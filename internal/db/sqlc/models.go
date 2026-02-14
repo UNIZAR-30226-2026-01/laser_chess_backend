@@ -2,13 +2,13 @@
 // versions:
 //   sqlc v1.30.0
 
-package sqlc
+package db
 
 import (
-	"database/sql"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Placeholder struct {
-	ID   int32          `json:"id"`
-	Data sql.NullString `json:"data"`
+	ID   int32       `json:"id"`
+	Data pgtype.Text `json:"data"`
 }

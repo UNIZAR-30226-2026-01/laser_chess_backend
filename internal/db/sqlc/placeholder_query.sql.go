@@ -3,11 +3,12 @@
 //   sqlc v1.30.0
 // source: placeholder_query.sql
 
-package sqlc
+package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createPlaceholder = `-- name: CreatePlaceholder :one
@@ -17,8 +18,8 @@ ON CONFLICT (data) DO NOTHING
 RETURNING id, data
 `
 
-func (q *Queries) CreatePlaceholder(ctx context.Context, data sql.NullString) (Placeholder, error) {
-	row := q.db.QueryRowContext(ctx, createPlaceholder, data)
+func (q *Queries) CreatePlaceholder(ctx context.Context, data pgtype.Text) (Placeholder, error) {
+	row := q.db.QueryRow(ctx, createPlaceholder, data)
 	var i Placeholder
 	err := row.Scan(&i.ID, &i.Data)
 	return i, err
@@ -30,7 +31,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetPlaceholder(ctx context.Context, id int32) (Placeholder, error) {
-	row := q.db.QueryRowContext(ctx, getPlaceholder, id)
+	row := q.db.QueryRow(ctx, getPlaceholder, id)
 	var i Placeholder
 	err := row.Scan(&i.ID, &i.Data)
 	return i, err
