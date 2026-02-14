@@ -26,7 +26,11 @@ jobs:
       - name: Instalar dependencias
         run: |
           go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.18.3
-          go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0
+
+          # Migrate tarda demasiado en compilar, a si que descargamos directamente el binario
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.2/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/
+
           # Hay que añadir el path de go al path global o no encuentra los binarios
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
@@ -36,6 +40,10 @@ jobs:
       - name: Hacer la build
         run: make build
         env:
+          DB_USER: user
+          DB_PASSWORD: password
+          DB_NAME: laser_chess_db
+          DB_PORT: 5432
           DB_URL: "postgresql://user:password@localhost:5432/laser_chess_db?sslmode=disable"
           
       
