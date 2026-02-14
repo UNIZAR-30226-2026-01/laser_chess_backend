@@ -43,5 +43,7 @@ jobs:
           DB_NAME: laser_chess_db
           DB_PORT: 5432
           DB_URL: "postgresql://user:password@localhost:5432/laser_chess_db?sslmode=disable"
+          # Hacer que se ejecute en modo release
+          GIN_MODE: release
           
       
