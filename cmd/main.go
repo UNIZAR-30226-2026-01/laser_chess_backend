@@ -55,7 +55,6 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	log.Println("server escuchando en el puerto " + port)
 	router.Run(":" + port)
 }
 
