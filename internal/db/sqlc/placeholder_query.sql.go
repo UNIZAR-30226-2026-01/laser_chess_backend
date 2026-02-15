@@ -7,18 +7,15 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createPlaceholder = `-- name: CreatePlaceholder :one
 INSERT INTO placeholder (data)
 VALUES ($1)
-ON CONFLICT (data) DO NOTHING
 RETURNING id, data
 `
 
-func (q *Queries) CreatePlaceholder(ctx context.Context, data pgtype.Text) (Placeholder, error) {
+func (q *Queries) CreatePlaceholder(ctx context.Context, data string) (Placeholder, error) {
 	row := q.db.QueryRow(ctx, createPlaceholder, data)
 	var i Placeholder
 	err := row.Scan(&i.ID, &i.Data)

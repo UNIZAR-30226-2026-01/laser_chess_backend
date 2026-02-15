@@ -4,11 +4,7 @@
 
 package db
 
-import (
-	"github.com/jackc/pgx/v5/pgtype"
-)
-
 type Placeholder struct {
-	ID   int32       `json:"id"`
-	Data pgtype.Text `json:"data"`
+	ID   int32  `json:"id"`
+	Data string `json:"data"`
 }

@@ -1,4 +1,4 @@
 CREATE TABLE placeholder (
     id SERIAL PRIMARY KEY,
-    data VARCHAR(10)
+    data TEXT NOT NULL
 )
