@@ -44,9 +44,12 @@ func main() {
 	placeholderService := placeholder.NewService(queries)
 	placeholderHandler := placeholder.NewHandler(placeholderService)
 
-	// Establecer las rutas de las peticiones http
-	router.POST("/placeholder", placeholderHandler.CreatePlaceholder)
-	router.GET("/placeholder/:id", placeholderHandler.GetPlaceholder)
+	// Establecer las rutas de las peticiones http por grupos
+	{
+		placeholderRoute := router.Group("/placeholder")
+		placeholderRoute.POST("", placeholderHandler.CreatePlaceholder)
+		placeholderRoute.GET("/:id", placeholderHandler.GetPlaceholder)
+	}
 
 	router.GET("/ping", getHello)
 
