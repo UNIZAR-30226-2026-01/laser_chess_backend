@@ -14,6 +14,8 @@ import (
 
 func main() {
 
+	Esto rompe la Integracion Continua
+
 	// Cargar las variables de .env
 	godotenv.Load()
 
