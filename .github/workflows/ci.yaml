@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Levantar base de datos
-        run: docker compose up -d
+        run: make postgres
         env:
           # Rellenamos las variables de entorno secretas
           # con unas de repuesto
@@ -28,15 +28,12 @@ jobs:
         with:
           sqlc-version: '1.30.0'
 
-      - name: Instalar migrate
-        run: |
-          # Hacer go install es muy lento, descargamos el binario desde las releases de github directamente
-          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.2/migrate.linux-amd64.tar.gz | tar xvz
-          sudo mv migrate /usr/local/bin/
-
       - name: Esperar a que postgresql termine de levantarse
         run: sleep 10
          
+      - name: Aplicar esquema de base de datos
+        run: make apply schema
+
       - name: Hacer la build
         run: make build
         env:

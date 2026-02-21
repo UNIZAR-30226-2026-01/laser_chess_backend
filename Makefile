@@ -2,18 +2,16 @@
 export
 
 BINARY_NAME=main
-MIGRATION_PATH=internal/db/migration
+DB_CONTAINER=postgres_db
+SCHEMA_FILE=internal/db/schema.sql
 
 postgres:
 	docker compose up -d
 
-migrate-up: postgres
-	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" -verbose up
+apply-schema: postgres
+	docker exec -i $(DB_CONTAINER) psql "$(DB_URL)" < $(SCHEMA_FILE)
 
-migrate-down: postgres
-	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" -verbose down
-
-sqlc: migrate-up
+sqlc: 
 	sqlc generate
 
 build: sqlc
@@ -25,18 +23,6 @@ run:
 clean:
 	rm -rf bin/
 
-
-# Para hacer cualquier modificacion a las tablas
-# Uso: make new-migration name=<el nombre que sea>
-new-migration:
-	migrate create -ext sql -dir $(MIGRATION_PATH) -seq $(name)
-
-
-migrate-up-1: postgres
-	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" -verbose up 1
-
-migrate-down-1: postgres
-	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" -verbose down 1
-
-migrate-reset: migrate-down migrate-up
-
+reset-db: postgres
+	docker exec -i $(DB_CONTAINER) psql "$(DB_URL)" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+	make apply-schema
