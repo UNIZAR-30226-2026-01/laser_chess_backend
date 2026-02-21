@@ -9,9 +9,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// Errores (habrá que poner todos los del proyecto en un paquete de errores)
-var ErrNotFound = errors.New("resource not found")
-
 type PlaceholderService struct {
 	queries *db.Queries
 }

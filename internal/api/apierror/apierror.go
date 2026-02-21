@@ -1,5 +1,8 @@
 package apierror
 
+// Paquete gestiona forma centralizada los errores para tener una interfaz común
+// que utilizan los handlers para responder el código http de error correspondiente.
+
 import (
 	"errors"
 	"log"
