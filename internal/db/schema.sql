@@ -41,29 +41,29 @@ CREATE TABLE IF NOT EXISTS "account" (
 	"account_id" BIGSERIAL NOT NULL UNIQUE,
 	"password_hash" TEXT NOT NULL,
 	"mail" TEXT NOT NULL UNIQUE,
-	"username" TEXT,
+	"username" TEXT NOT NULL,
 	-- Estado de la cuenta:
 	-- Borrada, Bloqueada, Activa...
 	-- 
-	"is_deleted" BOOLEAN,
-	"level" INTEGER,
-	"xp" INTEGER,
-	"money" INTEGER,
-	"elo_blitz" INTEGER,
-	"elo_bullet" INTEGER,
-	"elo_rapid" INTEGER,
-	"elo_classic" INTEGER,
-	"board_skin" INTEGER,
-	"piece_skin" INTEGER,
+	"is_deleted" BOOLEAN NOT NULL,
+	"level" INTEGER NOT NULL,
+	"xp" INTEGER NOT NULL,
+	"money" INTEGER NOT NULL,
+	"elo_blitz" INTEGER NOT NULL,
+	"elo_bullet" INTEGER NOT NULL,
+	"elo_rapid" INTEGER NOT NULL,
+	"elo_classic" INTEGER NOT NULL,
+	"board_skin" INTEGER NOT NULL,
+	"piece_skin" INTEGER NOT NULL,
 	PRIMARY KEY("account_id"),
 	UNIQUE ("board_skin", "piece_skin")
 );
 
 CREATE TABLE IF NOT EXISTS "shop_item" (
 	"item_id" SERIAL NOT NULL UNIQUE,
-	"price" INTEGER,
-	"level_requisite" INTEGER,
-	"item_type" ITEM_TYPE,
+	"price" INTEGER NOT NULL,
+	"level_requisite" INTEGER NOT NULL,
+	"item_type" ITEM_TYPE NOT NULL,
 	PRIMARY KEY("item_id")
 );
 
@@ -84,16 +84,16 @@ CREATE TABLE IF NOT EXISTS "match" (
 	"match_id" BIGSERIAL NOT NULL UNIQUE,
 	"p1_id" BIGINT NOT NULL,
 	"p2_id" BIGINT NOT NULL,
-	"p1_elo" INTEGER,
-	"p2_elo" INTEGER,
-	"date" TIMESTAMPTZ,
-	"winner" WINNER,
-	"termination" TERMINATION,
-	"match_type" MATCH_TYPE,
-	"board" BOARD_TYPE,
-	"movement_history" TEXT,
-	"time_base" INTEGER,
-	"time_increment" INTEGER,
+	"p1_elo" INTEGER NOT NULL,
+	"p2_elo" INTEGER NOT NULL,
+	"date" TIMESTAMPTZ NOT NULL,
+	"winner" WINNER NOT NULL,
+	"termination" TERMINATION NOT NULL,
+	"match_type" MATCH_TYPE NOT NULL,
+	"board" BOARD_TYPE NOT NULL,
+	"movement_history" TEXT NOT NULL,
+	"time_base" INTEGER NOT NULL,
+	"time_increment" INTEGER NOT NULL,
 	PRIMARY KEY("match_id"),
 	FOREIGN KEY("p1_id") REFERENCES "account"("account_id"),
 	FOREIGN KEY("p2_id") REFERENCES "account"("account_id")
@@ -105,11 +105,12 @@ CREATE TABLE IF NOT EXISTS "match" (
 CREATE TABLE IF NOT EXISTS "friendship" (
 	"user1_id" BIGINT NOT NULL,
 	"user2_id" BIGINT NOT NULL,
-	"accepted_1" BOOLEAN,
-	"accepted_2" BOOLEAN,
+	"accepted_1" BOOLEAN NOT NULL,
+	"accepted_2" BOOLEAN NOT NULL,
 	PRIMARY KEY("user1_id", "user2_id"),
 	FOREIGN KEY("user1_id") REFERENCES "account"("account_id"),
-	FOREIGN KEY("user2_id") REFERENCES "account"("account_id")
+	FOREIGN KEY("user2_id") REFERENCES "account"("account_id"),
+	CHECK ("user1_id" < "user2_id")
 );
 
 
