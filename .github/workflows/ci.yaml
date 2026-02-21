@@ -31,11 +31,10 @@ jobs:
       - name: Esperar a que postgresql termine de levantarse
         run: sleep 10
          
-      - name: Aplicar esquema de base de datos
-        run: make apply-schema
-
-      - name: Hacer la build
-        run: make build
+      - name: Aplicar esquema y hacer la build
+        run: |
+          make apply-schema
+          make build
         env:
           DB_USER: user
           DB_PASSWORD: password
