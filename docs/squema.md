@@ -1,3 +1,4 @@
+```mermaid
 erDiagram
 item_owner ||--o{ account : is_owner
 friendship ||--o{ account : is_friend
