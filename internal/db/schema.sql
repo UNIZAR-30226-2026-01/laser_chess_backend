@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS "friendship" (
 CREATE TABLE IF NOT EXISTS "rating" (
 	"user_id" BIGINT NOT NULL,
 	"elo_type" ELO_TYPE NOT NULL,
-	"value" BIGINT NOT NULL,
+	"value" INT NOT NULL,
 	PRIMARY KEY("user_id", "elo_type"),
 	FOREIGN KEY("user_id") REFERENCES "account"("account_id")
 );
