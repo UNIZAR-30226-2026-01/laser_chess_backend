@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS "account" (
     -- items equipados
 	"board_skin" INTEGER NOT NULL,
 	"piece_skin" INTEGER NOT NULL,
-	PRIMARY KEY("account_id"),
+	PRIMARY KEY("account_id")
 );
 
 CREATE TABLE IF NOT EXISTS "shop_item" (
