@@ -18,7 +18,7 @@ func NewHandler(s *MatchService) *MatchHandler {
 }
 
 func (h *MatchHandler) GetMatch(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("matchID"), 10, 32)
+	id, err := strconv.ParseInt(c.Param("matchID"), 10, 64)
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
@@ -34,7 +34,7 @@ func (h *MatchHandler) GetMatch(c *gin.Context) {
 }
 
 func (h *MatchHandler) GetUserHistory(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("userID"), 10, 32)
+	id, err := strconv.ParseInt(c.Param("userID"), 10, 64)
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
