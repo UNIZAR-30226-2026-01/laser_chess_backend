@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/placeholder"
@@ -46,6 +47,9 @@ func main() {
 	placeholderService := placeholder.NewService(queries)
 	placeholderHandler := placeholder.NewHandler(placeholderService)
 
+	accountService := account.NewService(queries)
+	accountHandler := account.NewHandler(accountService)
+
 	matchService := match.NewService(queries)
 	matchHandler := match.NewHandler(matchService)
 
@@ -57,12 +61,26 @@ func main() {
 		placeholderRoute := router.Group("/placeholder")
 		placeholderRoute.POST("", placeholderHandler.CreatePlaceholder)
 		placeholderRoute.GET("/:id", placeholderHandler.GetPlaceholder)
+	}
 
+	// Account routes
+	{
+		accountRoute := router.Group("/account")
+		accountRoute.POST("", accountHandler.CreateAccount)
+		accountRoute.GET("/:id", accountHandler.GetAccountByID)
+		accountRoute.POST("/", accountHandler.UpdateAccount)
+	}
+
+	// Match routes
+	{
 		matchRoute := router.Group("/match")
 		matchRoute.POST("", matchHandler.CreateMatch)
 		matchRoute.GET("/:matchID", matchHandler.GetMatch)
 		matchRoute.GET("/history/:userID", matchHandler.GetUserHistory)
+	}
 
+	// Item routes
+	{
 		itemRoute := router.Group("/item")
 		itemRoute.POST("", itemHandler.CreateItemOwner)
 		itemRoute.GET("/inventory/:userID", itemHandler.GetUserItems)
