@@ -46,17 +46,20 @@ CREATE TYPE "elo_type" AS ENUM (
 
 CREATE TABLE IF NOT EXISTS "account" (
 	"account_id" BIGSERIAL NOT NULL UNIQUE,
+	"mail" VARCHAR(255) NOT NULL UNIQUE,
+	"username" VARCHAR(50) NOT NULL UNIQUE,
 	"password_hash" TEXT NOT NULL,
-	"mail" TEXT NOT NULL UNIQUE,
-	"username" TEXT NOT NULL UNIQUE,
-	"is_deleted" BOOLEAN NOT NULL,
-	"level" INTEGER NOT NULL,
-	"xp" INTEGER NOT NULL,
-	"money" INTEGER NOT NULL,
+
+    -- params por defecto
+	"is_deleted" BOOLEAN NOT NULL DEFAULT FALSE,
+	"level" INTEGER NOT NULL DEFAULT 0,
+	"xp" INTEGER NOT NULL DEFAULT 0,
+	"money" INTEGER NOT NULL DEFAULT 0,
+
+    -- items equipados
 	"board_skin" INTEGER NOT NULL,
 	"piece_skin" INTEGER NOT NULL,
 	PRIMARY KEY("account_id"),
-	UNIQUE ("board_skin", "piece_skin")
 );
 
 CREATE TABLE IF NOT EXISTS "shop_item" (
