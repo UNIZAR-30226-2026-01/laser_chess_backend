@@ -40,3 +40,12 @@ func (s *AccountService) UpdateAccount(ctx context.Context, body db.UpdateAccoun
 	}
 	return res, nil
 }
+
+func (s *AccountService) DeleteAccount(ctx context.Context, accountID int64) error {
+	err := s.queries.DeleteAccount(ctx, accountID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
