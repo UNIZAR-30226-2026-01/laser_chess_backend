@@ -48,10 +48,7 @@ CREATE TABLE IF NOT EXISTS "account" (
 	"account_id" BIGSERIAL NOT NULL UNIQUE,
 	"password_hash" TEXT NOT NULL,
 	"mail" TEXT NOT NULL UNIQUE,
-	"username" TEXT NOT NULL,
-	-- Estado de la cuenta:
-	-- Borrada, Bloqueada, Activa...
-	-- 
+	"username" TEXT NOT NULL UNIQUE,
 	"is_deleted" BOOLEAN NOT NULL,
 	"level" INTEGER NOT NULL,
 	"xp" INTEGER NOT NULL,
