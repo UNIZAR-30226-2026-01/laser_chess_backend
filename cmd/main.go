@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/placeholder"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/gin-gonic/gin"
@@ -44,11 +46,27 @@ func main() {
 	placeholderService := placeholder.NewService(queries)
 	placeholderHandler := placeholder.NewHandler(placeholderService)
 
+	matchService := match.NewService(queries)
+	matchHandler := match.NewHandler(matchService)
+
+	itemService := item.NewService(queries)
+	itemHandler := item.NewHandler(itemService)
+
 	// Establecer las rutas de las peticiones http por grupos
 	{
 		placeholderRoute := router.Group("/placeholder")
 		placeholderRoute.POST("", placeholderHandler.CreatePlaceholder)
 		placeholderRoute.GET("/:id", placeholderHandler.GetPlaceholder)
+
+		matchRoute := router.Group("/match")
+		matchRoute.POST("", matchHandler.CreateMatch)
+		matchRoute.GET("/:matchID", matchHandler.GetMatch)
+		matchRoute.GET("/history/:userID", matchHandler.GetUserHistory)
+
+		itemRoute := router.Group("/item")
+		itemRoute.POST("", itemHandler.CreateItemOwner)
+		itemRoute.GET("/inventory/:userID", itemHandler.GetUserItems)
+		itemRoute.GET("/:itemID", itemHandler.GetShopItem)
 	}
 
 	router.GET("/ping", getHello)
