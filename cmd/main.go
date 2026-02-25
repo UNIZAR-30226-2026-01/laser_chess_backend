@@ -8,7 +8,6 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/placeholder"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -44,9 +43,6 @@ func main() {
 	store := db.NewStore(dbPool)
 
 	// Crear handlers y services
-	placeholderService := placeholder.NewService(store)
-	placeholderHandler := placeholder.NewHandler(placeholderService)
-
 	accountService := account.NewService(store)
 	accountHandler := account.NewHandler(accountService)
 
@@ -57,11 +53,6 @@ func main() {
 	itemHandler := item.NewHandler(itemService)
 
 	// Establecer las rutas de las peticiones http por grupos
-	{
-		placeholderRoute := router.Group("/placeholder")
-		placeholderRoute.POST("", placeholderHandler.CreatePlaceholder)
-		placeholderRoute.GET("/:id", placeholderHandler.GetPlaceholder)
-	}
 
 	// Account routes
 	{
@@ -88,18 +79,10 @@ func main() {
 		itemRoute.GET("/:itemID", itemHandler.GetShopItem)
 	}
 
-	router.GET("/ping", getHello)
-
 	// Ejecutar el router en el puerto que se le diga (8080 por defecto)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 	router.Run(":" + port)
-}
-
-func getHello(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "pong",
-	})
 }

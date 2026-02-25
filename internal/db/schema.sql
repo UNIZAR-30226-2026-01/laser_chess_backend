@@ -1,8 +1,3 @@
-CREATE TABLE placeholder (
-    id SERIAL PRIMARY KEY,
-    data TEXT NOT NULL
-);
-
 CREATE TYPE "winner" AS ENUM (
 	'P1_WINS',
 	'P2_WINS',

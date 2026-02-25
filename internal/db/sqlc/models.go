@@ -315,11 +315,6 @@ type Match struct {
 	TimeIncrement   int32              `json:"time_increment"`
 }
 
-type Placeholder struct {
-	ID   int32  `json:"id"`
-	Data string `json:"data"`
-}
-
 type Rating struct {
 	UserID  int64   `json:"user_id"`
 	EloType EloType `json:"elo_type"`
