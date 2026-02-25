@@ -11,11 +11,11 @@ import (
 )
 
 type AccountService struct {
-	queries *db.Queries
+	store *db.Store
 }
 
-func NewService(q *db.Queries) *AccountService {
-	return &AccountService{queries: q}
+func NewService(s *db.Store) *AccountService {
+	return &AccountService{store: s}
 }
 
 // Crea una cuenta
@@ -29,30 +29,44 @@ func (s *AccountService) CreateAccount(ctx context.Context, body CreateAccountDT
 		return AccountDTO{}, err
 	}
 
-	res, err := s.queries.CreateAccount(ctx, db.CreateAccountParams{
-		PasswordHash: string(passwordHash),
-		Username:     body.Username,
-		Mail:         body.Mail,
+	var res db.Account
 
-		// Por ahora forzamos que sean 1 y 2,
-		// pero habrá que hacer algún tipo de consulta
-		// o algo
-		BoardSkin: 1,
-		PieceSkin: 2,
+	// Ejecutar en transaccion
+	// Ahora no tiene sentido, pero lo tendra cuando hagamos lo de los items
+	err = s.store.ExecTx(ctx, func(q *db.Queries) error {
+		var errTx error
+
+		res, errTx = q.CreateAccount(ctx, db.CreateAccountParams{
+			PasswordHash: string(passwordHash),
+			Username:     body.Username,
+			Mail:         body.Mail,
+
+			// Por ahora forzamos que sean 1 y 2,
+			// pero habrá que hacer algún tipo de consulta
+			// o algo
+			BoardSkin: 1,
+			PieceSkin: 2,
+		})
+
+		if errTx != nil {
+			return errTx
+		}
+
+		//TODO: hacer que ownee los cosmeticos por defecto
+
+		return nil
 	})
 
 	if err != nil {
 		return AccountDTO{}, err
 	}
 
-	//TODO: hacer que ownee los cosmeticos por defecto
-
 	// Solo devuelve el AccountID
 	return AccountDTO{AccountID: res.AccountID}, nil
 }
 
 func (s *AccountService) GetAccountByID(ctx context.Context, accountID int64) (AccountDTO, error) {
-	res, err := s.queries.GetAccountByID(ctx, accountID)
+	res, err := s.store.GetAccountByID(ctx, accountID)
 	if err != nil {
 		return AccountDTO{}, err
 	}
@@ -70,7 +84,7 @@ func (s *AccountService) GetAccountByID(ctx context.Context, accountID int64) (A
 }
 
 func (s *AccountService) UpdateAccount(ctx context.Context, body AccountDTO) (AccountDTO, error) {
-	res, err := s.queries.UpdateAccount(ctx, db.UpdateAccountParams{
+	res, err := s.store.UpdateAccount(ctx, db.UpdateAccountParams{
 		AccountID: body.AccountID,
 		Username:  body.Username,
 		BoardSkin: body.BoardSkin,
@@ -89,7 +103,7 @@ func (s *AccountService) UpdateAccount(ctx context.Context, body AccountDTO) (Ac
 }
 
 func (s *AccountService) DeleteAccount(ctx context.Context, accountID int64) error {
-	err := s.queries.DeleteAccount(ctx, accountID)
+	err := s.store.DeleteAccount(ctx, accountID)
 	if err != nil {
 		return err
 	}

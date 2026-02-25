@@ -40,20 +40,20 @@ func main() {
 	// Inicializar router de gin
 	router := gin.Default()
 
-	// Inicializar queries de sqlc
-	queries := db.New(dbPool)
+	// Inicializar store de sqlc
+	store := db.NewStore(dbPool)
 
 	// Crear handlers y services
-	placeholderService := placeholder.NewService(queries)
+	placeholderService := placeholder.NewService(store)
 	placeholderHandler := placeholder.NewHandler(placeholderService)
 
-	accountService := account.NewService(queries)
+	accountService := account.NewService(store)
 	accountHandler := account.NewHandler(accountService)
 
-	matchService := match.NewService(queries)
+	matchService := match.NewService(store)
 	matchHandler := match.NewHandler(matchService)
 
-	itemService := item.NewService(queries)
+	itemService := item.NewService(store)
 	itemHandler := item.NewHandler(itemService)
 
 	// Establecer las rutas de las peticiones http por grupos
