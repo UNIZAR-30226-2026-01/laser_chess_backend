@@ -68,7 +68,8 @@ func main() {
 		accountRoute := router.Group("/account")
 		accountRoute.POST("", accountHandler.CreateAccount)
 		accountRoute.GET("/:id", accountHandler.GetAccountByID)
-		accountRoute.POST("/", accountHandler.UpdateAccount)
+		accountRoute.POST("/update", accountHandler.UpdateAccount)
+		accountRoute.DELETE("/delete/:id", accountHandler.DeleteAccount)
 	}
 
 	// Match routes

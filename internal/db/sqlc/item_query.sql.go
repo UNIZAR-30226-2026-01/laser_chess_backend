@@ -7,8 +7,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createItemOwner = `-- name: CreateItemOwner :one
@@ -57,10 +55,10 @@ WHERE user_id = $1 LIMIT 1
 `
 
 type GetUserItemsRow struct {
-	ItemID         pgtype.Int4 `json:"item_id"`
-	Price          pgtype.Int4 `json:"price"`
-	LevelRequisite pgtype.Int4 `json:"level_requisite"`
-	ItemType       ItemType    `json:"item_type"`
+	ItemID         *int32   `json:"item_id"`
+	Price          *int32   `json:"price"`
+	LevelRequisite *int32   `json:"level_requisite"`
+	ItemType       ItemType `json:"item_type"`
 }
 
 func (q *Queries) GetUserItems(ctx context.Context, userID int64) ([]GetUserItemsRow, error) {

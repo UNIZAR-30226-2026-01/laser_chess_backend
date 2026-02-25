@@ -7,8 +7,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createAccount = `-- name: CreateAccount :one
@@ -151,10 +149,10 @@ RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, mone
 `
 
 type UpdateAccountParams struct {
-	AccountID int64       `json:"account_id"`
-	Username  pgtype.Text `json:"username"`
-	BoardSkin pgtype.Int4 `json:"board_skin"`
-	PieceSkin pgtype.Int4 `json:"piece_skin"`
+	AccountID int64   `json:"account_id"`
+	Username  *string `json:"username"`
+	BoardSkin *int32  `json:"board_skin"`
+	PieceSkin *int32  `json:"piece_skin"`
 }
 
 // solo cambia cosas qué se pueden cambiar por el user
