@@ -15,9 +15,11 @@ import (
 )
 
 var (
-	ErrNotFound      = errors.New("resource not found")
-	ErrAlreadyExists = errors.New("resource already exists")
-	ErrBadRequest    = errors.New("bad request")
+	ErrInternalServerError = errors.New("internal server error")
+	ErrNotFound            = errors.New("resource not found")
+	ErrAlreadyExists       = errors.New("resource already exists")
+	ErrBadRequest          = errors.New("bad request")
+	ErrUnauthorized        = errors.New("unauthorized access")
 )
 
 // Función que detecta el tipo de error, y manda el código de error
@@ -31,25 +33,27 @@ func DetectAndSendError(c *gin.Context, err error) {
 		switch pgErr.Code {
 		case pgerrcode.UniqueViolation:
 			httpCode = http.StatusConflict
+			err = ErrInternalServerError
 
 		case pgerrcode.ForeignKeyViolation, pgerrcode.NotNullViolation,
 			pgerrcode.CheckViolation:
 
 			httpCode = http.StatusBadRequest
+			err = ErrInternalServerError
 		default:
 			// Cualquier otro error raro de BD
 			httpCode = http.StatusInternalServerError
+			err = ErrInternalServerError
 		}
 	} else {
 		switch {
-		case errors.Is(err, pgx.ErrNoRows) || errors.Is(err, ErrNotFound):
+		case errors.Is(err, pgx.ErrNoRows):
 			httpCode = http.StatusNotFound
+			err = ErrNotFound
 
-		case errors.Is(err, ErrAlreadyExists):
-			httpCode = http.StatusConflict
-
-		case errors.Is(err, ErrBadRequest):
-			httpCode = http.StatusBadRequest
+		case errors.Is(err, ErrUnauthorized):
+			httpCode = http.StatusAccepted
+			err = ErrUnauthorized
 
 		default:
 			httpCode = http.StatusInternalServerError
@@ -65,6 +69,7 @@ func SendError(c *gin.Context, code int, err error) {
 		log.Printf("DEBUG ERROR [%d]: %v", code, err)
 	}
 	c.AbortWithStatusJSON(code, gin.H{
-		"error": http.StatusText(code),
+		"error":         http.StatusText(code),
+		"error_message": err.Error(),
 	})
 }
