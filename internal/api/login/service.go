@@ -27,8 +27,8 @@ func (s *LoginService) Login(ctx context.Context, body LoginDTO) error {
 	}
 
 	// ver si es mail o username
-	if isMail(body.credential) {
-		mailRes, err := s.store.GetAccountByMail(ctx, body.credential)
+	if isMail(body.Credential) {
+		mailRes, err := s.store.GetAccountByMail(ctx, body.Credential)
 		if err != nil {
 			return err
 		}
@@ -36,7 +36,7 @@ func (s *LoginService) Login(ctx context.Context, body LoginDTO) error {
 		res.accountID = mailRes.AccountID
 		res.passwordHash = mailRes.PasswordHash
 	} else {
-		usernameRes, err := s.store.GetAccountByUsername(ctx, body.credential)
+		usernameRes, err := s.store.GetAccountByUsername(ctx, body.Credential)
 		if err != nil {
 			return err
 		}
@@ -45,7 +45,7 @@ func (s *LoginService) Login(ctx context.Context, body LoginDTO) error {
 		res.passwordHash = usernameRes.PasswordHash
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(res.passwordHash), []byte(body.password))
+	err := bcrypt.CompareHashAndPassword([]byte(res.passwordHash), []byte(body.Password))
 
 	if err != nil {
 		return apierror.ErrUnauthorized

@@ -32,7 +32,7 @@ func (q *Queries) CreateItemOwner(ctx context.Context, arg CreateItemOwnerParams
 }
 
 const getShopItem = `-- name: GetShopItem :one
-SELECT item_id, price, level_requisite, item_type FROM shop_item
+SELECT item_id, price, level_requisite, item_type, is_default FROM shop_item
 WHERE item_id = $1 LIMIT 1
 `
 
@@ -44,6 +44,7 @@ func (q *Queries) GetShopItem(ctx context.Context, itemID int32) (ShopItem, erro
 		&i.Price,
 		&i.LevelRequisite,
 		&i.ItemType,
+		&i.IsDefault,
 	)
 	return i, err
 }

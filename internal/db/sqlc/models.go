@@ -326,4 +326,5 @@ type ShopItem struct {
 	Price          int32    `json:"price"`
 	LevelRequisite int32    `json:"level_requisite"`
 	ItemType       ItemType `json:"item_type"`
+	IsDefault      bool     `json:"is_default"`
 }

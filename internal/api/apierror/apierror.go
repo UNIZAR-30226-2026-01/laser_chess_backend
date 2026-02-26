@@ -52,7 +52,7 @@ func DetectAndSendError(c *gin.Context, err error) {
 			err = ErrNotFound
 
 		case errors.Is(err, ErrUnauthorized):
-			httpCode = http.StatusAccepted
+			httpCode = http.StatusUnauthorized
 			err = ErrUnauthorized
 
 		default:

@@ -38,7 +38,7 @@ INSERT INTO public.account (
 VALUES(
     'user1@gmail.com',
     'user1', 
-    '0a041b9462caa4a31bac3567e0b6e6fd9100787db2ab433d96f6d178cabfce90',
+    '$2a$12$Taa.42J00Xz8Jl3tpzNEEezhrFvZ1pRWUm4N4Tno43waWwo.DaG06',
     false,
     0,
     0,
