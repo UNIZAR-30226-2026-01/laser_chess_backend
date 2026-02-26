@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS "shop_item" (
 	"price" INTEGER NOT NULL,
 	"level_requisite" INTEGER NOT NULL,
 	"item_type" ITEM_TYPE NOT NULL,
+	"is_default" BOOLEAN NOT NULL,
 	PRIMARY KEY("item_id")
 );
 
