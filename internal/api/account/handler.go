@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
-	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,8 +19,9 @@ func NewHandler(s *AccountService) *AccountHandler {
 }
 
 func (h *AccountHandler) CreateAccount(c *gin.Context) {
-	var body db.CreateAccountParams
+
 	// Mira si el json que nos han pasado coincide con el dto
+	var body CreateAccountDTO
 	if err := c.ShouldBindJSON(&body); err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
@@ -53,8 +53,8 @@ func (h *AccountHandler) GetAccountByID(c *gin.Context) {
 }
 
 func (h *AccountHandler) UpdateAccount(c *gin.Context) {
-	var body db.UpdateAccountParams
 	// Mira si el json que nos han pasado coincide con el dto
+	var body AccountDTO
 	if err := c.ShouldBindJSON(&body); err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
@@ -67,4 +67,20 @@ func (h *AccountHandler) UpdateAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *AccountHandler) DeleteAccount(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		apierror.SendError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.service.DeleteAccount(c.Request.Context(), int64(id))
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusNoContent, gin.H{})
 }

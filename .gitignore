@@ -2,4 +2,3 @@ bin/
 
 .env
 
-internal/db/sqlc/

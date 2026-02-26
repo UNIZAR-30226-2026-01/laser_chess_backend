@@ -8,7 +8,6 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/placeholder"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -40,35 +39,28 @@ func main() {
 	// Inicializar router de gin
 	router := gin.Default()
 
-	// Inicializar queries de sqlc
-	queries := db.New(dbPool)
+	// Inicializar store de sqlc
+	store := db.NewStore(dbPool)
 
 	// Crear handlers y services
-	placeholderService := placeholder.NewService(queries)
-	placeholderHandler := placeholder.NewHandler(placeholderService)
-
-	accountService := account.NewService(queries)
+	accountService := account.NewService(store)
 	accountHandler := account.NewHandler(accountService)
 
-	matchService := match.NewService(queries)
+	matchService := match.NewService(store)
 	matchHandler := match.NewHandler(matchService)
 
-	itemService := item.NewService(queries)
+	itemService := item.NewService(store)
 	itemHandler := item.NewHandler(itemService)
 
 	// Establecer las rutas de las peticiones http por grupos
-	{
-		placeholderRoute := router.Group("/placeholder")
-		placeholderRoute.POST("", placeholderHandler.CreatePlaceholder)
-		placeholderRoute.GET("/:id", placeholderHandler.GetPlaceholder)
-	}
 
 	// Account routes
 	{
 		accountRoute := router.Group("/account")
 		accountRoute.POST("", accountHandler.CreateAccount)
 		accountRoute.GET("/:id", accountHandler.GetAccountByID)
-		accountRoute.POST("/", accountHandler.UpdateAccount)
+		accountRoute.POST("/update", accountHandler.UpdateAccount)
+		accountRoute.DELETE("/delete/:id", accountHandler.DeleteAccount)
 	}
 
 	// Match routes
@@ -87,18 +79,10 @@ func main() {
 		itemRoute.GET("/:itemID", itemHandler.GetShopItem)
 	}
 
-	router.GET("/ping", getHello)
-
 	// Ejecutar el router en el puerto que se le diga (8080 por defecto)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 	router.Run(":" + port)
-}
-
-func getHello(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "pong",
-	})
 }

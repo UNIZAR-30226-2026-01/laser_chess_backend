@@ -7,19 +7,19 @@ import (
 )
 
 type itemService struct {
-	queries *db.Queries
+	store *db.Store
 }
 
-func NewService(q *db.Queries) *itemService {
-	return &itemService{queries: q}
+func NewService(s *db.Store) *itemService {
+	return &itemService{store: s}
 }
 
 func (s *itemService) Create(ctx context.Context, data db.CreateItemOwnerParams) (db.ItemOwner, error) {
-	return s.queries.CreateItemOwner(ctx, data)
+	return s.store.CreateItemOwner(ctx, data)
 }
 
 func (s *itemService) GetByID(ctx context.Context, itemID int32) (db.ShopItem, error) {
-	res, err := s.queries.GetShopItem(ctx, itemID)
+	res, err := s.store.GetShopItem(ctx, itemID)
 	if err != nil {
 		return db.ShopItem{}, err
 	}
@@ -28,7 +28,7 @@ func (s *itemService) GetByID(ctx context.Context, itemID int32) (db.ShopItem, e
 }
 
 func (s *itemService) GetUserItems(ctx context.Context, userID int64) ([]db.GetUserItemsRow, error) {
-	res, err := s.queries.GetUserItems(ctx, userID)
+	res, err := s.store.GetUserItems(ctx, userID)
 	if err != nil {
 		return []db.GetUserItemsRow{}, err
 	}

@@ -7,19 +7,23 @@ import (
 )
 
 type MatchService struct {
-	queries *db.Queries
+	store *db.Store
 }
 
-func NewService(q *db.Queries) *MatchService {
-	return &MatchService{queries: q}
+func NewService(s *db.Store) *MatchService {
+	return &MatchService{store: s}
 }
 
 func (s *MatchService) Create(ctx context.Context, data db.CreateMatchParams) (db.Match, error) {
-	return s.queries.CreateMatch(ctx, data)
+	res, err := s.store.CreateMatch(ctx, data)
+	if err != nil {
+		return db.Match{}, err
+	}
+	return res, nil
 }
 
 func (s *MatchService) GetByID(ctx context.Context, matchID int64) (db.Match, error) {
-	res, err := s.queries.GetMatch(ctx, matchID)
+	res, err := s.store.GetMatch(ctx, matchID)
 	if err != nil {
 		return db.Match{}, err
 	}
@@ -28,9 +32,9 @@ func (s *MatchService) GetByID(ctx context.Context, matchID int64) (db.Match, er
 }
 
 func (s *MatchService) GetUserHistory(ctx context.Context, userID int64) ([]db.Match, error) {
-	res, err := s.queries.GetUserHistory(ctx, userID)
+	res, err := s.store.GetUserHistory(ctx, userID)
 	if err != nil {
-		return []db.Match{}, err
+		return nil, err
 	}
 
 	return res, nil
