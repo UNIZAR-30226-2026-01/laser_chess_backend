@@ -22,9 +22,9 @@ func NewService(s *db.Store) *AccountService {
 // Primero hashea la contraseña
 // Por ahora se inventa los items equipados por defecto,
 // pero habrá que hacer que los ownee y los tenga equipados.
-func (s *AccountService) CreateAccount(ctx context.Context, body CreateAccountDTO) (AccountDTO, error) {
+func (s *AccountService) Create(ctx context.Context, body CreateAccountDTO) (AccountDTO, error) {
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 12)
 	if err != nil {
 		return AccountDTO{}, err
 	}
@@ -65,7 +65,7 @@ func (s *AccountService) CreateAccount(ctx context.Context, body CreateAccountDT
 	return AccountDTO{AccountID: res.AccountID}, nil
 }
 
-func (s *AccountService) GetAccountByID(ctx context.Context, accountID int64) (AccountDTO, error) {
+func (s *AccountService) GetByID(ctx context.Context, accountID int64) (AccountDTO, error) {
 	res, err := s.store.GetAccountByID(ctx, accountID)
 	if err != nil {
 		return AccountDTO{}, err
@@ -83,7 +83,7 @@ func (s *AccountService) GetAccountByID(ctx context.Context, accountID int64) (A
 	}, nil
 }
 
-func (s *AccountService) UpdateAccount(ctx context.Context, body AccountDTO) (AccountDTO, error) {
+func (s *AccountService) Update(ctx context.Context, body AccountDTO) (AccountDTO, error) {
 	res, err := s.store.UpdateAccount(ctx, db.UpdateAccountParams{
 		AccountID: body.AccountID,
 		Username:  body.Username,
@@ -102,7 +102,7 @@ func (s *AccountService) UpdateAccount(ctx context.Context, body AccountDTO) (Ac
 	}, nil
 }
 
-func (s *AccountService) DeleteAccount(ctx context.Context, accountID int64) error {
+func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
 	err := s.store.DeleteAccount(ctx, accountID)
 	if err != nil {
 		return err

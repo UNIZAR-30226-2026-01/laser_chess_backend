@@ -18,7 +18,7 @@ func NewHandler(s *AccountService) *AccountHandler {
 	return &AccountHandler{service: s}
 }
 
-func (h *AccountHandler) CreateAccount(c *gin.Context) {
+func (h *AccountHandler) Create(c *gin.Context) {
 
 	// Mira si el json que nos han pasado coincide con el dto
 	var body CreateAccountDTO
@@ -27,7 +27,7 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.CreateAccount(c.Request.Context(), body)
+	res, err := h.service.Create(c.Request.Context(), body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -36,14 +36,14 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
-func (h *AccountHandler) GetAccountByID(c *gin.Context) {
+func (h *AccountHandler) GetByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := h.service.GetAccountByID(c.Request.Context(), int64(id))
+	res, err := h.service.GetByID(c.Request.Context(), int64(id))
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -52,7 +52,7 @@ func (h *AccountHandler) GetAccountByID(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func (h *AccountHandler) UpdateAccount(c *gin.Context) {
+func (h *AccountHandler) Update(c *gin.Context) {
 	// Mira si el json que nos han pasado coincide con el dto
 	var body AccountDTO
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -60,7 +60,7 @@ func (h *AccountHandler) UpdateAccount(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.UpdateAccount(c.Request.Context(), body)
+	res, err := h.service.Update(c.Request.Context(), body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -69,14 +69,14 @@ func (h *AccountHandler) UpdateAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func (h *AccountHandler) DeleteAccount(c *gin.Context) {
+func (h *AccountHandler) Delete(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	err = h.service.DeleteAccount(c.Request.Context(), int64(id))
+	err = h.service.Delete(c.Request.Context(), int64(id))
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
