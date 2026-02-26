@@ -92,49 +92,37 @@ func (q *Queries) GetAccountByID(ctx context.Context, accountID int64) (Account,
 
 const getAccountByMail = `-- name: GetAccountByMail :one
 
-SELECT account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin FROM account
+SELECT account_id, password_hash FROM account
 WHERE mail = $1 AND is_deleted = FALSE
 `
 
+type GetAccountByMailRow struct {
+	AccountID    int64  `json:"account_id"`
+	PasswordHash string `json:"password_hash"`
+}
+
 // Queries privadas que sólo se llaman desde dentro del sistema
-func (q *Queries) GetAccountByMail(ctx context.Context, mail string) (Account, error) {
+func (q *Queries) GetAccountByMail(ctx context.Context, mail string) (GetAccountByMailRow, error) {
 	row := q.db.QueryRow(ctx, getAccountByMail, mail)
-	var i Account
-	err := row.Scan(
-		&i.AccountID,
-		&i.Mail,
-		&i.Username,
-		&i.PasswordHash,
-		&i.IsDeleted,
-		&i.Level,
-		&i.Xp,
-		&i.Money,
-		&i.BoardSkin,
-		&i.PieceSkin,
-	)
+	var i GetAccountByMailRow
+	err := row.Scan(&i.AccountID, &i.PasswordHash)
 	return i, err
 }
 
 const getAccountByUsername = `-- name: GetAccountByUsername :one
-SELECT account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin FROM account
+SELECT account_id, password_hash FROM account
 WHERE username = $1 AND is_deleted = FALSE
 `
 
-func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Account, error) {
+type GetAccountByUsernameRow struct {
+	AccountID    int64  `json:"account_id"`
+	PasswordHash string `json:"password_hash"`
+}
+
+func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (GetAccountByUsernameRow, error) {
 	row := q.db.QueryRow(ctx, getAccountByUsername, username)
-	var i Account
-	err := row.Scan(
-		&i.AccountID,
-		&i.Mail,
-		&i.Username,
-		&i.PasswordHash,
-		&i.IsDeleted,
-		&i.Level,
-		&i.Xp,
-		&i.Money,
-		&i.BoardSkin,
-		&i.PieceSkin,
-	)
+	var i GetAccountByUsernameRow
+	err := row.Scan(&i.AccountID, &i.PasswordHash)
 	return i, err
 }
 

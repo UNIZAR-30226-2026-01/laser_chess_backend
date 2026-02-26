@@ -7,6 +7,7 @@ import (
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/login"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/gin-gonic/gin"
@@ -43,6 +44,9 @@ func main() {
 	store := db.NewStore(dbPool)
 
 	// Crear handlers y services
+	loginService := login.NewService(store)
+	loginHandler := login.NewHandler(loginService)
+
 	accountService := account.NewService(store)
 	accountHandler := account.NewHandler(accountService)
 
@@ -53,6 +57,10 @@ func main() {
 	itemHandler := item.NewHandler(itemService)
 
 	// Establecer las rutas de las peticiones http por grupos
+
+	// Login routes
+
+	router.POST("/login", loginHandler.Login)
 
 	// Account routes
 	{

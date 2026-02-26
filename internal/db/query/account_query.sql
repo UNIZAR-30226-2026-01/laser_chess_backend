@@ -29,11 +29,11 @@ RETURNING *;
 -- Queries privadas que sólo se llaman desde dentro del sistema
 
 -- name: GetAccountByMail :one
-SELECT * FROM account
+SELECT account_id, password_hash FROM account
 WHERE mail = $1 AND is_deleted = FALSE;
 
 -- name: GetAccountByUsername :one
-SELECT * FROM account
+SELECT account_id, password_hash FROM account
 WHERE username = $1 AND is_deleted = FALSE;
 
 -- name: DeleteAccount :exec
