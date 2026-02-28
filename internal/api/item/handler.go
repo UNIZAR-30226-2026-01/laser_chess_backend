@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
-	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/gin-gonic/gin"
 )
 
@@ -51,7 +50,7 @@ func (h *itemHandler) GetUserItems(c *gin.Context) {
 
 func (h *itemHandler) CreateItemOwner(c *gin.Context) {
 
-	var body db.CreateItemOwnerParams
+	var body ItemOwnerDTO
 
 	// Mira si el json que nos han pasado coincide con el dto
 	if err := c.ShouldBindJSON(&body); err != nil {
