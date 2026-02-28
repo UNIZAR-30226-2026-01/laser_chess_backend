@@ -135,3 +135,24 @@ func (q *Queries) GetRapidElo(ctx context.Context, userID int64) (Rating, error)
 	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
 	return i, err
 }
+
+const updateRating = `-- name: UpdateRating :one
+UPDATE rating
+SET
+    value = $3
+WHERE user_id = $1 AND elo_type = $2
+RETURNING user_id, elo_type, value
+`
+
+type UpdateRatingParams struct {
+	UserID  int64   `json:"user_id"`
+	EloType EloType `json:"elo_type"`
+	Value   int32   `json:"value"`
+}
+
+func (q *Queries) UpdateRating(ctx context.Context, arg UpdateRatingParams) (Rating, error) {
+	row := q.db.QueryRow(ctx, updateRating, arg.UserID, arg.EloType, arg.Value)
+	var i Rating
+	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
+	return i, err
+}

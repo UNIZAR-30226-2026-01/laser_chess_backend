@@ -36,3 +36,10 @@ WHERE user_id = $1 AND elo_type = elo_type.rapid;
 -- name: GetClassicElo :one
 SELECT * FROM rating
 WHERE user_id = $1 AND elo_type = elo_type.classic;
+
+-- name: UpdateRating :one
+UPDATE rating
+SET
+    value = $3
+WHERE user_id = $1 AND elo_type = $2
+RETURNING *;

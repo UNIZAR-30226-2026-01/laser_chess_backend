@@ -94,3 +94,21 @@ func (h *RatingHandler) GetClassicElo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+/*
+func (h *RatingHandler) UpdateElo(c *gin.Context){
+	var rating RatingDTO
+	if err := c.ShouldBindJSON(&rating); err != nil{
+		apierror.SendError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := h.service.UpdateEloByID(c.Request.Context(), rating)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+*/
