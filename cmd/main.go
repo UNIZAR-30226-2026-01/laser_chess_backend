@@ -9,6 +9,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/login"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -56,6 +57,9 @@ func main() {
 	itemService := item.NewService(store)
 	itemHandler := item.NewHandler(itemService)
 
+	ratingService := rating.NewService(store)
+	ratingHandler := rating.NewHandler(ratingService)
+
 	// Establecer las rutas de las peticiones http por grupos
 
 	// Login routes
@@ -85,6 +89,16 @@ func main() {
 		itemRoute.POST("", itemHandler.CreateItemOwner)
 		itemRoute.GET("/inventory/:userID", itemHandler.GetUserItems)
 		itemRoute.GET("/:itemID", itemHandler.GetShopItem)
+	}
+
+	// Rating routes
+	{
+		ratingRoute := router.Group("/rating")
+		ratingRoute.GET("/:userID", ratingHandler.GetAllElos)
+		ratingRoute.GET("/:userID/blitz", ratingHandler.GetBlitzElo)
+		ratingRoute.GET("/:userID/bullet", ratingHandler.GetBulletElo)
+		ratingRoute.GET("/:userID/rapid", ratingHandler.GetRapidElo)
+		ratingRoute.GET("/:userID/classic", ratingHandler.GetClassicElo)
 	}
 
 	// Ejecutar el router en el puerto que se le diga (8080 por defecto)

@@ -23,7 +23,7 @@ func (h *RatingHandler) GetAllElos(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetAllElosByID(c, id)
+	res, err := h.service.GetAllElosByID(c.Request.Context(), id)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -39,7 +39,7 @@ func (h *RatingHandler) GetBlitzElo(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetBlitzEloByID(c, id)
+	res, err := h.service.GetBlitzEloByID(c.Request.Context(), id)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -55,7 +55,7 @@ func (h *RatingHandler) GetBulletElo(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetBulletEloByID(c, id)
+	res, err := h.service.GetBulletEloByID(c.Request.Context(), id)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -71,7 +71,7 @@ func (h *RatingHandler) GetRapidElo(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetRapidEloByID(c, id)
+	res, err := h.service.GetRapidEloByID(c.Request.Context(), id)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -86,7 +86,7 @@ func (h *RatingHandler) GetClassicElo(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetClassicEloByID(c, id)
+	res, err := h.service.GetClassicEloByID(c.Request.Context(), id)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
