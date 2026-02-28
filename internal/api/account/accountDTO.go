@@ -7,8 +7,8 @@ type CreateAccountDTO struct {
 	Password  string `json:"password" binding:"required"`
 	Mail      string `json:"mail" binding:"required"`
 	Username  string `json:"username" binding:"required"`
-	BoardSkin int32  `json:"board_skin" binding:"required"`
-	PieceSkin int32  `json:"piece_skin" binding:"required"`
+	BoardSkin int32  `json:"board_skin"`
+	PieceSkin int32  `json:"piece_skin"`
 }
 
 // Para mandar/recibir un user al/del frontend

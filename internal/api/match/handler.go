@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
-	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,7 +39,7 @@ func (h *MatchHandler) GetUserHistory(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetByID(c.Request.Context(), int64(id))
+	res, err := h.service.GetUserHistory(c.Request.Context(), int64(id))
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -51,7 +50,7 @@ func (h *MatchHandler) GetUserHistory(c *gin.Context) {
 
 func (h *MatchHandler) CreateMatch(c *gin.Context) {
 
-	var body db.CreateMatchParams
+	var body MatchDTO
 
 	// Mira si el json que nos han pasado coincide con el dto
 	if err := c.ShouldBindJSON(&body); err != nil {

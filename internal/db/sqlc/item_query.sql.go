@@ -50,16 +50,17 @@ func (q *Queries) GetShopItem(ctx context.Context, itemID int32) (ShopItem, erro
 }
 
 const getUserItems = `-- name: GetUserItems :many
-SELECT shop_item.item_id, price, level_requisite, item_type::ITEM_TYPE FROM item_owner 
-LEFT JOIN shop_item ON shop_item.item_id = item_owner.item_id
-WHERE user_id = $1 LIMIT 1
+SELECT shop_item.item_id, price, level_requisite, item_type::ITEM_TYPE, is_default FROM item_owner 
+JOIN shop_item ON shop_item.item_id = item_owner.item_id
+WHERE user_id = $1
 `
 
 type GetUserItemsRow struct {
-	ItemID         *int32   `json:"item_id"`
-	Price          *int32   `json:"price"`
-	LevelRequisite *int32   `json:"level_requisite"`
+	ItemID         int32    `json:"item_id"`
+	Price          int32    `json:"price"`
+	LevelRequisite int32    `json:"level_requisite"`
 	ItemType       ItemType `json:"item_type"`
+	IsDefault      bool     `json:"is_default"`
 }
 
 func (q *Queries) GetUserItems(ctx context.Context, userID int64) ([]GetUserItemsRow, error) {
@@ -76,6 +77,7 @@ func (q *Queries) GetUserItems(ctx context.Context, userID int64) ([]GetUserItem
 			&i.Price,
 			&i.LevelRequisite,
 			&i.ItemType,
+			&i.IsDefault,
 		); err != nil {
 			return nil, err
 		}
