@@ -6,8 +6,8 @@ package account
 import (
 	"context"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/auth"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type AccountService struct {
@@ -24,7 +24,7 @@ func NewService(s *db.Store) *AccountService {
 // pero habrá que hacer que los ownee y los tenga equipados.
 func (s *AccountService) Create(ctx context.Context, body CreateAccountDTO) (AccountDTO, error) {
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 12)
+	passwordHash, err := auth.HashPassword(body.Password)
 	if err != nil {
 		return AccountDTO{}, err
 	}

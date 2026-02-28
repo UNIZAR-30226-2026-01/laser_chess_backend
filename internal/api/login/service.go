@@ -8,8 +8,8 @@ import (
 	"regexp"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/auth"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginService struct {
@@ -45,8 +45,7 @@ func (s *LoginService) Login(ctx context.Context, body LoginDTO) error {
 		res.passwordHash = usernameRes.PasswordHash
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(res.passwordHash), []byte(body.Password))
-
+	err := auth.VerifyPassword(res.passwordHash, body.Password)
 	if err != nil {
 		return apierror.ErrUnauthorized
 	}
