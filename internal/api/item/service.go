@@ -14,24 +14,62 @@ func NewService(s *db.Store) *itemService {
 	return &itemService{store: s}
 }
 
-func (s *itemService) Create(ctx context.Context, data db.CreateItemOwnerParams) (db.ItemOwner, error) {
-	return s.store.CreateItemOwner(ctx, data)
+func (s *itemService) Create(ctx context.Context, data ItemOwnerDTO) (ItemOwnerDTO, error) {
+
+	res, err := s.store.CreateItemOwner(ctx, db.CreateItemOwnerParams{
+		ItemID: data.ItemID,
+		UserID: data.UserID,
+	})
+
+	if err != nil {
+		return ItemOwnerDTO{}, err
+	}
+
+	return ItemOwnerDTO{UserID: res.UserID, ItemID: res.ItemID}, nil
 }
 
-func (s *itemService) GetByID(ctx context.Context, itemID int32) (db.ShopItem, error) {
+func (s *itemService) GetByID(ctx context.Context, itemID int32) (ShopItemDTO, error) {
+
 	res, err := s.store.GetShopItem(ctx, itemID)
 	if err != nil {
-		return db.ShopItem{}, err
+		return ShopItemDTO{}, err
 	}
 
-	return res, nil
+	return ShopItemDTO{
+		ItemID:         res.ItemID,
+		Price:          res.Price,
+		LevelRequisite: res.LevelRequisite,
+		ItemType:       res.ItemType,
+		IsDefault:      res.IsDefault,
+	}, nil
 }
 
-func (s *itemService) GetUserItems(ctx context.Context, userID int64) ([]db.GetUserItemsRow, error) {
+func (s *itemService) GetUserItems(ctx context.Context, userID int64) ([]ShopItemDTO, error) {
+
 	res, err := s.store.GetUserItems(ctx, userID)
 	if err != nil {
-		return []db.GetUserItemsRow{}, err
+		return []ShopItemDTO{}, err
 	}
 
-	return res, nil
+	return parseUserItems(res), nil
+}
+
+// Funcion auxiliar: pasar de db.GetUserItemsRow a ShopItemDTO
+
+func parseUserItems(data []db.GetUserItemsRow) []ShopItemDTO {
+	var res []ShopItemDTO
+
+	print(len(data))
+
+	for _, value := range data {
+		res = append(res, ShopItemDTO{
+			ItemID:         value.ItemID,
+			Price:          value.Price,
+			LevelRequisite: value.LevelRequisite,
+			ItemType:       value.ItemType,
+			IsDefault:      value.IsDefault,
+		})
+	}
+
+	return res
 }
