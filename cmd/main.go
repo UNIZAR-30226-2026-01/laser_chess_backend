@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
@@ -11,6 +12,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -40,6 +42,17 @@ func main() {
 
 	// Inicializar router de gin
 	router := gin.Default()
+
+	// Cross-Origin Resource Sharing para conexion con Angular
+	router.Use(cors.New(cors.Config{
+		// Habrá que cambiar esto por la url real en produccion
+		AllowOrigins:     []string{"http://localhost:4200"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Inicializar store de sqlc
 	store := db.NewStore(dbPool)
