@@ -62,3 +62,29 @@ INSERT INTO item_owner (
     item_id
 )
 VALUES ( 1,1 ), ( 1,2 ), ( 2,1 ) , ( 2,2 );
+
+INSERT INTO public."match" (
+    p1_id,
+    p2_id,
+    p1_elo,
+    p2_elo,
+    "date",
+    "winner",
+    "termination",
+    "match_type",
+    board, movement_history,
+    time_base, time_increment
+) VALUES (
+    1,
+    2,
+    1500,
+    1600,
+    '2026-02-22T15:04:05Z',
+    'P1_WINS',
+    'LASER',
+    'RANKED',
+    'ACE',
+    'una ruta',
+    300,
+    5
+);

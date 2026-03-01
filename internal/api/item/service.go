@@ -55,7 +55,6 @@ func (s *itemService) GetUserItems(ctx context.Context, userID int64) ([]ShopIte
 }
 
 // Funcion auxiliar: pasar de db.GetUserItemsRow a ShopItemDTO
-
 func parseUserItems(data []db.GetUserItemsRow) []ShopItemDTO {
 	var res []ShopItemDTO
 
