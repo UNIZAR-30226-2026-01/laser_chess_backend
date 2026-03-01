@@ -1,5 +1,12 @@
 package rating
 
+/**
+* gestiona  las peticiones http a las url de /rating/*,
+* se comunica con los modulos
+* apierror y gin para la gestión de errores en común con el resto del código
+* y para la programación del backend respectivamente
+**/
+
 import (
 	"net/http"
 	"strconv"
@@ -16,6 +23,15 @@ func NewHandler(s *RatingService) *RatingHandler {
 	return &RatingHandler{service: s}
 }
 
+/*
+*
+* Desc: Esta funcion llama a otra funcion del service que busca todos los tipos
+* de elo que un jugador posee.
+* --- Parametros ---
+* c, *gin.Context - Es el contexto de gin del cual obtiene el id de la partida.
+* ------------------
+*
+ */
 func (h *RatingHandler) GetAllElos(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("userID"), 10, 64)
 	if err != nil {
@@ -32,6 +48,15 @@ func (h *RatingHandler) GetAllElos(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+/*
+*
+* Desc: Esta funcion y el resto de gets similares llama a otra funcion del service
+* que busca el valor del tipo de elo del nombre de la función.
+* --- Parametros ---
+* c, *gin.Context - Es el contexto de gin del cual obtiene el id de la partida.
+* ------------------
+*
+ */
 func (h *RatingHandler) GetBlitzElo(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("userID"), 10, 64)
 	if err != nil {
