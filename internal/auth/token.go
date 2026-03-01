@@ -16,12 +16,13 @@ import (
 var jwtSecret = []byte("estoesunsecretonolomiresporfa")
 
 // Time To Live del access token en minutos
-var accessTokenTTL time.Duration = 15 * time.Minute
+var AccessTokenTTL time.Duration = 15 * time.Minute
+var RefreshTokenTTL time.Duration = 7 * 24 * time.Hour
 
 // Genera un JWT de corta duracion
 func GenerateAccessToken(accountID int64) (string, error) {
 
-	expirationTime := time.Now().Add(accessTokenTTL)
+	expirationTime := time.Now().Add(AccessTokenTTL)
 
 	claims := jwt.MapClaims{
 		"sub": accountID,

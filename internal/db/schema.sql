@@ -125,6 +125,8 @@ CREATE TABLE IF NOT EXISTS "refresh_session" (
     "account_id" BIGINT NOT NULL,
     "token_hash" TEXT NOT NULL,
     "expires_at" TIMESTAMPTZ NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT (now()),
     FOREIGN KEY ("account_id") REFERENCES "account"("account_id")
 );
-
+-- btree para encontrar refresh token rapido
+CREATE UNIQUE INDEX "refresh_session_token_hash_idx" ON "refresh_session" ("token_hash");

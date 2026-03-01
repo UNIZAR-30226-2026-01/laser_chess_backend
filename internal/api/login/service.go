@@ -22,6 +22,51 @@ func NewService(s *db.Store) *LoginService {
 	return &LoginService{store: s}
 }
 
+// Comprueba si un string es una direccion de email o no
+func isMail(credential string) bool {
+	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	return emailRegex.MatchString(credential)
+}
+
+// Genera una pareja de access y refresh tokens
+func generateAccessRefreshToken(accountID int64) (string, string, error) {
+
+	accessToken, err := auth.GenerateAccessToken(accountID)
+	if err != nil {
+		return "", "", err
+	}
+	refreshToken, err := auth.GenerateRefreshToken()
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+// Método auxiliar para generar y guardar el refresh token respetando el límite de 3
+func (s *LoginService) saveNewSession(ctx context.Context, accountID int64, refreshToken string) error {
+	count, err := s.store.CountSessionsByAccount(ctx, accountID)
+	if err != nil {
+		return err
+	}
+
+	// FIFO
+	if count >= 3 {
+		err = s.store.DeleteOldestSession(ctx, accountID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Crear nueva sesion
+	expiresAt := time.Now().Add(auth.RefreshTokenTTL)
+	return s.store.CreateRefreshSession(ctx, db.CreateRefreshSessionParams{
+		AccountID: accountID,
+		TokenHash: auth.HashToken(refreshToken),
+		ExpiresAt: pgtype.Timestamptz{Time: expiresAt, Valid: true},
+	})
+}
+
 // Verifica las credenciales de un usuario,
 func (s *LoginService) Login(ctx context.Context, body LoginDTO) (*LoginResult, error) {
 	var res struct {
@@ -55,26 +100,13 @@ func (s *LoginService) Login(ctx context.Context, body LoginDTO) (*LoginResult, 
 	}
 
 	// Generar tokens
-	accessToken, err := auth.GenerateAccessToken(res.accountID)
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, err := auth.GenerateRefreshToken()
+	accessToken, refreshToken, err := generateAccessRefreshToken(res.accountID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Guardar refresh token en bdd
-	expiresAt := time.Now().Add(7 * 24 * time.Hour)
-	err = s.store.CreateRefreshSession(ctx, db.CreateRefreshSessionParams{
-		AccountID: res.accountID,
-		TokenHash: auth.HashToken(refreshToken),
-		ExpiresAt: pgtype.Timestamptz{
-			Time: expiresAt,
-			Valid: true,
-		}
-	})
+	err = s.saveNewSession(ctx, res.accountID, refreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +117,39 @@ func (s *LoginService) Login(ctx context.Context, body LoginDTO) (*LoginResult, 
 	}, nil
 }
 
-// Comprueba si un string es una direccion de email o no
-func isMail(credential string) bool {
-	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	return emailRegex.MatchString(credential)
+func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*LoginResult, error) {
+	tokenHash := auth.HashToken(refreshToken)
+
+	// Buscar token en bdd
+	session, err := s.store.GetRefreshSession(ctx, tokenHash)
+	if err != nil {
+		return nil, apierror.ErrUnauthorized
+	}
+
+	// Mirar si ha espirado
+	if time.Now().After(session.ExpiresAt.Time) {
+		s.store.DeleteRefreshSession(ctx, tokenHash)
+		return nil, apierror.ErrUnauthorized
+	}
+
+	// Volver a generar tokens
+	newAccessToken, newRefreshToken, err := generateAccessRefreshToken(session.AccountID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Borramos el expirado y creamos nuevo
+	s.store.DeleteRefreshSession(ctx, tokenHash)
+
+	err = s.store.CreateRefreshSession(ctx, db.CreateRefreshSessionParams{
+		AccountID: session.AccountID,
+		TokenHash: auth.HashToken(newRefreshToken),
+		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(auth.RefreshTokenTTL), Valid: true},
+	})
+
+	return &LoginResult{
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
+	}, nil
+
 }

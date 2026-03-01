@@ -36,10 +36,39 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		"refresh_token",  // name
 		res.RefreshToken, // value
 		3600*24*7,        // maxAge
-		"/",              // path
+		"",               // path
 		"",               // domain
 		false,            // secure (si usamos https sera true
 		true,             // HttpOnly
+	)
+
+	c.JSON(http.StatusOK, LoginResponseDTO{AccessToken: res.AccessToken})
+}
+
+func (h *LoginHandler) Refresh(c *gin.Context) {
+	// Coger el refresh de la cookie
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		apierror.SendError(c, http.StatusUnauthorized, err)
+		return
+	}
+
+	// validar y rotar
+	res, err := h.service.Refresh(c.Request.Context(), refreshToken)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	// Guardar el nuevo
+	c.SetCookie(
+		"refresh_token",
+		res.RefreshToken,
+		3600*24*7,
+		"/",
+		"",
+		false,
+		true,
 	)
 
 	c.JSON(http.StatusOK, LoginResponseDTO{AccessToken: res.AccessToken})

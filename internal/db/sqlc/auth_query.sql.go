@@ -11,6 +11,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countSessionsByAccount = `-- name: CountSessionsByAccount :one
+SELECT count(*) FROM "refresh_session" 
+WHERE account_id = $1
+`
+
+func (q *Queries) CountSessionsByAccount(ctx context.Context, accountID int64) (int64, error) {
+	row := q.db.QueryRow(ctx, countSessionsByAccount, accountID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createRefreshSession = `-- name: CreateRefreshSession :exec
 INSERT INTO "refresh_session" (account_id, token_hash, expires_at)
 VALUES ($1, $2, $3)
@@ -25,4 +37,46 @@ type CreateRefreshSessionParams struct {
 func (q *Queries) CreateRefreshSession(ctx context.Context, arg CreateRefreshSessionParams) error {
 	_, err := q.db.Exec(ctx, createRefreshSession, arg.AccountID, arg.TokenHash, arg.ExpiresAt)
 	return err
+}
+
+const deleteOldestSession = `-- name: DeleteOldestSession :exec
+DELETE FROM "refresh_session"
+WHERE token_hash = (
+    SELECT token_hash 
+    FROM "refresh_session" r
+    WHERE r.account_id = $1
+    ORDER BY created_at ASC
+    LIMIT 1
+)
+`
+
+func (q *Queries) DeleteOldestSession(ctx context.Context, accountID int64) error {
+	_, err := q.db.Exec(ctx, deleteOldestSession, accountID)
+	return err
+}
+
+const deleteRefreshSession = `-- name: DeleteRefreshSession :exec
+DELETE FROM "refresh_session" WHERE token_hash = $1
+`
+
+func (q *Queries) DeleteRefreshSession(ctx context.Context, tokenHash string) error {
+	_, err := q.db.Exec(ctx, deleteRefreshSession, tokenHash)
+	return err
+}
+
+const getRefreshSession = `-- name: GetRefreshSession :one
+SELECT session_id, account_id, token_hash, expires_at, created_at FROM "refresh_session" WHERE token_hash = $1 LIMIT 1
+`
+
+func (q *Queries) GetRefreshSession(ctx context.Context, tokenHash string) (RefreshSession, error) {
+	row := q.db.QueryRow(ctx, getRefreshSession, tokenHash)
+	var i RefreshSession
+	err := row.Scan(
+		&i.SessionID,
+		&i.AccountID,
+		&i.TokenHash,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }

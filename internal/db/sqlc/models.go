@@ -326,6 +326,7 @@ type RefreshSession struct {
 	AccountID int64              `json:"account_id"`
 	TokenHash string             `json:"token_hash"`
 	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type ShopItem struct {
