@@ -19,6 +19,7 @@ var (
 	ErrNotFound            = errors.New("resource not found")
 	ErrAlreadyExists       = errors.New("resource already exists")
 	ErrBadRequest          = errors.New("bad request")
+	ErrInvalidToken        = errors.New("invalid token")
 	ErrUnauthorized        = errors.New("unauthorized access")
 )
 
@@ -47,13 +48,21 @@ func DetectAndSendError(c *gin.Context, err error) {
 		}
 	} else {
 		switch {
-		case errors.Is(err, pgx.ErrNoRows):
+		case errors.Is(err, pgx.ErrNoRows) || errors.Is(err, ErrNotFound):
 			httpCode = http.StatusNotFound
 			err = ErrNotFound
 
-		case errors.Is(err, ErrUnauthorized):
+		case errors.Is(err, ErrAlreadyExists):
+			httpCode = http.StatusConflict
+
+		case errors.Is(err, ErrAlreadyExists):
+			httpCode = http.StatusConflict
+
+		case errors.Is(err, ErrBadRequest):
+			httpCode = http.StatusBadRequest
+
+		case errors.Is(err, ErrInvalidToken):
 			httpCode = http.StatusUnauthorized
-			err = ErrUnauthorized
 
 		default:
 			httpCode = http.StatusInternalServerError

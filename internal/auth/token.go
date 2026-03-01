@@ -4,14 +4,16 @@ package auth
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
-	"os"
 	"time"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = os.Getenv("JWT_SECRET")
+// Habrá que pillarlo del .env
+var jwtSecret = []byte("estoesunsecretonolomiresporfa")
 
 // Time To Live del access token en minutos
 var accessTokenTTL time.Duration = 15 * time.Minute
@@ -23,7 +25,7 @@ func GenerateAccessToken(accountID int64) (string, error) {
 
 	claims := jwt.MapClaims{
 		"sub": accountID,
-		"exp": expirationTime,
+		"exp": expirationTime.Unix(),
 		"iat": time.Now().Unix(),
 	}
 
@@ -35,12 +37,43 @@ func GenerateAccessToken(accountID int64) (string, error) {
 func GenerateRefreshToken() (string, error) {
 	// rellena un array con bytes random
 	bytes := make([]byte, 32)
-	rand.Read(bytes)
+
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
 
 	return hex.EncodeToString(bytes), nil
 }
 
+// Hashea el refresh token
+func HashToken(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(hash[:])
+}
+
 // Valida el access token y devuelve el accountID
 func ValidateAccessToken(tokenString string) (int64, error) {
-	// TODO
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, apierror.ErrInvalidToken
+		}
+		return jwtSecret, nil
+	})
+	if err != nil || !token.Valid {
+		return 0, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, apierror.ErrInvalidToken
+	}
+
+	sub, ok := claims["sub"].(float64)
+	if !ok {
+		return 0, apierror.ErrInvalidToken
+	}
+
+	return int64(sub), nil
 }

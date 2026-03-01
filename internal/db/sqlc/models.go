@@ -321,6 +321,13 @@ type Rating struct {
 	Value   int32   `json:"value"`
 }
 
+type RefreshSession struct {
+	SessionID int64              `json:"session_id"`
+	AccountID int64              `json:"account_id"`
+	TokenHash string             `json:"token_hash"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+}
+
 type ShopItem struct {
 	ItemID         int32    `json:"item_id"`
 	Price          int32    `json:"price"`

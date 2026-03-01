@@ -117,5 +117,11 @@ CREATE TABLE IF NOT EXISTS "rating" (
 	FOREIGN KEY("user_id") REFERENCES "account"("account_id")
 );
 
-
+CREATE TABLE IF NOT EXISTS "refresh_session" (
+    "session_id" BIGSERIAL PRIMARY KEY,
+    "account_id" BIGINT NOT NULL,
+    "token_hash" TEXT NOT NULL,
+    "expires_at" TIMESTAMPTZ NOT NULL,
+    FOREIGN KEY ("account_id") REFERENCES "account"("account_id")
+);
 

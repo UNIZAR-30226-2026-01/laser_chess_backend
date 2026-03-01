@@ -17,6 +17,7 @@ func NewHandler(s *LoginService) *LoginHandler {
 	return &LoginHandler{service: s}
 }
 
+// Endpoint de login
 func (h *LoginHandler) Login(c *gin.Context) {
 	var body LoginDTO
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -24,11 +25,22 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		return
 	}
 
-	err := h.service.Login(c.Request.Context(), body)
+	res, err := h.service.Login(c.Request.Context(), body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	// Mandar la cookie del refresh token
+	c.SetCookie(
+		"refresh_token",  // name
+		res.RefreshToken, // value
+		3600*24*7,        // maxAge
+		"/",              // path
+		"",               // domain
+		false,            // secure (si usamos https sera true
+		true,             // HttpOnly
+	)
+
+	c.JSON(http.StatusOK, LoginResponseDTO{AccessToken: res.AccessToken})
 }
