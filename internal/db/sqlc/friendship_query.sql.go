@@ -79,128 +79,137 @@ func (q *Queries) GetFriendship(ctx context.Context, arg GetFriendshipParams) (F
 	return i, err
 }
 
-const getUser1PendingRecievedFriendship = `-- name: GetUser1PendingRecievedFriendship :many
-SELECT user2_id FROM friendship
-WHERE ($1 = user1_id AND accepted_1 = FALSE AND accepted_2 = TRUE)
-`
-
-// ERES USER 1
-func (q *Queries) GetUser1PendingRecievedFriendship(ctx context.Context, user1ID int64) ([]int64, error) {
-	rows, err := q.db.Query(ctx, getUser1PendingRecievedFriendship, user1ID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []int64
-	for rows.Next() {
-		var user2_id int64
-		if err := rows.Scan(&user2_id); err != nil {
-			return nil, err
-		}
-		items = append(items, user2_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getUser1PendingSentFriendship = `-- name: GetUser1PendingSentFriendship :many
-SELECT user2_id FROM friendship
-WHERE ($1 = user1_id AND accepted_1 = TRUE AND accepted_2 = FALSE)
-`
-
-// ERES USER 1
-func (q *Queries) GetUser1PendingSentFriendship(ctx context.Context, user1ID int64) ([]int64, error) {
-	rows, err := q.db.Query(ctx, getUser1PendingSentFriendship, user1ID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []int64
-	for rows.Next() {
-		var user2_id int64
-		if err := rows.Scan(&user2_id); err != nil {
-			return nil, err
-		}
-		items = append(items, user2_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getUser2PendingRecievedFriendship = `-- name: GetUser2PendingRecievedFriendship :many
-SELECT user1_id FROM friendship
-WHERE ($1 = user2_id AND accepted_1 = TRUE AND accepted_2 = FALSE)
-`
-
-// ERES USER 2
-func (q *Queries) GetUser2PendingRecievedFriendship(ctx context.Context, user2ID int64) ([]int64, error) {
-	rows, err := q.db.Query(ctx, getUser2PendingRecievedFriendship, user2ID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []int64
-	for rows.Next() {
-		var user1_id int64
-		if err := rows.Scan(&user1_id); err != nil {
-			return nil, err
-		}
-		items = append(items, user1_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getUser2PendingSentFriendship = `-- name: GetUser2PendingSentFriendship :many
-SELECT user1_id FROM friendship
-WHERE ($1 = user2_id AND accepted_1 = FALSE AND accepted_2 = TRUE)
-`
-
-// ERES USER 2
-func (q *Queries) GetUser2PendingSentFriendship(ctx context.Context, user2ID int64) ([]int64, error) {
-	rows, err := q.db.Query(ctx, getUser2PendingSentFriendship, user2ID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []int64
-	for rows.Next() {
-		var user1_id int64
-		if err := rows.Scan(&user1_id); err != nil {
-			return nil, err
-		}
-		items = append(items, user1_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getUserFriendships = `-- name: GetUserFriendships :many
-SELECT user2_id FROM friendship
-WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = user1_id
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user2_id = account.account_id
+WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = friendship.user1_id
+
+UNION
+
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user1_id = account.account_id
+WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = friendship.user2_id
 `
 
-func (q *Queries) GetUserFriendships(ctx context.Context, user1ID int64) ([]int64, error) {
+type GetUserFriendshipsRow struct {
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Level    int32  `json:"level"`
+	Xp       int32  `json:"xp"`
+}
+
+func (q *Queries) GetUserFriendships(ctx context.Context, user1ID int64) ([]GetUserFriendshipsRow, error) {
 	rows, err := q.db.Query(ctx, getUserFriendships, user1ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []int64
+	var items []GetUserFriendshipsRow
 	for rows.Next() {
-		var user2_id int64
-		if err := rows.Scan(&user2_id); err != nil {
+		var i GetUserFriendshipsRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Username,
+			&i.Level,
+			&i.Xp,
+		); err != nil {
 			return nil, err
 		}
-		items = append(items, user2_id)
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserPendingRecievedFriendships = `-- name: GetUserPendingRecievedFriendships :many
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user2_id = account.account_id
+WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user1_id
+
+UNION
+
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user1_id = account.account_id
+WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user2_id
+`
+
+type GetUserPendingRecievedFriendshipsRow struct {
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Level    int32  `json:"level"`
+	Xp       int32  `json:"xp"`
+}
+
+func (q *Queries) GetUserPendingRecievedFriendships(ctx context.Context, user1ID int64) ([]GetUserPendingRecievedFriendshipsRow, error) {
+	rows, err := q.db.Query(ctx, getUserPendingRecievedFriendships, user1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserPendingRecievedFriendshipsRow
+	for rows.Next() {
+		var i GetUserPendingRecievedFriendshipsRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Username,
+			&i.Level,
+			&i.Xp,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserPendingSentFriendships = `-- name: GetUserPendingSentFriendships :many
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user2_id = account.account_id
+WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user1_id
+
+UNION
+
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user1_id = account.account_id
+WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user2_id
+`
+
+type GetUserPendingSentFriendshipsRow struct {
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Level    int32  `json:"level"`
+	Xp       int32  `json:"xp"`
+}
+
+func (q *Queries) GetUserPendingSentFriendships(ctx context.Context, user1ID int64) ([]GetUserPendingSentFriendshipsRow, error) {
+	rows, err := q.db.Query(ctx, getUserPendingSentFriendships, user1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserPendingSentFriendshipsRow
+	for rows.Next() {
+		var i GetUserPendingSentFriendshipsRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Username,
+			&i.Level,
+			&i.Xp,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

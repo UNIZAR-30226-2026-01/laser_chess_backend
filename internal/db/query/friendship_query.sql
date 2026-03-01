@@ -11,28 +11,45 @@ SELECT * FROM friendship
 WHERE ($1 = user1_id AND $2 = user2_id) OR ($1 = user2_id AND $2 = user1_id);
 
 -- name: GetUserFriendships :many
-SELECT user2_id FROM friendship
-WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = user1_id;
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user2_id = account.account_id
+WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = friendship.user1_id
 
---ERES USER 1
--- name: GetUser1PendingSentFriendship :many
-SELECT user2_id FROM friendship
-WHERE ($1 = user1_id AND accepted_1 = TRUE AND accepted_2 = FALSE);
+UNION
 
---ERES USER 2
--- name: GetUser2PendingSentFriendship :many
-SELECT user1_id FROM friendship
-WHERE ($1 = user2_id AND accepted_1 = FALSE AND accepted_2 = TRUE);
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user1_id = account.account_id
+WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = friendship.user2_id;
 
---ERES USER 1
--- name: GetUser1PendingRecievedFriendship :many
-SELECT user2_id FROM friendship
-WHERE ($1 = user1_id AND accepted_1 = FALSE AND accepted_2 = TRUE);
 
---ERES USER 2
--- name: GetUser2PendingRecievedFriendship :many
-SELECT user1_id FROM friendship
-WHERE ($1 = user2_id AND accepted_1 = TRUE AND accepted_2 = FALSE);
+-- name: GetUserPendingSentFriendships :many
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user2_id = account.account_id
+WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user1_id
+
+UNION
+
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user1_id = account.account_id
+WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user2_id;
+
+
+-- name: GetUserPendingRecievedFriendships :many
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user2_id = account.account_id
+WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user1_id
+
+UNION
+
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+FROM friendship 
+JOIN account ON friendship.user1_id = account.account_id
+WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user2_id;
 
 -- name: SetFriendship :exec
 UPDATE friendship
@@ -43,3 +60,24 @@ WHERE ($1 = user1_id AND $2 = user2_id) OR ($2 = user2_id AND $1 = user1_id);
 DELETE FROM friendship 
 WHERE ($1 = user1_id AND $2 = user2_id) OR ($1 = user2_id AND $2 = user1_id);
 
+-- QUERIES ANTIGUAS, POR SI ACASO
+
+-- --ERES USER 1
+-- -- name: GetUser1PendingSentFriendship :many
+-- SELECT user2_id FROM friendship
+-- WHERE ($1 = user1_id AND accepted_1 = TRUE AND accepted_2 = FALSE);
+
+-- --ERES USER 2
+-- -- name: GetUser2PendingSentFriendship :many
+-- SELECT user1_id FROM friendship
+-- WHERE ($1 = user2_id AND accepted_1 = FALSE AND accepted_2 = TRUE);
+
+-- --ERES USER 1
+-- -- name: GetUser1PendingRecievedFriendship :many
+-- SELECT user2_id FROM friendship
+-- WHERE ($1 = user1_id AND accepted_1 = FALSE AND accepted_2 = TRUE);
+
+-- --ERES USER 2
+-- -- name: GetUser2PendingRecievedFriendship :many
+-- SELECT user1_id FROM friendship
+-- WHERE ($1 = user2_id AND accepted_1 = TRUE AND accepted_2 = FALSE);

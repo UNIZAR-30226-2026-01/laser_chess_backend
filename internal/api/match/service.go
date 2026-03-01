@@ -111,7 +111,6 @@ func (s *MatchService) GetUserHistory(ctx context.Context, userID int64) ([]Matc
 }
 
 // Funcion auxiliar: pasar de db.Match a MatchDTO
-
 func parseMatches(data []db.Match) []MatchDTO {
 	var res []MatchDTO
 
