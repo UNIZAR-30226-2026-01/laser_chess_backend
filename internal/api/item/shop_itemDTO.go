@@ -14,7 +14,7 @@ type ItemOwnerDTO struct {
 }
 
 // Para mandar/recibir un shop_item al/del frontend
-// Son obligatorios ambos parametros
+// El obligatorio el id del item
 type ShopItemDTO struct {
 	ItemID         int32       `json:"item_id" binding:"required"`
 	Price          int32       `json:"price"`
