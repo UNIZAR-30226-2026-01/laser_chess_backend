@@ -6,7 +6,7 @@ VALUES (
 )
 RETURNING *;
 
--- name: GetFiendship :one
+-- name: GetFriendship :one
 SELECT * FROM friendship 
 WHERE ($1 = user1_id AND $2 = user2_id) OR ($1 = user2_id AND $2 = user1_id);
 

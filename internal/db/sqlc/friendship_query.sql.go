@@ -57,18 +57,18 @@ func (q *Queries) DeleteFriendship(ctx context.Context, arg DeleteFriendshipPara
 	return err
 }
 
-const getFiendship = `-- name: GetFiendship :one
+const getFriendship = `-- name: GetFriendship :one
 SELECT user1_id, user2_id, accepted_1, accepted_2 FROM friendship 
 WHERE ($1 = user1_id AND $2 = user2_id) OR ($1 = user2_id AND $2 = user1_id)
 `
 
-type GetFiendshipParams struct {
+type GetFriendshipParams struct {
 	User1ID int64 `json:"user1_id"`
 	User2ID int64 `json:"user2_id"`
 }
 
-func (q *Queries) GetFiendship(ctx context.Context, arg GetFiendshipParams) (Friendship, error) {
-	row := q.db.QueryRow(ctx, getFiendship, arg.User1ID, arg.User2ID)
+func (q *Queries) GetFriendship(ctx context.Context, arg GetFriendshipParams) (Friendship, error) {
+	row := q.db.QueryRow(ctx, getFriendship, arg.User1ID, arg.User2ID)
 	var i Friendship
 	err := row.Scan(
 		&i.User1ID,
