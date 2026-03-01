@@ -15,12 +15,19 @@ func NewService(s *db.Store) *FriendshipService {
 	return &FriendshipService{store: s}
 }
 
-/** CREATE
- * 	Recibe: dos usuarios, «senderID» y «recieverID», los ordena para que no haya
- *  repetidos en base de datos, pone la petición aceptada del lado del remitente
- * 	e inserta en orden de tamaño User1ID - el menor y User2ID - el mayor
- *  Devuelve: error si no se puede crear la amistad porque ya existe o por otro...
- */
+/*
+*
+* Desc: Esta funcion llama a una query generada por sqlc que crea una amistad
+dado su DTO.
+* --- Parametros ---
+* ctx, context.Context - Es el contexto de gin.
+* data, FriendshipDTO - Es el DTO con los datos de la amistad.
+* --- Resultados ---
+* FriendshipDTO - Objeto que contiene los ids de los jugadores.
+* error - Es el error que se haya provocado en la consulta, o nil en caso
+contrario.
+*
+*/
 func (s FriendshipService) Create(
 	ctx context.Context, data FriendshipDTO) (FriendshipDTO, error) {
 
@@ -45,8 +52,6 @@ func (s FriendshipService) Create(
 		return FriendshipDTO{}, apierror.ErrBadRequest
 	}
 
-	// NOTA - Puede estar bien devolver algo significativo cuando ya existe en
-	// base de datos
 	res, err := s.store.CreateFriendship(ctx, db.CreateFriendshipParams{
 		User1ID:   AuxUser1ID,
 		User2ID:   AuxUser2ID,
@@ -61,11 +66,19 @@ func (s FriendshipService) Create(
 	return FriendshipDTO{SenderID: res.User1ID, RecieverID: res.User2ID}, nil
 }
 
-/** GET FRIENDSHIP
- *	Recibe: dos usuarios, «senderID» y «recieverID», donde sender es el usuario
- *  principal, y revieverID es el usuario secundario y devuelve el estado de la
- *	amistad
- */
+/*
+*
+* Desc: Esta funcion llama a una query generada por sqlc que devuelve los datos
+de una amistad dados los ids de los usuarios.
+* --- Parametros ---
+* ctx, context.Context - Es el contexto de gin.
+* data, FriendshipDTO - Es el DTO con los ids de los usuarios.
+* --- Resultados ---
+* FriendshipDTO - Objeto que contiene la informacion de la amistad.
+* error - Es el error que se haya provocado en la consulta, o nil en caso
+contrario.
+*
+*/
 func (s FriendshipService) GetFriendshipStatus(
 	ctx context.Context, data FriendshipDTO) (FriendshipStatusDTO, error) {
 
@@ -94,42 +107,22 @@ func (s FriendshipService) GetFriendshipStatus(
 		}, err
 	}
 
-	// var AuxUser1ID int64
-	// var AuxUser2ID int64
-	// var AuxAccepted1 bool
-	// var AuxAccepted2 bool
-
-	// // Ordenamos para la inserción en BDD
-	// if data.SenderID < data.RecieverID {
-	// 	AuxUser1ID = data.SenderID
-	// 	AuxUser2ID = data.RecieverID
-	// } else if data.SenderID > data.RecieverID {
-	// 	AuxUser1ID = data.RecieverID
-	// 	AuxUser2ID = data.SenderID
-	// } else {
-	// 	//Bad_request Sender == reciever
-	// 	return FriendshipStatusDTO{}, apierror.ErrBadRequest
-	// }
-
-	// if err != nil {
-	// 	return FriendshipStatusDTO{}, err
-	// }
-	// if data.SenderID < data.RecieverID {
-	// 	AuxAccepted1 = res.Accepted1
-	// 	AuxAccepted2 = res.Accepted2
-	// } else { //		(data.SenderID > data.RecieverID) {
-	// 	AuxAccepted1 = res.Accepted2
-	// 	AuxAccepted2 = res.Accepted2
-	// }
-
-	// return FriendshipStatusDTO{
-	// 	SenderID:       AuxUser1ID,
-	// 	RecieverID:     AuxUser2ID,
-	// 	SenderAccept:   AuxAccepted1,
-	// 	RecieverAccept: AuxAccepted2,
-	// }, err
 }
 
+/*
+*
+* Desc: Esta funcion llama a una query generada por sqlc que devuelve un listado
+de las amistades de un jugador dado su id.
+* --- Parametros ---
+* ctx, context.Context - Es el contexto de gin.
+* userID, int64 - Es el id del usuario.
+* --- Resultados ---
+* []FriendshipReturnDTO - Lista con la información de las amistades del usuario,
+incluyendo los datos relevante del otro usuario.
+* error - Es el error que se haya provocado en la consulta, o nil en caso
+contrario.
+*
+*/
 func (s FriendshipService) GetUserFriendships(
 	ctx context.Context, userID int64) ([]FriendshipReturnDTO, error) {
 
@@ -141,6 +134,20 @@ func (s FriendshipService) GetUserFriendships(
 	return parseFrienshipRow(res), nil
 }
 
+/*
+*
+* Desc: Esta funcion llama a una query generada por sqlc que devuelve un listado
+de las amistades enviadas pendientes de un jugador dado su id.
+* --- Parametros ---
+* ctx, context.Context - Es el contexto de gin.
+* userID, int64 - Es el id del usuario.
+* --- Resultados ---
+* []FriendshipReturnDTO - Lista con la información de las amistades enviadas
+pendientes del usuario, incluyendo los datos relevante del otro usuario.
+* error - Es el error que se haya provocado en la consulta, o nil en caso
+contrario.
+*
+*/
 func (s FriendshipService) GetUserPendingSentFriendships(
 	ctx context.Context, userID int64) ([]FriendshipReturnDTO, error) {
 
@@ -152,6 +159,20 @@ func (s FriendshipService) GetUserPendingSentFriendships(
 	return parsePendingSentRow(res), nil
 }
 
+/*
+*
+* Desc: Esta funcion llama a una query generada por sqlc que devuelve un listado
+de las amistades recibidas pendientes de un jugador dado su id.
+* --- Parametros ---
+* ctx, context.Context - Es el contexto de gin.
+* userID, int64 - Es el id del usuario.
+* --- Resultados ---
+* []FriendshipReturnDTO - Lista con la información de las amistades recibidas
+pendientes del usuario, incluyendo los datos relevante del otro usuario.
+* error - Es el error que se haya provocado en la consulta, o nil en caso
+contrario.
+*
+*/
 func (s FriendshipService) GetUserPendingRecievedFriendships(
 	ctx context.Context, userID int64) ([]FriendshipReturnDTO, error) {
 
@@ -163,6 +184,18 @@ func (s FriendshipService) GetUserPendingRecievedFriendships(
 	return parsePendingRecievedRow(res), nil
 }
 
+/*
+*
+* Desc: Esta funcion llama a una query generada por sqlc que marca una amistad
+como aceptada dados los ids de ambos usuarios.
+* --- Parametros ---
+* ctx, context.Context - Es el contexto de gin.
+* data, FriendshipDTO - Es DTO que los ids de los usuarios.
+* --- Resultados ---
+* error - Es el error que se haya provocado en la consulta, o nil en caso
+contrario.
+*
+*/
 func (s FriendshipService) AcceptFrienship(
 	ctx context.Context, data FriendshipDTO) error {
 
@@ -177,6 +210,18 @@ func (s FriendshipService) AcceptFrienship(
 	return nil
 }
 
+/*
+*
+* Desc: Esta funcion llama a una query generada por sqlc que elimina una amistad
+dados los ids de ambos usuarios.
+* --- Parametros ---
+* ctx, context.Context - Es el contexto de gin.
+* data, FriendshipDTO - Es DTO que los ids de los usuarios.
+* --- Resultados ---
+* error - Es el error que se haya provocado en la consulta, o nil en caso
+contrario.
+*
+*/
 func (s FriendshipService) DeleteFrienship(
 	ctx context.Context, data FriendshipDTO) error {
 

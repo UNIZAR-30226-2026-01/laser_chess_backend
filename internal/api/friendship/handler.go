@@ -18,13 +18,13 @@ func NewHandler(s *FriendshipService) *FriendshipHandler {
 
 /*
 *
-* Desc: Esta funcion llama a otra funcion del service que busca una partida dado
-su id.
+* Desc: Esta funcion llama a otra funcion del service que busca una amistad
+dados los ids de los usuarios.
 * --- Parametros ---
-* c, *gin.Context - Es el contexto de gin del cual obtiene el id de la partida.
+* c, *gin.Context - Es el contexto de gin del cual obtiene los ids.
 * ------------------
 * Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
-con la informacion de la partida junto con un StatusOK si no hay errores, y un
+con la informacion de la amistad junto con un StatusOK si no hay errores, y un
 error en caso contrario.
 *
 */
@@ -56,14 +56,14 @@ func (h *FriendshipHandler) GetFriendship(c *gin.Context) {
 
 /*
 *
-* Desc: Esta funcion llama a otra funcion del service que busca una partida dado
-su id.
+* Desc: Esta funcion llama a otra funcion del service que devuelve un listado de
+las amistades de un usuario dado su id.
 * --- Parametros ---
-* c, *gin.Context - Es el contexto de gin del cual obtiene el id de la partida.
+* c, *gin.Context - Es el contexto de gin del cual obtiene el id del usuario.
 * ------------------
 * Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
-con la informacion de la partida junto con un StatusOK si no hay errores, y un
-error en caso contrario.
+con el listado de las amistades que contienen los datos relevantes del otro
+usuario junto con un StatusOK si no hay errores, y un error en caso contrario.
 *
 */
 func (h *FriendshipHandler) GetUserFrienships(c *gin.Context) {
@@ -73,12 +73,9 @@ func (h *FriendshipHandler) GetUserFrienships(c *gin.Context) {
 		return
 	}
 
-	println("El usuario es ", userID)
-
 	res, err := h.service.GetUserFriendships(c.Request.Context(), userID)
 
 	if err != nil {
-		println("El usuario es ", userID)
 		apierror.DetectAndSendError(c, err)
 		return
 	}
@@ -88,14 +85,15 @@ func (h *FriendshipHandler) GetUserFrienships(c *gin.Context) {
 
 /*
 *
-* Desc: Esta funcion llama a otra funcion del service que crea una amistad dado
-un JSON.
+* Desc: Esta funcion llama a otra funcion del service que devuelve un listado de
+las amistades enviadas pendientes de un usuario dado su id.
 * --- Parametros ---
-* c, *gin.Context - Es el contexto de gin de donde saca el JSON.
+* c, *gin.Context - Es el contexto de gin del cual obtiene el id del usuario.
 * ------------------
 * Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
-con un objeto de confirmacion que contiene los id de ambos usuarios junto con
-un StatusCreated si no hay errores, y un error en caso contrario.
+con el listado de las amistades enviadas pendientes que contienen los datos
+relevantes del otro usuario junto con un StatusOK si no hay errores, y un error
+en caso contrario.
 *
 */
 func (h *FriendshipHandler) GetUserPendingSentFriendships(c *gin.Context) {
@@ -118,14 +116,15 @@ func (h *FriendshipHandler) GetUserPendingSentFriendships(c *gin.Context) {
 
 /*
 *
-* Desc: Esta funcion llama a otra funcion del service que crea una amistad dado
-un JSON.
+* Desc: Esta funcion llama a otra funcion del service que devuelve un listado de
+las amistades recibidas pendientes de un usuario dado su id.
 * --- Parametros ---
-* c, *gin.Context - Es el contexto de gin de donde saca el JSON.
+* c, *gin.Context - Es el contexto de gin del cual obtiene el id del usuario.
 * ------------------
 * Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
-con un objeto de confirmacion que contiene los id de ambos usuarios junto con
-un StatusCreated si no hay errores, y un error en caso contrario.
+con el listado de las amistades recibidas pendientes que contienen los datos
+relevantes del otro usuario junto con un StatusOK si no hay errores, y un error
+en caso contrario.
 *
 */
 func (h *FriendshipHandler) GetUserPendingRecievedFriendships(c *gin.Context) {
@@ -148,14 +147,13 @@ func (h *FriendshipHandler) GetUserPendingRecievedFriendships(c *gin.Context) {
 
 /*
 *
-* Desc: Esta funcion llama a otra funcion del service que crea una amistad dado
-un JSON.
+* Desc: Esta funcion llama a otra funcion del service que acepta una amistad
+entre dos usuarios dados sus ids.
 * --- Parametros ---
-* c, *gin.Context - Es el contexto de gin de donde saca el JSON.
+* c, *gin.Context - Es el contexto de gin de donde los ids de los usuarios.
 * ------------------
 * Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
-con un objeto de confirmacion que contiene los id de ambos usuarios junto con
-un StatusCreated si no hay errores, y un error en caso contrario.
+un error en caso de haber ocurrido.
 *
 */
 func (h *FriendshipHandler) AcceptFrienship(c *gin.Context) {
@@ -186,14 +184,13 @@ func (h *FriendshipHandler) AcceptFrienship(c *gin.Context) {
 
 /*
 *
-* Desc: Esta funcion llama a otra funcion del service que crea una amistad dado
-un JSON.
+* Desc: Esta funcion llama a otra funcion del service que elimina una amistad
+entre dos usuarios dados sus ids.
 * --- Parametros ---
-* c, *gin.Context - Es el contexto de gin de donde saca el JSON.
+* c, *gin.Context - Es el contexto de gin de donde los ids de los usuarios.
 * ------------------
 * Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
-con un objeto de confirmacion que contiene los id de ambos usuarios junto con
-un StatusCreated si no hay errores, y un error en caso contrario.
+un error en caso de haber ocurrido.
 *
 */
 func (h *FriendshipHandler) DeleteFrienship(c *gin.Context) {
