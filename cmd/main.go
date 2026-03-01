@@ -4,13 +4,16 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/friendship"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/login"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -41,6 +44,17 @@ func main() {
 	// Inicializar router de gin
 	router := gin.Default()
 
+	// Cross-Origin Resource Sharing para conexion con Angular
+	router.Use(cors.New(cors.Config{
+		// Habrá que cambiar esto por la url real en produccion
+		AllowOrigins:     []string{"http://localhost:4200"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	// Inicializar store de sqlc
 	store := db.NewStore(dbPool)
 
@@ -59,6 +73,9 @@ func main() {
 
 	ratingService := rating.NewService(store)
 	ratingHandler := rating.NewHandler(ratingService)
+
+	friendshipService := friendship.NewService(store)
+	friendshipHandler := friendship.NewHandler(friendshipService)
 
 	// Establecer las rutas de las peticiones http por grupos
 
@@ -99,6 +116,20 @@ func main() {
 		ratingRoute.GET("/:userID/bullet", ratingHandler.GetBulletElo)
 		ratingRoute.GET("/:userID/rapid", ratingHandler.GetRapidElo)
 		ratingRoute.GET("/:userID/classic", ratingHandler.GetClassicElo)
+	}
+
+	// Friendship routes
+	{
+		friendshipRoute := router.Group("/friendship")
+		friendshipRoute.POST("", friendshipHandler.Create)
+		friendshipRoute.GET("/:user1ID", friendshipHandler.GetUserFrienships)
+		friendshipRoute.GET("/:user1ID/sent",
+			friendshipHandler.GetUserPendingSentFriendships)
+		friendshipRoute.GET("/:user1ID/pending",
+			friendshipHandler.GetUserPendingRecievedFriendships)
+		friendshipRoute.GET("/:user1ID/:user2ID", friendshipHandler.GetFriendship)
+		friendshipRoute.PUT("/:user1ID/:user2ID", friendshipHandler.AcceptFrienship)
+		friendshipRoute.DELETE("/:user1ID/:user2ID", friendshipHandler.DeleteFrienship)
 	}
 
 	// Ejecutar el router en el puerto que se le diga (8080 por defecto)
