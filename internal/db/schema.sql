@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS "shop_item" (
 	"level_requisite" INTEGER NOT NULL,
 	"item_type" ITEM_TYPE NOT NULL,
 	"is_default" BOOLEAN NOT NULL,
-	PRIMARY KEY("item_id")
+	PRIMARY KEY("item_id"),
+	CHECK ("price" >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS "item_owner" (
@@ -95,7 +96,8 @@ CREATE TABLE IF NOT EXISTS "match" (
 	"time_increment" INTEGER NOT NULL,
 	PRIMARY KEY("match_id"),
 	FOREIGN KEY("p1_id") REFERENCES "account"("account_id"),
-	FOREIGN KEY("p2_id") REFERENCES "account"("account_id")
+	FOREIGN KEY("p2_id") REFERENCES "account"("account_id"),
+	CHECK ("p1_id" != "p2_id")
 );
 
 CREATE TABLE IF NOT EXISTS "friendship" (
@@ -114,7 +116,8 @@ CREATE TABLE IF NOT EXISTS "rating" (
 	"elo_type" ELO_TYPE NOT NULL,
 	"value" INT NOT NULL,
 	PRIMARY KEY("user_id", "elo_type"),
-	FOREIGN KEY("user_id") REFERENCES "account"("account_id")
+	FOREIGN KEY("user_id") REFERENCES "account"("account_id"),
+	CHECK ("value" >= 0)
 );
 
 

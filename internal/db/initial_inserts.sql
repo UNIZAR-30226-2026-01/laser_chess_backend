@@ -38,7 +38,17 @@ INSERT INTO public.account (
 VALUES(
     'user1@gmail.com',
     'user1', 
-    '$2a$12$Taa.42J00Xz8Jl3tpzNEEezhrFvZ1pRWUm4N4Tno43waWwo.DaG06',
+    '$2a$12$gZCIUMOOEuMhWvNlygdI3uTmXN90EEDBNVTCi/mWFuVfcRNQ.pIxi',
+    false,
+    0,
+    0,
+    0,
+    1,
+    2
+), (
+    'user2@gmail.com',
+    'user2', 
+    '$2a$12$Pm4HvVrVjvxfbihkZbfFneJtIZUb0G6CD7IERVrZQuaaAM/hASYT2',
     false,
     0,
     0,
@@ -46,3 +56,9 @@ VALUES(
     1,
     2
 );
+
+INSERT INTO item_owner (
+    user_id,
+    item_id
+)
+VALUES ( 1,1 ), ( 1,2 ), ( 2,1 ) , ( 2,2 );
