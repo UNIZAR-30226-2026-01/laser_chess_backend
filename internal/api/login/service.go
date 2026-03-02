@@ -1,7 +1,7 @@
 package login
 
 // Service que se encarga de la lógica de negocio relacionada con las cuentas
-// de usuario
+// de usuario y los JWTs
 
 import (
 	"context"
@@ -28,6 +28,8 @@ func isMail(credential string) bool {
 	return emailRegex.MatchString(credential)
 }
 
+// Coge el userID y contraseña hasheada de un user a partir de su mail
+// o nombre de usuario
 func (s *LoginService) getCredentials(ctx context.Context, body *LoginDTO) (int64, string, error) {
 	if isMail(body.Credential) {
 		mailRes, err := s.store.GetAccountByMail(ctx, body.Credential)
@@ -87,6 +89,7 @@ func (s *LoginService) saveNewSession(ctx context.Context, accountID int64, refr
 }
 
 // Verifica las credenciales de un usuario,
+// y genera access y refresh tokens
 func (s *LoginService) Login(ctx context.Context, body *LoginDTO) (*LoginResult, error) {
 
 	// ver si es mail o username
@@ -119,6 +122,8 @@ func (s *LoginService) Login(ctx context.Context, body *LoginDTO) (*LoginResult,
 	}, nil
 }
 
+// Valida el refresh token, y si es correcto,
+// crea una pareja nueva de refresh y access tokens
 func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*LoginResult, error) {
 	tokenHash := auth.HashToken(refreshToken)
 
@@ -128,7 +133,8 @@ func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*Login
 		return nil, apierror.ErrUnauthorized
 	}
 
-	// Mirar si ha expirado
+	// Si el refresh ha expirado no se hace nada
+	// El user tendra que hacer login de nuevo
 	if time.Now().After(session.ExpiresAt.Time) {
 		s.store.DeleteRefreshSession(ctx, tokenHash)
 		return nil, apierror.ErrUnauthorized
@@ -140,7 +146,7 @@ func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*Login
 		return nil, err
 	}
 
-	// Borramos el expirado y creamos nuevo
+	// Borramos el antiguo y creamos nuevo
 	s.store.DeleteRefreshSession(ctx, tokenHash)
 
 	err = s.store.CreateRefreshSession(ctx, db.CreateRefreshSessionParams{
