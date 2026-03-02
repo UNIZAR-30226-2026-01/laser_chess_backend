@@ -27,7 +27,7 @@ dado su DTO.
 contrario.
 *
 */
-func (s *MatchService) Create(ctx context.Context, data MatchDTO) (MatchDTO, error) {
+func (s *MatchService) Create(ctx context.Context, data *MatchDTO) (*MatchDTO, error) {
 
 	res, err := s.store.CreateMatch(ctx, db.CreateMatchParams{
 		P1ID:            data.P1ID,
@@ -45,10 +45,10 @@ func (s *MatchService) Create(ctx context.Context, data MatchDTO) (MatchDTO, err
 	})
 
 	if err != nil {
-		return MatchDTO{}, err
+		return nil, err
 	}
 
-	return MatchDTO{P1ID: res.P1ID, P2ID: res.P2ID}, nil
+	return &MatchDTO{P1ID: res.P1ID, P2ID: res.P2ID}, nil
 }
 
 /*
@@ -64,14 +64,14 @@ dado su id.
 contrario.
 *
 */
-func (s *MatchService) GetByID(ctx context.Context, matchID int64) (MatchDTO, error) {
+func (s *MatchService) GetByID(ctx context.Context, matchID int64) (*MatchDTO, error) {
 
 	res, err := s.store.GetMatch(ctx, matchID)
 	if err != nil {
-		return MatchDTO{}, err
+		return nil, err
 	}
 
-	return MatchDTO{
+	return &MatchDTO{
 		P1ID:            res.P1ID,
 		P2ID:            res.P2ID,
 		P1Elo:           res.P1Elo,
