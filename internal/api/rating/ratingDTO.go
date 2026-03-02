@@ -8,19 +8,19 @@ import (
 
 // Para mover ratings de usuario
 type RatingDTO struct {
-	UserID  int64      `json:"user_id" bindig:"required"`
-	EloType db.EloType `json:"elo_type" bindig:"required"`
+	UserID  int64      `json:"user_id" binding:"required"`
+	EloType db.EloType `json:"elo_type" binding:"required"`
 	Value   int32      `json:"value" binding:"required"`
 }
 
 type GenericRatingDto struct {
-	EloType db.EloType `json:"elo_type" bindig:"required"`
+	EloType db.EloType `json:"elo_type" binding:"required"`
 	Value   int32      `json:"value" binding:"required"`
 }
 
 // Para mover todos los ratings de golpe
 type AllRatingsDTO struct {
-	UserID int64 `json:"user_id" bindig:"required"`
+	UserID int64 `json:"user_id" binding:"required"`
 	Elo1   GenericRatingDto
 	Elo2   GenericRatingDto
 	Elo3   GenericRatingDto

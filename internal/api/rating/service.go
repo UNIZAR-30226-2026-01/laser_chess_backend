@@ -30,7 +30,7 @@ func NewService(s *db.Store) *RatingService {
 * contrario.
 *
  */
-func (s *RatingService) CreateRating(ctx context.Context, userID int64) (AllRatingsDTO, error) {
+func (s *RatingService) CreateRating(ctx context.Context, userID int64) (*AllRatingsDTO, error) {
 	newRating := db.CreateRatingsParams{
 		UserID:  userID,
 		Value:   INITIAL_RATING,
@@ -41,7 +41,7 @@ func (s *RatingService) CreateRating(ctx context.Context, userID int64) (AllRati
 
 	res, err := s.store.CreateRatings(ctx, newRating)
 	if err != nil {
-		return AllRatingsDTO{}, err
+		return nil, err
 	}
 	return s.SqlcParamToDTO(res), err
 }
@@ -57,18 +57,26 @@ func (s *RatingService) CreateRating(ctx context.Context, userID int64) (AllRati
 * de rating que se le han asignado.
 *
  */
-func (s RatingService) SqlcParamToDTO(res []db.Rating) AllRatingsDTO {
-	ratingsDTO := AllRatingsDTO{}
-	ratingsDTO.UserID = res[0].UserID
-	ratingsDTO.Elo1.EloType = res[0].EloType
-	ratingsDTO.Elo1.Value = res[0].Value
-	ratingsDTO.Elo2.EloType = res[1].EloType
-	ratingsDTO.Elo2.Value = res[1].Value
-	ratingsDTO.Elo3.EloType = res[2].EloType
-	ratingsDTO.Elo3.Value = res[2].Value
-	ratingsDTO.Elo4.EloType = res[3].EloType
-	ratingsDTO.Elo4.Value = res[3].Value
-	return ratingsDTO
+func (s RatingService) SqlcParamToDTO(res []db.Rating) *AllRatingsDTO {
+	return &AllRatingsDTO{
+		UserID: res[0].UserID,
+		Elo1: GenericRatingDto{
+			EloType: res[0].EloType,
+			Value:   res[0].Value,
+		},
+		Elo2: GenericRatingDto{
+			EloType: res[1].EloType,
+			Value:   res[1].Value,
+		},
+		Elo3: GenericRatingDto{
+			EloType: res[2].EloType,
+			Value:   res[2].Value,
+		},
+		Elo4: GenericRatingDto{
+			EloType: res[3].EloType,
+			Value:   res[3].Value,
+		},
+	}
 }
 
 /*
@@ -85,10 +93,10 @@ func (s RatingService) SqlcParamToDTO(res []db.Rating) AllRatingsDTO {
 * contrario.
 *
  */
-func (s *RatingService) GetAllElosByID(ctx context.Context, userID int64) (AllRatingsDTO, error) {
+func (s *RatingService) GetAllElosByID(ctx context.Context, userID int64) (*AllRatingsDTO, error) {
 	res, err := s.store.GetAllElos(ctx, userID)
 	if err != nil {
-		return AllRatingsDTO{}, err
+		return nil, err
 	}
 	return s.SqlcParamToDTO(res), nil
 }
@@ -108,48 +116,48 @@ func (s *RatingService) GetAllElosByID(ctx context.Context, userID int64) (AllRa
 * contrario.
 *
  */
-func (s *RatingService) GetBlitzEloByID(ctx context.Context, userID int64) (RatingDTO, error) {
+func (s *RatingService) GetBlitzEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
 	res, err := s.store.GetBlitzElo(ctx, userID)
 	if err != nil {
-		return RatingDTO{}, err
+		return nil, err
 	}
-	return RatingDTO{
+	return &RatingDTO{
 		UserID:  res.UserID,
 		EloType: res.EloType,
 		Value:   res.Value,
 	}, nil
 }
 
-func (s *RatingService) GetBulletEloByID(ctx context.Context, userID int64) (RatingDTO, error) {
+func (s *RatingService) GetBulletEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
 	res, err := s.store.GetBulletElo(ctx, userID)
 	if err != nil {
-		return RatingDTO{}, err
+		return nil, err
 	}
-	return RatingDTO{
+	return &RatingDTO{
 		UserID:  res.UserID,
 		EloType: res.EloType,
 		Value:   res.Value,
 	}, nil
 }
 
-func (s *RatingService) GetRapidEloByID(ctx context.Context, userID int64) (RatingDTO, error) {
+func (s *RatingService) GetRapidEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
 	res, err := s.store.GetRapidElo(ctx, userID)
 	if err != nil {
-		return RatingDTO{}, err
+		return nil, err
 	}
-	return RatingDTO{
+	return &RatingDTO{
 		UserID:  res.UserID,
 		EloType: res.EloType,
 		Value:   res.Value,
 	}, nil
 }
 
-func (s *RatingService) GetClassicEloByID(ctx context.Context, userID int64) (RatingDTO, error) {
+func (s *RatingService) GetClassicEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
 	res, err := s.store.GetClassicElo(ctx, userID)
 	if err != nil {
-		return RatingDTO{}, err
+		return nil, err
 	}
-	return RatingDTO{
+	return &RatingDTO{
 		UserID:  res.UserID,
 		EloType: res.EloType,
 		Value:   res.Value,
@@ -171,16 +179,16 @@ func (s *RatingService) GetClassicEloByID(ctx context.Context, userID int64) (Ra
 * contrario.
 *
  */
-func (s *RatingService) UpdateEloByID(ctx context.Context, rating RatingDTO) (RatingDTO, error) {
+func (s *RatingService) UpdateEloByID(ctx context.Context, rating *RatingDTO) (*RatingDTO, error) {
 	res, err := s.store.UpdateRating(ctx, db.UpdateRatingParams{
 		UserID:  rating.UserID,
 		EloType: rating.EloType,
 		Value:   rating.Value,
 	})
 	if err != nil {
-		return RatingDTO{}, err
+		return nil, err
 	}
-	return RatingDTO{
+	return &RatingDTO{
 		UserID:  res.UserID,
 		EloType: res.EloType,
 		Value:   res.Value,
