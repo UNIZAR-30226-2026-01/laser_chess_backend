@@ -103,8 +103,9 @@ func (ns NullEloType) Value() (driver.Value, error) {
 type ItemType string
 
 const (
-	ItemTypeBoardSkin ItemType = "board_skin"
-	ItemTypePieceSkin ItemType = "piece_skin"
+	ItemTypeBoardSkin    ItemType = "board_skin"
+	ItemTypePieceSkin    ItemType = "piece_skin"
+	ItemTypeWinAnimation ItemType = "win_animation"
 )
 
 func (e *ItemType) Scan(src interface{}) error {
@@ -285,6 +286,7 @@ type Account struct {
 	Money        int32  `json:"money"`
 	BoardSkin    int32  `json:"board_skin"`
 	PieceSkin    int32  `json:"piece_skin"`
+	WinAnimation int32  `json:"win_animation"`
 }
 
 type Friendship struct {

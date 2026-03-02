@@ -44,8 +44,9 @@ func (s *AccountService) Create(ctx context.Context, body CreateAccountDTO) (Acc
 			// Por ahora forzamos que sean 1 y 2,
 			// pero habrá que hacer algún tipo de consulta
 			// o algo
-			BoardSkin: 1,
-			PieceSkin: 2,
+			BoardSkin:    1,
+			PieceSkin:    2,
+			WinAnimation: 3,
 		})
 
 		if errTx != nil {
@@ -72,14 +73,15 @@ func (s *AccountService) GetByID(ctx context.Context, accountID int64) (AccountD
 	}
 
 	return AccountDTO{
-		AccountID: res.AccountID,
-		Mail:      &res.Mail,
-		Username:  &res.Username,
-		Level:     &res.Level,
-		Xp:        &res.Xp,
-		Money:     &res.Money,
-		BoardSkin: &res.BoardSkin,
-		PieceSkin: &res.PieceSkin,
+		AccountID:    res.AccountID,
+		Mail:         &res.Mail,
+		Username:     &res.Username,
+		Level:        &res.Level,
+		Xp:           &res.Xp,
+		Money:        &res.Money,
+		BoardSkin:    &res.BoardSkin,
+		PieceSkin:    &res.PieceSkin,
+		WinAnimation: &res.WinAnimation,
 	}, nil
 }
 

@@ -29,7 +29,8 @@ CREATE TYPE "termination" AS ENUM (
 
 CREATE TYPE "item_type" AS ENUM (
 	'board_skin',
-	'piece_skin'
+	'piece_skin',
+    'win_animation'
 );
 
 CREATE TYPE "elo_type" AS ENUM (
@@ -54,6 +55,8 @@ CREATE TABLE IF NOT EXISTS "account" (
     -- items equipados
 	"board_skin" INTEGER NOT NULL,
 	"piece_skin" INTEGER NOT NULL,
+	"win_animation" INTEGER NOT NULL,
+
 	PRIMARY KEY("account_id")
 );
 

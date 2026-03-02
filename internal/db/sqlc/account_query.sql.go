@@ -13,10 +13,10 @@ const createAccount = `-- name: CreateAccount :one
 
 INSERT INTO account (
     password_hash, mail, username, 
-    board_skin, piece_skin
+    board_skin, piece_skin, win_animation
 )
-VALUES ($1, $2, $3, $4, $5)
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation
 `
 
 type CreateAccountParams struct {
@@ -25,6 +25,7 @@ type CreateAccountParams struct {
 	Username     string `json:"username"`
 	BoardSkin    int32  `json:"board_skin"`
 	PieceSkin    int32  `json:"piece_skin"`
+	WinAnimation int32  `json:"win_animation"`
 }
 
 // Queries públicas desde endpoints
@@ -35,6 +36,7 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		arg.Username,
 		arg.BoardSkin,
 		arg.PieceSkin,
+		arg.WinAnimation,
 	)
 	var i Account
 	err := row.Scan(
@@ -48,6 +50,7 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		&i.Money,
 		&i.BoardSkin,
 		&i.PieceSkin,
+		&i.WinAnimation,
 	)
 	return i, err
 }
@@ -68,7 +71,7 @@ func (q *Queries) DeleteAccount(ctx context.Context, accountID int64) error {
 }
 
 const getAccountByID = `-- name: GetAccountByID :one
-SELECT account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin FROM account
+SELECT account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation FROM account
 WHERE account_id = $1 AND is_deleted = FALSE LIMIT 1
 `
 
@@ -86,6 +89,7 @@ func (q *Queries) GetAccountByID(ctx context.Context, accountID int64) (Account,
 		&i.Money,
 		&i.BoardSkin,
 		&i.PieceSkin,
+		&i.WinAnimation,
 	)
 	return i, err
 }
@@ -131,16 +135,18 @@ UPDATE account
 SET 
     username = COALESCE($2, username),
     board_skin = COALESCE($3, board_skin),
-    piece_skin = COALESCE($4, piece_skin)
+    piece_skin = COALESCE($4, piece_skin),
+    win_animation = COALESCE($5, win_animation)
 WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin
+RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation
 `
 
 type UpdateAccountParams struct {
-	AccountID int64   `json:"account_id"`
-	Username  *string `json:"username"`
-	BoardSkin *int32  `json:"board_skin"`
-	PieceSkin *int32  `json:"piece_skin"`
+	AccountID    int64   `json:"account_id"`
+	Username     *string `json:"username"`
+	BoardSkin    *int32  `json:"board_skin"`
+	PieceSkin    *int32  `json:"piece_skin"`
+	WinAnimation *int32  `json:"win_animation"`
 }
 
 // solo cambia cosas qué se pueden cambiar por el user
@@ -153,6 +159,7 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (A
 		arg.Username,
 		arg.BoardSkin,
 		arg.PieceSkin,
+		arg.WinAnimation,
 	)
 	var i Account
 	err := row.Scan(
@@ -166,6 +173,7 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (A
 		&i.Money,
 		&i.BoardSkin,
 		&i.PieceSkin,
+		&i.WinAnimation,
 	)
 	return i, err
 }
@@ -175,7 +183,7 @@ UPDATE account
 SET
     mail = $2
 WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin
+RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation
 `
 
 type UpdateMailParams struct {
@@ -197,6 +205,7 @@ func (q *Queries) UpdateMail(ctx context.Context, arg UpdateMailParams) (Account
 		&i.Money,
 		&i.BoardSkin,
 		&i.PieceSkin,
+		&i.WinAnimation,
 	)
 	return i, err
 }
@@ -225,7 +234,7 @@ SET
     xp = $3,
     money = $4
 WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin
+RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation
 `
 
 type UpdateStatsParams struct {
@@ -254,6 +263,7 @@ func (q *Queries) UpdateStats(ctx context.Context, arg UpdateStatsParams) (Accou
 		&i.Money,
 		&i.BoardSkin,
 		&i.PieceSkin,
+		&i.WinAnimation,
 	)
 	return i, err
 }

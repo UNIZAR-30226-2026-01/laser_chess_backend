@@ -24,6 +24,19 @@ VALUES (
     true
 );
 
+INSERT INTO shop_item (
+	price,
+	level_requisite,
+	item_type,
+	is_default
+)
+VALUES (
+    0,
+    0,
+    'win_animation',
+    true
+);
+
 INSERT INTO public.account (
     mail,
     username,
@@ -33,7 +46,8 @@ INSERT INTO public.account (
     xp,
     "money",
     board_skin,
-    piece_skin
+    piece_skin,
+    win_animation
 )
 VALUES(
     'user1@gmail.com',
@@ -44,7 +58,8 @@ VALUES(
     0,
     0,
     1,
-    2
+    2,
+    3
 ), (
     'user2@gmail.com',
     'user2', 
@@ -54,14 +69,15 @@ VALUES(
     0,
     0,
     1,
-    2
+    2,
+    3
 );
 
 INSERT INTO item_owner (
     user_id,
     item_id
 )
-VALUES ( 1,1 ), ( 1,2 ), ( 2,1 ) , ( 2,2 );
+VALUES ( 1,1 ), ( 1,2 ), ( 1,3 ), ( 2,1 ) , ( 2,2 ), ( 2,3 );
 
 INSERT INTO public."match" (
     p1_id,

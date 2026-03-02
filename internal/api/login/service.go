@@ -28,9 +28,9 @@ func isMail(credential string) bool {
 	return emailRegex.MatchString(credential)
 }
 
-func getCredentials(ctx context.Context, q *db.Queries, body *LoginDTO) (int64, string, error) {
+func (s *LoginService) getCredentials(ctx context.Context, body *LoginDTO) (int64, string, error) {
 	if isMail(body.Credential) {
-		mailRes, err := q.GetAccountByMail(ctx, body.Credential)
+		mailRes, err := s.store.GetAccountByMail(ctx, body.Credential)
 		if err != nil {
 			return -1, "", err
 		}
@@ -38,7 +38,7 @@ func getCredentials(ctx context.Context, q *db.Queries, body *LoginDTO) (int64, 
 		return mailRes.AccountID, mailRes.PasswordHash, nil
 
 	} else {
-		usernameRes, err := q.GetAccountByUsername(ctx, body.Credential)
+		usernameRes, err := s.store.GetAccountByUsername(ctx, body.Credential)
 		if err != nil {
 			return -1, "", err
 		}
@@ -87,11 +87,11 @@ func (s *LoginService) saveNewSession(ctx context.Context, accountID int64, refr
 }
 
 // Verifica las credenciales de un usuario,
-func (s *LoginService) Login(ctx context.Context, body LoginDTO) (*LoginResult, error) {
+func (s *LoginService) Login(ctx context.Context, body *LoginDTO) (*LoginResult, error) {
 
 	// ver si es mail o username
 	// modularizar: GetByCredential o algo asi
-	accountID, passwordHash, err := getCredentials(s.store.Queries, body)
+	accountID, passwordHash, err := s.getCredentials(ctx, body)
 	if err != nil {
 		return nil, apierror.ErrUnauthorized
 	}
@@ -102,7 +102,7 @@ func (s *LoginService) Login(ctx context.Context, body LoginDTO) (*LoginResult, 
 	}
 
 	// Generar tokens
-	accessToken, refreshToken, err := generateAccessRefreshToken(res.accountID)
+	accessToken, refreshToken, err := generateAccessRefreshToken(accountID)
 	if err != nil {
 		return nil, err
 	}
