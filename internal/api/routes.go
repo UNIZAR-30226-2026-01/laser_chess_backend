@@ -3,6 +3,7 @@ package api
 // Fichero que se encarga de inicializar todas las rutas de la api
 
 import (
+	"os"
 	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
@@ -64,7 +65,13 @@ func SetupRouter(store *db.Store) *gin.Engine {
 	// == RUTAS PRIVADAS ===============================================
 
 	protected := router.Group("/api")
-	protected.Use(middleware.AuthMiddleware())
+
+	// Si la variable de entorno "PROTECTED" == "FALSE" no se usa el middleware
+	// de seguridad y se pueden hacer pruebas sin preocuparse por JWTs
+
+	if os.Getenv("PROTECTED") != "FALSE" {
+		protected.Use(middleware.AuthMiddleware())
+	}
 
 	// Account routes
 	{
