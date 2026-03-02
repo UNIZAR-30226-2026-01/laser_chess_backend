@@ -22,11 +22,11 @@ func NewService(s *db.Store) *AccountService {
 // Primero hashea la contraseña
 // Por ahora se inventa los items equipados por defecto,
 // pero habrá que hacer que los ownee y los tenga equipados.
-func (s *AccountService) Create(ctx context.Context, body CreateAccountDTO) (AccountDTO, error) {
+func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*AccountDTO, error) {
 
 	passwordHash, err := auth.HashPassword(body.Password)
 	if err != nil {
-		return AccountDTO{}, err
+		return nil, err
 	}
 
 	var res db.Account
@@ -59,20 +59,20 @@ func (s *AccountService) Create(ctx context.Context, body CreateAccountDTO) (Acc
 	})
 
 	if err != nil {
-		return AccountDTO{}, err
+		return nil, err
 	}
 
 	// Solo devuelve el AccountID
-	return AccountDTO{AccountID: res.AccountID}, nil
+	return &AccountDTO{AccountID: res.AccountID}, nil
 }
 
-func (s *AccountService) GetByID(ctx context.Context, accountID int64) (AccountDTO, error) {
+func (s *AccountService) GetByID(ctx context.Context, accountID int64) (*AccountDTO, error) {
 	res, err := s.store.GetAccountByID(ctx, accountID)
 	if err != nil {
-		return AccountDTO{}, err
+		return nil, err
 	}
 
-	return AccountDTO{
+	return &AccountDTO{
 		AccountID:    res.AccountID,
 		Mail:         &res.Mail,
 		Username:     &res.Username,
@@ -85,7 +85,7 @@ func (s *AccountService) GetByID(ctx context.Context, accountID int64) (AccountD
 	}, nil
 }
 
-func (s *AccountService) Update(ctx context.Context, body AccountDTO) (AccountDTO, error) {
+func (s *AccountService) Update(ctx context.Context, body *AccountDTO) (*AccountDTO, error) {
 	res, err := s.store.UpdateAccount(ctx, db.UpdateAccountParams{
 		AccountID: body.AccountID,
 		Username:  body.Username,
@@ -93,9 +93,9 @@ func (s *AccountService) Update(ctx context.Context, body AccountDTO) (AccountDT
 		PieceSkin: body.PieceSkin,
 	})
 	if err != nil {
-		return AccountDTO{}, err
+		return nil, err
 	}
-	return AccountDTO{
+	return &AccountDTO{
 		AccountID: res.AccountID,
 		Mail:      &res.Mail,
 		Username:  &res.Username,

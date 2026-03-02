@@ -29,7 +29,9 @@ contrario.
 *
 */
 func (s FriendshipService) Create(
-	ctx context.Context, data FriendshipDTO) (FriendshipDTO, error) {
+	ctx context.Context,
+	data *FriendshipDTO,
+) (*FriendshipDTO, error) {
 
 	var AuxUser1ID int64
 	var AuxUser2ID int64
@@ -49,7 +51,7 @@ func (s FriendshipService) Create(
 		AuxAccepted2 = true
 	} else {
 		//Bad_request Sender == reciever
-		return FriendshipDTO{}, apierror.ErrBadRequest
+		return nil, apierror.ErrBadRequest
 	}
 
 	res, err := s.store.CreateFriendship(ctx, db.CreateFriendshipParams{
@@ -60,10 +62,13 @@ func (s FriendshipService) Create(
 	})
 
 	if err != nil {
-		return FriendshipDTO{}, err
+		return nil, err
 	}
 
-	return FriendshipDTO{SenderID: res.User1ID, RecieverID: res.User2ID}, nil
+	return &FriendshipDTO{
+		SenderID:   res.User1ID,
+		RecieverID: res.User2ID,
+	}, nil
 }
 
 /*
@@ -80,10 +85,12 @@ contrario.
 *
 */
 func (s FriendshipService) GetFriendshipStatus(
-	ctx context.Context, data FriendshipDTO) (FriendshipStatusDTO, error) {
+	ctx context.Context,
+	data *FriendshipDTO,
+) (*FriendshipStatusDTO, error) {
 
 	if data.SenderID == data.RecieverID {
-		return FriendshipStatusDTO{}, apierror.ErrBadRequest
+		return nil, apierror.ErrBadRequest
 	}
 
 	res, err := s.store.GetFriendship(ctx, db.GetFriendshipParams{
@@ -92,21 +99,20 @@ func (s FriendshipService) GetFriendshipStatus(
 	})
 
 	if data.SenderID == res.User1ID {
-		return FriendshipStatusDTO{
+		return &FriendshipStatusDTO{
 			SenderID:       res.User1ID,
 			RecieverID:     res.User2ID,
 			SenderAccept:   res.Accepted1,
 			RecieverAccept: res.Accepted2,
 		}, err
 	} else {
-		return FriendshipStatusDTO{
+		return &FriendshipStatusDTO{
 			SenderID:       res.User2ID,
 			RecieverID:     res.User1ID,
 			SenderAccept:   res.Accepted2,
 			RecieverAccept: res.Accepted1,
 		}, err
 	}
-
 }
 
 /*
@@ -124,14 +130,16 @@ contrario.
 *
 */
 func (s FriendshipService) GetUserFriendships(
-	ctx context.Context, userID int64) ([]FriendshipReturnDTO, error) {
+	ctx context.Context,
+	userID int64,
+) ([]FriendshipReturnDTO, error) {
 
 	res, err := s.store.GetUserFriendships(ctx, userID)
 	if err != nil {
 		return []FriendshipReturnDTO{}, err
 	}
 
-	return parseFrienshipRow(res), nil
+	return parseFriendshipRow(res), nil
 }
 
 /*
@@ -149,7 +157,9 @@ contrario.
 *
 */
 func (s FriendshipService) GetUserPendingSentFriendships(
-	ctx context.Context, userID int64) ([]FriendshipReturnDTO, error) {
+	ctx context.Context,
+	userID int64,
+) ([]FriendshipReturnDTO, error) {
 
 	res, err := s.store.GetUserPendingSentFriendships(ctx, userID)
 	if err != nil {
@@ -174,7 +184,9 @@ contrario.
 *
 */
 func (s FriendshipService) GetUserPendingRecievedFriendships(
-	ctx context.Context, userID int64) ([]FriendshipReturnDTO, error) {
+	ctx context.Context,
+	userID int64,
+) ([]FriendshipReturnDTO, error) {
 
 	res, err := s.store.GetUserPendingRecievedFriendships(ctx, userID)
 	if err != nil {
@@ -196,8 +208,10 @@ como aceptada dados los ids de ambos usuarios.
 contrario.
 *
 */
-func (s FriendshipService) AcceptFrienship(
-	ctx context.Context, data FriendshipDTO) error {
+func (s FriendshipService) AcceptFriendship(
+	ctx context.Context,
+	data *FriendshipDTO,
+) error {
 
 	err := s.store.SetFriendship(ctx, db.SetFriendshipParams{
 		User1ID: data.SenderID,
@@ -222,8 +236,10 @@ dados los ids de ambos usuarios.
 contrario.
 *
 */
-func (s FriendshipService) DeleteFrienship(
-	ctx context.Context, data FriendshipDTO) error {
+func (s FriendshipService) DeleteFriendship(
+	ctx context.Context,
+	data *FriendshipDTO,
+) error {
 
 	err := s.store.DeleteFriendship(ctx, db.DeleteFriendshipParams{
 		User1ID: data.SenderID,
@@ -238,8 +254,8 @@ func (s FriendshipService) DeleteFrienship(
 
 // FUNCIONES AUXILIARES
 
-// Funcion auxiliar: pasar de db.GetUserFrienshipsRow a FriendshipReturnDTO
-func parseFrienshipRow(data []db.GetUserFriendshipsRow) []FriendshipReturnDTO {
+// Funcion auxiliar: pasar de db.GetUserFriendshipsRow a FriendshipReturnDTO
+func parseFriendshipRow(data []db.GetUserFriendshipsRow) []FriendshipReturnDTO {
 	var res []FriendshipReturnDTO
 
 	for _, value := range data {
@@ -257,7 +273,8 @@ func parseFrienshipRow(data []db.GetUserFriendshipsRow) []FriendshipReturnDTO {
 // Funcion auxiliar: pasar de db.GetUserPendingSentFriendshipsRow
 // a FriendshipReturnDTO
 func parsePendingSentRow(
-	data []db.GetUserPendingSentFriendshipsRow) []FriendshipReturnDTO {
+	data []db.GetUserPendingSentFriendshipsRow,
+) []FriendshipReturnDTO {
 	var res []FriendshipReturnDTO
 
 	for _, value := range data {
@@ -275,7 +292,9 @@ func parsePendingSentRow(
 // Funcion auxiliar: pasar de db.GetUserPendingRecievedFriendshipsRow
 // a FriendshipReturnDTO
 func parsePendingRecievedRow(
-	data []db.GetUserPendingRecievedFriendshipsRow) []FriendshipReturnDTO {
+	data []db.GetUserPendingRecievedFriendshipsRow,
+) []FriendshipReturnDTO {
+
 	var res []FriendshipReturnDTO
 
 	for _, value := range data {

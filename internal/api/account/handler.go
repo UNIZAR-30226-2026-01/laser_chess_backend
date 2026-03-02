@@ -27,7 +27,7 @@ func (h *AccountHandler) Create(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.Create(c.Request.Context(), body)
+	res, err := h.service.Create(c.Request.Context(), &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -60,7 +60,7 @@ func (h *AccountHandler) Update(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.Update(c.Request.Context(), body)
+	res, err := h.service.Update(c.Request.Context(), &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return

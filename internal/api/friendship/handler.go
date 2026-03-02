@@ -41,7 +41,7 @@ func (h *FriendshipHandler) GetFriendship(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetFriendshipStatus(c.Request.Context(), FriendshipDTO{
+	res, err := h.service.GetFriendshipStatus(c.Request.Context(), &FriendshipDTO{
 		SenderID:   user1ID,
 		RecieverID: user2ID,
 	})
@@ -66,7 +66,7 @@ con el listado de las amistades que contienen los datos relevantes del otro
 usuario junto con un StatusOK si no hay errores, y un error en caso contrario.
 *
 */
-func (h *FriendshipHandler) GetUserFrienships(c *gin.Context) {
+func (h *FriendshipHandler) GetUserFriendships(c *gin.Context) {
 	userID, err := strconv.ParseInt(c.Param("user1ID"), 10, 64)
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
@@ -156,7 +156,7 @@ entre dos usuarios dados sus ids.
 un error en caso de haber ocurrido.
 *
 */
-func (h *FriendshipHandler) AcceptFrienship(c *gin.Context) {
+func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 	user1ID, err := strconv.ParseInt(c.Param("user1ID"), 10, 64)
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
@@ -169,7 +169,7 @@ func (h *FriendshipHandler) AcceptFrienship(c *gin.Context) {
 		return
 	}
 
-	err = h.service.AcceptFrienship(c.Request.Context(), FriendshipDTO{
+	err = h.service.AcceptFriendship(c.Request.Context(), &FriendshipDTO{
 		SenderID:   user1ID,
 		RecieverID: user2ID,
 	})
@@ -193,7 +193,7 @@ entre dos usuarios dados sus ids.
 un error en caso de haber ocurrido.
 *
 */
-func (h *FriendshipHandler) DeleteFrienship(c *gin.Context) {
+func (h *FriendshipHandler) DeleteFriendship(c *gin.Context) {
 	user1ID, err := strconv.ParseInt(c.Param("user1ID"), 10, 64)
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
@@ -206,7 +206,7 @@ func (h *FriendshipHandler) DeleteFrienship(c *gin.Context) {
 		return
 	}
 
-	err = h.service.DeleteFrienship(c.Request.Context(), FriendshipDTO{
+	err = h.service.DeleteFriendship(c.Request.Context(), &FriendshipDTO{
 		SenderID:   user1ID,
 		RecieverID: user2ID,
 	})
@@ -241,7 +241,7 @@ func (h *FriendshipHandler) Create(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.Create(c.Request.Context(), body)
+	res, err := h.service.Create(c.Request.Context(), &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return

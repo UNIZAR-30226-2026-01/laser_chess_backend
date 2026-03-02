@@ -104,14 +104,14 @@ func SetupRouter(store *db.Store) *gin.Engine {
 	{
 		friendshipRoute := protected.Group("/friendship")
 		friendshipRoute.POST("", friendshipHandler.Create)
-		friendshipRoute.GET("/:user1ID", friendshipHandler.GetUserFrienships)
+		friendshipRoute.GET("/:user1ID", friendshipHandler.GetUserFriendships)
 		friendshipRoute.GET("/:user1ID/sent",
 			friendshipHandler.GetUserPendingSentFriendships)
 		friendshipRoute.GET("/:user1ID/pending",
 			friendshipHandler.GetUserPendingRecievedFriendships)
 		friendshipRoute.GET("/:user1ID/:user2ID", friendshipHandler.GetFriendship)
-		friendshipRoute.PUT("/:user1ID/:user2ID", friendshipHandler.AcceptFrienship)
-		friendshipRoute.DELETE("/:user1ID/:user2ID", friendshipHandler.DeleteFrienship)
+		friendshipRoute.PUT("/:user1ID/:user2ID", friendshipHandler.AcceptFriendship)
+		friendshipRoute.DELETE("/:user1ID/:user2ID", friendshipHandler.DeleteFriendship)
 	}
 
 	return router
