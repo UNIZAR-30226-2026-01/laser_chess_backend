@@ -36,7 +36,7 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		"refresh_token",  // name
 		res.RefreshToken, // value
 		3600*24*7,        // maxAge
-		"",               // path
+		"/",              // path
 		"",               // domain
 		false,            // secure (si usamos https sera true
 		true,             // HttpOnly
