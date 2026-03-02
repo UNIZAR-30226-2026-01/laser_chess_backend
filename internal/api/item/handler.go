@@ -96,7 +96,7 @@ func (h *itemHandler) CreateItemOwner(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.Create(c.Request.Context(), body)
+	res, err := h.service.Create(c.Request.Context(), &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return

@@ -28,7 +28,7 @@ item y usuario del objeto creado.
 contrario.
 *
 */
-func (s *itemService) Create(ctx context.Context, data ItemOwnerDTO) (ItemOwnerDTO, error) {
+func (s *itemService) Create(ctx context.Context, data *ItemOwnerDTO) (*ItemOwnerDTO, error) {
 
 	res, err := s.store.CreateItemOwner(ctx, db.CreateItemOwnerParams{
 		ItemID: data.ItemID,
@@ -36,10 +36,10 @@ func (s *itemService) Create(ctx context.Context, data ItemOwnerDTO) (ItemOwnerD
 	})
 
 	if err != nil {
-		return ItemOwnerDTO{}, err
+		return nil, err
 	}
 
-	return ItemOwnerDTO{UserID: res.UserID, ItemID: res.ItemID}, nil
+	return &ItemOwnerDTO{UserID: res.UserID, ItemID: res.ItemID}, nil
 }
 
 /*
@@ -55,14 +55,14 @@ su id.
 contrario.
 *
 */
-func (s *itemService) GetByID(ctx context.Context, itemID int32) (ShopItemDTO, error) {
+func (s *itemService) GetByID(ctx context.Context, itemID int32) (*ShopItemDTO, error) {
 
 	res, err := s.store.GetShopItem(ctx, itemID)
 	if err != nil {
-		return ShopItemDTO{}, err
+		return nil, err
 	}
 
-	return ShopItemDTO{
+	return &ShopItemDTO{
 		ItemID:         res.ItemID,
 		Price:          res.Price,
 		LevelRequisite: res.LevelRequisite,
