@@ -28,6 +28,25 @@ func isMail(credential string) bool {
 	return emailRegex.MatchString(credential)
 }
 
+func getCredentials(ctx context.Context, q *db.Queries, body *LoginDTO) (int64, string, error) {
+	if isMail(body.Credential) {
+		mailRes, err := q.GetAccountByMail(ctx, body.Credential)
+		if err != nil {
+			return -1, "", err
+		}
+
+		return mailRes.AccountID, mailRes.PasswordHash, nil
+
+	} else {
+		usernameRes, err := q.GetAccountByUsername(ctx, body.Credential)
+		if err != nil {
+			return -1, "", err
+		}
+
+		return usernameRes.AccountID, usernameRes.PasswordHash, nil
+	}
+}
+
 // Genera una pareja de access y refresh tokens
 func generateAccessRefreshToken(accountID int64) (string, string, error) {
 
@@ -69,32 +88,15 @@ func (s *LoginService) saveNewSession(ctx context.Context, accountID int64, refr
 
 // Verifica las credenciales de un usuario,
 func (s *LoginService) Login(ctx context.Context, body LoginDTO) (*LoginResult, error) {
-	var res struct {
-		accountID    int64
-		passwordHash string
-	}
 
 	// ver si es mail o username
 	// modularizar: GetByCredential o algo asi
-	if isMail(body.Credential) {
-		mailRes, err := s.store.GetAccountByMail(ctx, body.Credential)
-		if err != nil {
-			return nil, err
-		}
-
-		res.accountID = mailRes.AccountID
-		res.passwordHash = mailRes.PasswordHash
-	} else {
-		usernameRes, err := s.store.GetAccountByUsername(ctx, body.Credential)
-		if err != nil {
-			return nil, err
-		}
-
-		res.accountID = usernameRes.AccountID
-		res.passwordHash = usernameRes.PasswordHash
+	accountID, passwordHash, err := getCredentials(s.store.Queries, body)
+	if err != nil {
+		return nil, apierror.ErrUnauthorized
 	}
 
-	err := auth.VerifyPassword(res.passwordHash, body.Password)
+	err = auth.VerifyPassword(passwordHash, body.Password)
 	if err != nil {
 		return nil, apierror.ErrUnauthorized
 	}
@@ -106,7 +108,7 @@ func (s *LoginService) Login(ctx context.Context, body LoginDTO) (*LoginResult, 
 	}
 
 	// Guardar refresh token en bdd
-	err = s.saveNewSession(ctx, res.accountID, refreshToken)
+	err = s.saveNewSession(ctx, accountID, refreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +128,7 @@ func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*Login
 		return nil, apierror.ErrUnauthorized
 	}
 
-	// Mirar si ha espirado
+	// Mirar si ha expirado
 	if time.Now().After(session.ExpiresAt.Time) {
 		s.store.DeleteRefreshSession(ctx, tokenHash)
 		return nil, apierror.ErrUnauthorized
