@@ -78,7 +78,7 @@ func SetupRouter(store *db.Store) *gin.Engine {
 		accountRoute := protected.Group("/account")
 		accountRoute.GET("/:id", accountHandler.GetByID)
 		accountRoute.POST("/update", accountHandler.Update)
-		accountRoute.DELETE("/delete/:id", accountHandler.Delete)
+		accountRoute.DELETE("/delete/", accountHandler.Delete)
 	}
 
 	// Match routes

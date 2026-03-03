@@ -63,9 +63,10 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 	}
 
 	// Solo devuelve el AccountID
-	return &AccountDTO{AccountID: res.AccountID}, nil
+	return &AccountDTO{AccountID: &res.AccountID}, nil
 }
 
+// Devuelve toda la info de la cuenta del user con id == accountID
 func (s *AccountService) GetByID(ctx context.Context, accountID int64) (*AccountDTO, error) {
 	res, err := s.store.GetAccountByID(ctx, accountID)
 	if err != nil {
@@ -73,7 +74,7 @@ func (s *AccountService) GetByID(ctx context.Context, accountID int64) (*Account
 	}
 
 	return &AccountDTO{
-		AccountID:    res.AccountID,
+		AccountID:    &res.AccountID,
 		Mail:         &res.Mail,
 		Username:     &res.Username,
 		Level:        &res.Level,
@@ -85,30 +86,34 @@ func (s *AccountService) GetByID(ctx context.Context, accountID int64) (*Account
 	}, nil
 }
 
-func (s *AccountService) Update(ctx context.Context, body *AccountDTO) (*AccountDTO, error) {
+// Actualiza el username o cosmeticos del usuario con
+// id == accountID. Solo actualiza los campos no nulos
+func (s *AccountService) Update(
+	ctx context.Context,
+	accountID int64,
+	body *AccountDTO,
+) (*AccountDTO, error) {
 	res, err := s.store.UpdateAccount(ctx, db.UpdateAccountParams{
-		AccountID: body.AccountID,
-		Username:  body.Username,
-		BoardSkin: body.BoardSkin,
-		PieceSkin: body.PieceSkin,
+		AccountID:    accountID,
+		Username:     body.Username,
+		BoardSkin:    body.BoardSkin,
+		PieceSkin:    body.PieceSkin,
+		WinAnimation: body.WinAnimation,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &AccountDTO{
-		AccountID: res.AccountID,
-		Mail:      &res.Mail,
-		Username:  &res.Username,
-		BoardSkin: &res.BoardSkin,
-		PieceSkin: &res.PieceSkin,
+		AccountID:    &res.AccountID,
+		Mail:         &res.Mail,
+		Username:     &res.Username,
+		BoardSkin:    &res.BoardSkin,
+		PieceSkin:    &res.PieceSkin,
+		WinAnimation: &res.WinAnimation,
 	}, nil
 }
 
+// Desactiva la cuenta del usuario con id == accountID
 func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
-	err := s.store.DeleteAccount(ctx, accountID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.store.DeleteAccount(ctx, accountID)
 }

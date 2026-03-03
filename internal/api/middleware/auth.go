@@ -36,3 +36,20 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// Extrae el id de la cuenta que envia la peticion http
+// con access token jwt
+func ExtractAccountID(c *gin.Context) (int64, error) {
+
+	idInterface, exists := c.Get("account_id")
+	if !exists {
+		return -1, apierror.ErrInternalServerError
+	}
+
+	accountID, ok := idInterface.(int64)
+	if !ok {
+		return -1, apierror.ErrInternalServerError
+	}
+
+	return accountID, nil
+}
