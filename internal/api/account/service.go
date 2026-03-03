@@ -29,7 +29,7 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 		return nil, err
 	}
 
-	var res db.Account
+	var res int64
 
 	// Ejecutar en transaccion
 	// Ahora no tiene sentido, pero lo tendra cuando hagamos lo de los items
@@ -63,7 +63,7 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 	}
 
 	// Solo devuelve el AccountID
-	return &AccountDTO{AccountID: &res.AccountID}, nil
+	return &AccountDTO{AccountID: &res}, nil
 }
 
 // Devuelve toda la info de la cuenta del user con id == accountID

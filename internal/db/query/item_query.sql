@@ -1,11 +1,10 @@
--- name: CreateItemOwner :one
+-- name: CreateItemOwner :exec
 INSERT INTO item_owner (
     user_id, item_id
 )
 VALUES (
     $1, $2
-)
-RETURNING *;
+);
 
 -- name: GetUserItems :many
 SELECT shop_item.item_id, price, level_requisite, item_type::ITEM_TYPE, is_default FROM item_owner 
