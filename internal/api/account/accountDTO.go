@@ -12,7 +12,7 @@ type CreateAccountDTO struct {
 // Para mandar/recibir un user al/del frontend
 // Solo es obligatorio el userID, el resto es opcional
 type AccountDTO struct {
-	AccountID    int64   `json:"account_id" binding:"required"`
+	AccountID    *int64  `json:"account_id"`
 	Mail         *string `json:"mail"`
 	Username     *string `json:"username"`
 	Level        *int32  `json:"level"`
