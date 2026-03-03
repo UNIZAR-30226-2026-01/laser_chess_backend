@@ -28,10 +28,7 @@ dado su DTO.
 contrario.
 *
 */
-func (s FriendshipService) Create(
-	ctx context.Context,
-	data *FriendshipDTO,
-) (*FriendshipDTO, error) {
+func (s FriendshipService) Create(ctx context.Context, data *FriendshipDTO) error {
 
 	var AuxUser1ID int64
 	var AuxUser2ID int64
@@ -39,36 +36,29 @@ func (s FriendshipService) Create(
 	var AuxAccepted2 bool
 
 	// Ordenamos para la inserción en BDD
-	if data.SenderID < data.RecieverID {
-		AuxUser1ID = data.SenderID
-		AuxUser2ID = data.RecieverID
+	if *data.SenderID < data.ReceiverID {
+		AuxUser1ID = *data.SenderID
+		AuxUser2ID = data.ReceiverID
 		AuxAccepted1 = true
 		AuxAccepted2 = false
-	} else if data.SenderID > data.RecieverID {
-		AuxUser1ID = data.RecieverID
-		AuxUser2ID = data.SenderID
+	} else if *data.SenderID > data.ReceiverID {
+		AuxUser1ID = data.ReceiverID
+		AuxUser2ID = *data.SenderID
 		AuxAccepted1 = false
 		AuxAccepted2 = true
 	} else {
-		//Bad_request Sender == reciever
-		return nil, apierror.ErrBadRequest
+		//Bad_request Sender == receiver
+		return apierror.ErrBadRequest
 	}
 
-	res, err := s.store.CreateFriendship(ctx, db.CreateFriendshipParams{
+	err := s.store.CreateFriendship(ctx, db.CreateFriendshipParams{
 		User1ID:   AuxUser1ID,
 		User2ID:   AuxUser2ID,
 		Accepted1: AuxAccepted1,
 		Accepted2: AuxAccepted2,
 	})
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &FriendshipDTO{
-		SenderID:   res.User1ID,
-		RecieverID: res.User2ID,
-	}, nil
+	return err
 }
 
 /*
@@ -89,28 +79,28 @@ func (s FriendshipService) GetFriendshipStatus(
 	data *FriendshipDTO,
 ) (*FriendshipStatusDTO, error) {
 
-	if data.SenderID == data.RecieverID {
+	if *data.SenderID == data.ReceiverID {
 		return nil, apierror.ErrBadRequest
 	}
 
 	res, err := s.store.GetFriendship(ctx, db.GetFriendshipParams{
-		User1ID: data.SenderID,
-		User2ID: data.RecieverID,
+		User1ID: *data.SenderID,
+		User2ID: data.ReceiverID,
 	})
 
-	if data.SenderID == res.User1ID {
+	if *data.SenderID == res.User1ID {
 		return &FriendshipStatusDTO{
 			SenderID:       res.User1ID,
-			RecieverID:     res.User2ID,
+			ReceiverID:     res.User2ID,
 			SenderAccept:   res.Accepted1,
-			RecieverAccept: res.Accepted2,
+			ReceiverAccept: res.Accepted2,
 		}, err
 	} else {
 		return &FriendshipStatusDTO{
 			SenderID:       res.User2ID,
-			RecieverID:     res.User1ID,
+			ReceiverID:     res.User1ID,
 			SenderAccept:   res.Accepted2,
-			RecieverAccept: res.Accepted1,
+			ReceiverAccept: res.Accepted1,
 		}, err
 	}
 }
@@ -121,7 +111,7 @@ func (s FriendshipService) GetFriendshipStatus(
 de las amistades de un jugador dado su id.
 * --- Parametros ---
 * ctx, context.Context - Es el contexto de gin.
-* userID, int64 - Es el id del usuario.
+* accountID, int64 - Es el id del usuario.
 * --- Resultados ---
 * []FriendshipReturnDTO - Lista con la información de las amistades del usuario,
 incluyendo los datos relevante del otro usuario.
@@ -131,12 +121,12 @@ contrario.
 */
 func (s FriendshipService) GetUserFriendships(
 	ctx context.Context,
-	userID int64,
+	accountID int64,
 ) ([]FriendshipReturnDTO, error) {
 
-	res, err := s.store.GetUserFriendships(ctx, userID)
+	res, err := s.store.GetUserFriendships(ctx, accountID)
 	if err != nil {
-		return []FriendshipReturnDTO{}, err
+		return nil, err
 	}
 
 	return parseFriendshipRow(res), nil
@@ -148,7 +138,7 @@ func (s FriendshipService) GetUserFriendships(
 de las amistades enviadas pendientes de un jugador dado su id.
 * --- Parametros ---
 * ctx, context.Context - Es el contexto de gin.
-* userID, int64 - Es el id del usuario.
+* accountID, int64 - Es el id del usuario.
 * --- Resultados ---
 * []FriendshipReturnDTO - Lista con la información de las amistades enviadas
 pendientes del usuario, incluyendo los datos relevante del otro usuario.
@@ -158,12 +148,12 @@ contrario.
 */
 func (s FriendshipService) GetUserPendingSentFriendships(
 	ctx context.Context,
-	userID int64,
+	accountID int64,
 ) ([]FriendshipReturnDTO, error) {
 
-	res, err := s.store.GetUserPendingSentFriendships(ctx, userID)
+	res, err := s.store.GetUserPendingSentFriendships(ctx, accountID)
 	if err != nil {
-		return []FriendshipReturnDTO{}, err
+		return nil, err
 	}
 
 	return parsePendingSentRow(res), nil
@@ -175,7 +165,7 @@ func (s FriendshipService) GetUserPendingSentFriendships(
 de las amistades recibidas pendientes de un jugador dado su id.
 * --- Parametros ---
 * ctx, context.Context - Es el contexto de gin.
-* userID, int64 - Es el id del usuario.
+* accountID, int64 - Es el id del usuario.
 * --- Resultados ---
 * []FriendshipReturnDTO - Lista con la información de las amistades recibidas
 pendientes del usuario, incluyendo los datos relevante del otro usuario.
@@ -183,17 +173,17 @@ pendientes del usuario, incluyendo los datos relevante del otro usuario.
 contrario.
 *
 */
-func (s FriendshipService) GetUserPendingRecievedFriendships(
+func (s FriendshipService) GetUserPendingReceivedFriendships(
 	ctx context.Context,
-	userID int64,
+	accountID int64,
 ) ([]FriendshipReturnDTO, error) {
 
-	res, err := s.store.GetUserPendingRecievedFriendships(ctx, userID)
+	res, err := s.store.GetUserPendingReceivedFriendships(ctx, accountID)
 	if err != nil {
-		return []FriendshipReturnDTO{}, err
+		return nil, err
 	}
 
-	return parsePendingRecievedRow(res), nil
+	return parsePendingReceivedRow(res), nil
 }
 
 /*
@@ -213,9 +203,9 @@ func (s FriendshipService) AcceptFriendship(
 	data *FriendshipDTO,
 ) error {
 
-	err := s.store.SetFriendship(ctx, db.SetFriendshipParams{
-		User1ID: data.SenderID,
-		User2ID: data.RecieverID,
+	err := s.store.AcceptFriendship(ctx, db.AcceptFriendshipParams{
+		User1ID: *data.SenderID,
+		User2ID: data.ReceiverID,
 	})
 	if err != nil {
 		return err
@@ -242,8 +232,8 @@ func (s FriendshipService) DeleteFriendship(
 ) error {
 
 	err := s.store.DeleteFriendship(ctx, db.DeleteFriendshipParams{
-		User1ID: data.SenderID,
-		User2ID: data.RecieverID,
+		User1ID: *data.SenderID,
+		User2ID: data.ReceiverID,
 	})
 	if err != nil {
 		return err
@@ -289,10 +279,10 @@ func parsePendingSentRow(
 	return res
 }
 
-// Funcion auxiliar: pasar de db.GetUserPendingRecievedFriendshipsRow
+// Funcion auxiliar: pasar de db.GetUserPendingReceivedFriendshipsRow
 // a FriendshipReturnDTO
-func parsePendingRecievedRow(
-	data []db.GetUserPendingRecievedFriendshipsRow,
+func parsePendingReceivedRow(
+	data []db.GetUserPendingReceivedFriendshipsRow,
 ) []FriendshipReturnDTO {
 
 	var res []FriendshipReturnDTO

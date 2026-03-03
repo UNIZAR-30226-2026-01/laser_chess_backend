@@ -4,16 +4,16 @@ package friendship
 
 // Para crear una petición de amistad
 type FriendshipDTO struct {
-	SenderID   int64 `json:"user1_id" binding:"required"`
-	RecieverID int64 `json:"user2_id" binding:"required"`
+	SenderID   *int64 `json:"user1_id"`
+	ReceiverID int64  `json:"user2_id" binding:"required"`
 }
 
 // Para recibir una petición de amistad
 type FriendshipStatusDTO struct {
 	SenderID       int64 `json:"user1_id" binding:"required"`
-	RecieverID     int64 `json:"user2_id" binding:"required"`
+	ReceiverID     int64 `json:"user2_id" binding:"required"`
 	SenderAccept   bool
-	RecieverAccept bool
+	ReceiverAccept bool
 }
 
 // Para devolver los datos de los usuarios amigos de una consulta

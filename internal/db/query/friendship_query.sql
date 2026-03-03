@@ -1,10 +1,9 @@
--- name: CreateFriendship :one
+-- name: CreateFriendship :exec
 INSERT INTO friendship (
     user1_id, user2_id, accepted_1, accepted_2)
 VALUES (
     $1, $2, $3, $4
-)
-RETURNING *;
+);
 
 -- name: GetFriendship :one
 SELECT * FROM friendship 
@@ -38,7 +37,7 @@ JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user2_id;
 
 
--- name: GetUserPendingRecievedFriendships :many
+-- name: GetUserPendingReceivedFriendships :many
 SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
 FROM friendship 
 JOIN account ON friendship.user2_id = account.account_id
@@ -51,10 +50,13 @@ FROM friendship
 JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user2_id;
 
--- name: SetFriendship :exec
+-- name: AcceptFriendship :exec
 UPDATE friendship
-SET accepted_1 = TRUE, accepted_2 = TRUE
-WHERE ($1 = user1_id AND $2 = user2_id) OR ($2 = user2_id AND $1 = user1_id);
+SET 
+    accepted_1 = CASE WHEN user1_id = $1 THEN TRUE ELSE accepted_1 END,
+    accepted_2 = CASE WHEN user2_id = $1 THEN TRUE ELSE accepted_2 END
+WHERE (user1_id = $1 AND user2_id = $2) OR (user1_id = $2 AND user2_id = $1);
+
 
 -- name: DeleteFriendship :exec
 DELETE FROM friendship 
@@ -73,11 +75,16 @@ WHERE ($1 = user1_id AND $2 = user2_id) OR ($1 = user2_id AND $2 = user1_id);
 -- WHERE ($1 = user2_id AND accepted_1 = FALSE AND accepted_2 = TRUE);
 
 -- --ERES USER 1
--- -- name: GetUser1PendingRecievedFriendship :many
+-- -- name: GetUser1PendingReceivedFriendship :many
 -- SELECT user2_id FROM friendship
 -- WHERE ($1 = user1_id AND accepted_1 = FALSE AND accepted_2 = TRUE);
 
 -- --ERES USER 2
--- -- name: GetUser2PendingRecievedFriendship :many
+-- -- name: GetUser2PendingReceivedFriendship :many
 -- SELECT user1_id FROM friendship
 -- WHERE ($1 = user2_id AND accepted_1 = TRUE AND accepted_2 = FALSE);
+
+---- name: SetFriendship :exec
+--UPDATE friendship
+--SET accepted_1 = TRUE, accepted_2 = TRUE
+--WHERE (user1_id = LEAST($1::bigint, $2::bigint) AND user2_id = GREATEST($1::bigint, $2::bigint));

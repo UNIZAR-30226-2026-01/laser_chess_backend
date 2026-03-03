@@ -9,13 +9,30 @@ import (
 	"context"
 )
 
-const createFriendship = `-- name: CreateFriendship :one
+const acceptFriendship = `-- name: AcceptFriendship :exec
+UPDATE friendship
+SET 
+    accepted_1 = CASE WHEN user1_id = $1 THEN TRUE ELSE accepted_1 END,
+    accepted_2 = CASE WHEN user2_id = $1 THEN TRUE ELSE accepted_2 END
+WHERE (user1_id = $1 AND user2_id = $2) OR (user1_id = $2 AND user2_id = $1)
+`
+
+type AcceptFriendshipParams struct {
+	User1ID int64 `json:"user1_id"`
+	User2ID int64 `json:"user2_id"`
+}
+
+func (q *Queries) AcceptFriendship(ctx context.Context, arg AcceptFriendshipParams) error {
+	_, err := q.db.Exec(ctx, acceptFriendship, arg.User1ID, arg.User2ID)
+	return err
+}
+
+const createFriendship = `-- name: CreateFriendship :exec
 INSERT INTO friendship (
     user1_id, user2_id, accepted_1, accepted_2)
 VALUES (
     $1, $2, $3, $4
 )
-RETURNING user1_id, user2_id, accepted_1, accepted_2
 `
 
 type CreateFriendshipParams struct {
@@ -25,21 +42,14 @@ type CreateFriendshipParams struct {
 	Accepted2 bool  `json:"accepted_2"`
 }
 
-func (q *Queries) CreateFriendship(ctx context.Context, arg CreateFriendshipParams) (Friendship, error) {
-	row := q.db.QueryRow(ctx, createFriendship,
+func (q *Queries) CreateFriendship(ctx context.Context, arg CreateFriendshipParams) error {
+	_, err := q.db.Exec(ctx, createFriendship,
 		arg.User1ID,
 		arg.User2ID,
 		arg.Accepted1,
 		arg.Accepted2,
 	)
-	var i Friendship
-	err := row.Scan(
-		&i.User1ID,
-		&i.User2ID,
-		&i.Accepted1,
-		&i.Accepted2,
-	)
-	return i, err
+	return err
 }
 
 const deleteFriendship = `-- name: DeleteFriendship :exec
@@ -125,7 +135,7 @@ func (q *Queries) GetUserFriendships(ctx context.Context, user1ID int64) ([]GetU
 	return items, nil
 }
 
-const getUserPendingRecievedFriendships = `-- name: GetUserPendingRecievedFriendships :many
+const getUserPendingReceivedFriendships = `-- name: GetUserPendingReceivedFriendships :many
 SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
 FROM friendship 
 JOIN account ON friendship.user2_id = account.account_id
@@ -139,22 +149,22 @@ JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user2_id
 `
 
-type GetUserPendingRecievedFriendshipsRow struct {
+type GetUserPendingReceivedFriendshipsRow struct {
 	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
 	Level    int32  `json:"level"`
 	Xp       int32  `json:"xp"`
 }
 
-func (q *Queries) GetUserPendingRecievedFriendships(ctx context.Context, user1ID int64) ([]GetUserPendingRecievedFriendshipsRow, error) {
-	rows, err := q.db.Query(ctx, getUserPendingRecievedFriendships, user1ID)
+func (q *Queries) GetUserPendingReceivedFriendships(ctx context.Context, user1ID int64) ([]GetUserPendingReceivedFriendshipsRow, error) {
+	rows, err := q.db.Query(ctx, getUserPendingReceivedFriendships, user1ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetUserPendingRecievedFriendshipsRow
+	var items []GetUserPendingReceivedFriendshipsRow
 	for rows.Next() {
-		var i GetUserPendingRecievedFriendshipsRow
+		var i GetUserPendingReceivedFriendshipsRow
 		if err := rows.Scan(
 			&i.UserID,
 			&i.Username,
@@ -215,20 +225,4 @@ func (q *Queries) GetUserPendingSentFriendships(ctx context.Context, user1ID int
 		return nil, err
 	}
 	return items, nil
-}
-
-const setFriendship = `-- name: SetFriendship :exec
-UPDATE friendship
-SET accepted_1 = TRUE, accepted_2 = TRUE
-WHERE ($1 = user1_id AND $2 = user2_id) OR ($2 = user2_id AND $1 = user1_id)
-`
-
-type SetFriendshipParams struct {
-	User1ID int64 `json:"user1_id"`
-	User2ID int64 `json:"user2_id"`
-}
-
-func (q *Queries) SetFriendship(ctx context.Context, arg SetFriendshipParams) error {
-	_, err := q.db.Exec(ctx, setFriendship, arg.User1ID, arg.User2ID)
-	return err
 }
