@@ -22,24 +22,20 @@ una cuenta de usuario dado un JSON.
 * ctx, context.Context - Es el contexto de gin.
 * data, ItemOwnerDTO - Es el DTO del objeto a insertar.
 * --- Resultados ---
-* ItemOwnerDTO - Es un objeto de confirmacion que tan solo contiene los ids del
-item y usuario del objeto creado.
 * error - Es el error que se haya provocado en la consulta, o nil en caso
 contrario.
 *
 */
-func (s *itemService) Create(ctx context.Context, data *ItemOwnerDTO) (*ItemOwnerDTO, error) {
+func (s *itemService) Create(
+	ctx context.Context,
+	accountID int64,
+	itemID int32,
+) error {
 
-	res, err := s.store.CreateItemOwner(ctx, db.CreateItemOwnerParams{
-		ItemID: data.ItemID,
-		UserID: data.UserID,
+	return s.store.CreateItemOwner(ctx, db.CreateItemOwnerParams{
+		UserID: accountID,
+		ItemID: itemID,
 	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &ItemOwnerDTO{UserID: res.UserID, ItemID: res.ItemID}, nil
 }
 
 /*

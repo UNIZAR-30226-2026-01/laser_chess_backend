@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -50,18 +51,20 @@ func (h *itemHandler) GetShopItem(c *gin.Context) {
 *
 * Desc: Esta funcion llama a otra funcion del service que obtiene un listado de
 los objetos de un usuario dado su id.
-* --- Parametros ---
-* c: *gin.Context - Es el contexto de gin, del cual recibe el id del usuario.
-* ------------------
-* Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
+  - --- Parametros ---
+  - c: *gin.Context - Es el contexto de gin, del cual recibe el id del usuario a
+    a través del access JWT.
+  - ------------------
+  - Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
+
 con la información de los objetos si la obtiene junto con un StatusOK, y un
 error en caso contrario.
 *
 */
 func (h *itemHandler) GetUserItems(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("userID"), 10, 64)
+	id, err := middleware.ExtractAccountID(c)
 	if err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
+		apierror.DetectAndSendError(c, err)
 		return
 	}
 
@@ -87,20 +90,25 @@ y un error en caso contrario.
 *
 */
 func (h *itemHandler) CreateItemOwner(c *gin.Context) {
-
-	var body ItemOwnerDTO
-
-	// Mira si el json que nos han pasado coincide con el dto
-	if err := c.ShouldBindJSON(&body); err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
-		return
-	}
-
-	res, err := h.service.Create(c.Request.Context(), &body)
+	// Coger el id
+	accountID, err := middleware.ExtractAccountID(c)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, res)
+	// Mira si el json que nos han pasado coincide con el dto
+	var body ItemOwnerDTO
+	if err := c.ShouldBindJSON(&body); err != nil {
+		apierror.SendError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.service.Create(c.Request.Context(), accountID, body.ItemID)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, nil)
 }

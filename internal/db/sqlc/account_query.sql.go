@@ -16,7 +16,7 @@ INSERT INTO account (
     board_skin, piece_skin, win_animation
 )
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation
+RETURNING account_id
 `
 
 type CreateAccountParams struct {
@@ -29,7 +29,7 @@ type CreateAccountParams struct {
 }
 
 // Queries públicas desde endpoints
-func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (int64, error) {
 	row := q.db.QueryRow(ctx, createAccount,
 		arg.PasswordHash,
 		arg.Mail,
@@ -38,21 +38,9 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		arg.PieceSkin,
 		arg.WinAnimation,
 	)
-	var i Account
-	err := row.Scan(
-		&i.AccountID,
-		&i.Mail,
-		&i.Username,
-		&i.PasswordHash,
-		&i.IsDeleted,
-		&i.Level,
-		&i.Xp,
-		&i.Money,
-		&i.BoardSkin,
-		&i.PieceSkin,
-		&i.WinAnimation,
-	)
-	return i, err
+	var account_id int64
+	err := row.Scan(&account_id)
+	return account_id, err
 }
 
 const deleteAccount = `-- name: DeleteAccount :exec

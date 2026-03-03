@@ -9,14 +9,13 @@ import (
 	"context"
 )
 
-const createItemOwner = `-- name: CreateItemOwner :one
+const createItemOwner = `-- name: CreateItemOwner :exec
 INSERT INTO item_owner (
     user_id, item_id
 )
 VALUES (
     $1, $2
 )
-RETURNING user_id, item_id
 `
 
 type CreateItemOwnerParams struct {
@@ -24,11 +23,9 @@ type CreateItemOwnerParams struct {
 	ItemID int32 `json:"item_id"`
 }
 
-func (q *Queries) CreateItemOwner(ctx context.Context, arg CreateItemOwnerParams) (ItemOwner, error) {
-	row := q.db.QueryRow(ctx, createItemOwner, arg.UserID, arg.ItemID)
-	var i ItemOwner
-	err := row.Scan(&i.UserID, &i.ItemID)
-	return i, err
+func (q *Queries) CreateItemOwner(ctx context.Context, arg CreateItemOwnerParams) error {
+	_, err := q.db.Exec(ctx, createItemOwner, arg.UserID, arg.ItemID)
+	return err
 }
 
 const getShopItem = `-- name: GetShopItem :one

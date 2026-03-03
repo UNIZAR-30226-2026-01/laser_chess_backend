@@ -84,6 +84,8 @@ func SetupRouter(store *db.Store) *gin.Engine {
 	// Match routes
 	{
 		matchRoute := protected.Group("/match")
+		// Probablemente las partidas las acabe creando la app, a si
+		// que creo que no se usara el POST (la funcion del service si)
 		matchRoute.POST("", matchHandler.CreateMatch)
 		matchRoute.GET("/:matchID", matchHandler.GetMatch)
 		matchRoute.GET("/history/:userID", matchHandler.GetUserHistory)
@@ -93,8 +95,9 @@ func SetupRouter(store *db.Store) *gin.Engine {
 	{
 		itemRoute := protected.Group("/item")
 		itemRoute.POST("", itemHandler.CreateItemOwner)
-		itemRoute.GET("/inventory/:userID", itemHandler.GetUserItems)
+		itemRoute.GET("/inventory", itemHandler.GetUserItems)
 		itemRoute.GET("/:itemID", itemHandler.GetShopItem)
+		// Probablemente habrá que meter una de GET todos los items
 	}
 
 	// Rating routes

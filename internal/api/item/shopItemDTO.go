@@ -7,9 +7,8 @@ import (
 // DTOs para tratar con accounts
 
 // Para mandar/recibir un item_owner al/del frontend
-// Son obligatorios ambos parametros
+// Solo se manda el item. El user se pilla del JWT
 type ItemOwnerDTO struct {
-	UserID int64 `json:"user_id" binding:"required"`
 	ItemID int32 `json:"item_id" binding:"required"`
 }
 

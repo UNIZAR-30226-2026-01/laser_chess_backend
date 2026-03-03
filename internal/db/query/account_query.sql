@@ -6,7 +6,7 @@ INSERT INTO account (
     board_skin, piece_skin, win_animation
 )
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING *;
+RETURNING account_id;
 
 -- name: GetAccountByID :one
 SELECT * FROM account
