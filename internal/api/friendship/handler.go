@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,10 +29,10 @@ con la informacion de la amistad junto con un StatusOK si no hay errores, y un
 error en caso contrario.
 *
 */
-func (h *FriendshipHandler) GetFriendship(c *gin.Context) {
-	user1ID, err := strconv.ParseInt(c.Param("user1ID"), 10, 64)
+func (h *FriendshipHandler) GetFriendshipStatus(c *gin.Context) {
+	user1ID, err := middleware.ExtractAccountID(c)
 	if err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
+		apierror.DetectAndSendError(c, err)
 		return
 	}
 
@@ -42,8 +43,8 @@ func (h *FriendshipHandler) GetFriendship(c *gin.Context) {
 	}
 
 	res, err := h.service.GetFriendshipStatus(c.Request.Context(), &FriendshipDTO{
-		SenderID:   user1ID,
-		RecieverID: user2ID,
+		SenderID:   &user1ID,
+		ReceiverID: user2ID,
 	})
 
 	if err != nil {
@@ -67,14 +68,13 @@ usuario junto con un StatusOK si no hay errores, y un error en caso contrario.
 *
 */
 func (h *FriendshipHandler) GetUserFriendships(c *gin.Context) {
-	userID, err := strconv.ParseInt(c.Param("user1ID"), 10, 64)
+	accountID, err := middleware.ExtractAccountID(c)
 	if err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
+		apierror.DetectAndSendError(c, err)
 		return
 	}
 
-	res, err := h.service.GetUserFriendships(c.Request.Context(), userID)
-
+	res, err := h.service.GetUserFriendships(c.Request.Context(), accountID)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -97,14 +97,13 @@ en caso contrario.
 *
 */
 func (h *FriendshipHandler) GetUserPendingSentFriendships(c *gin.Context) {
-	userID, err := strconv.ParseInt(c.Param("user1ID"), 10, 64)
+	accountID, err := middleware.ExtractAccountID(c)
 	if err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
+		apierror.DetectAndSendError(c, err)
 		return
 	}
 
-	res, err := h.service.GetUserPendingSentFriendships(c.Request.Context(),
-		userID)
+	res, err := h.service.GetUserPendingSentFriendships(c.Request.Context(), accountID)
 
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
@@ -127,15 +126,14 @@ relevantes del otro usuario junto con un StatusOK si no hay errores, y un error
 en caso contrario.
 *
 */
-func (h *FriendshipHandler) GetUserPendingRecievedFriendships(c *gin.Context) {
-	userID, err := strconv.ParseInt(c.Param("user1ID"), 10, 64)
+func (h *FriendshipHandler) GetUserPendingReceivedFriendships(c *gin.Context) {
+	accountID, err := middleware.ExtractAccountID(c)
 	if err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
+		apierror.DetectAndSendError(c, err)
 		return
 	}
 
-	res, err := h.service.GetUserPendingRecievedFriendships(c.Request.Context(),
-		userID)
+	res, err := h.service.GetUserPendingReceivedFriendships(c.Request.Context(), accountID)
 
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
@@ -157,9 +155,9 @@ un error en caso de haber ocurrido.
 *
 */
 func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
-	user1ID, err := strconv.ParseInt(c.Param("user1ID"), 10, 64)
+	user1ID, err := middleware.ExtractAccountID(c)
 	if err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
+		apierror.DetectAndSendError(c, err)
 		return
 	}
 
@@ -170,8 +168,8 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 	}
 
 	err = h.service.AcceptFriendship(c.Request.Context(), &FriendshipDTO{
-		SenderID:   user1ID,
-		RecieverID: user2ID,
+		SenderID:   &user1ID,
+		ReceiverID: user2ID,
 	})
 
 	if err != nil {
@@ -194,9 +192,9 @@ un error en caso de haber ocurrido.
 *
 */
 func (h *FriendshipHandler) DeleteFriendship(c *gin.Context) {
-	user1ID, err := strconv.ParseInt(c.Param("user1ID"), 10, 64)
+	user1ID, err := middleware.ExtractAccountID(c)
 	if err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
+		apierror.DetectAndSendError(c, err)
 		return
 	}
 
@@ -207,8 +205,8 @@ func (h *FriendshipHandler) DeleteFriendship(c *gin.Context) {
 	}
 
 	err = h.service.DeleteFriendship(c.Request.Context(), &FriendshipDTO{
-		SenderID:   user1ID,
-		RecieverID: user2ID,
+		SenderID:   &user1ID,
+		ReceiverID: user2ID,
 	})
 
 	if err != nil {
@@ -226,12 +224,16 @@ un JSON.
 * --- Parametros ---
 * c, *gin.Context - Es el contexto de gin de donde saca el JSON.
 * ------------------
-* Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
-con un objeto de confirmacion que contiene los id de ambos usuarios junto con
-un StatusCreated si no hay errores, y un error en caso contrario.
+Devuelve StatusCreated si no hay errores, y un error en caso contrario.
 *
 */
 func (h *FriendshipHandler) Create(c *gin.Context) {
+
+	accountID, err := middleware.ExtractAccountID(c)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
 
 	var body FriendshipDTO
 
@@ -241,11 +243,12 @@ func (h *FriendshipHandler) Create(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.Create(c.Request.Context(), &body)
+	body.SenderID = &accountID
+	err = h.service.Create(c.Request.Context(), &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, res)
+	c.JSON(http.StatusCreated, nil)
 }
