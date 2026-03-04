@@ -14,6 +14,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +22,7 @@ import (
 // Hace el setup del router
 // Crea handlers y services, y mapea endpoints
 // Tambien activa el middleware del jwt
-func SetupRouter(store *db.Store) *gin.Engine {
+func SetupRouter(store *db.Store, privateHub *rt.PrivateHub) *gin.Engine {
 	router := gin.Default()
 
 	// Cross-Origin Resource Sharing para conexion con Angular
@@ -126,6 +127,8 @@ func SetupRouter(store *db.Store) *gin.Engine {
 		friendshipRoute.PUT("/:user2ID", friendshipHandler.AcceptFriendship)
 		friendshipRoute.DELETE("/:user2ID", friendshipHandler.DeleteFriendship)
 	}
+
+	// TODO: meter los endpoints de websockets
 
 	return router
 }
