@@ -8,6 +8,7 @@ package rt
 import "sync"
 
 type PrivateHub struct {
+	// registro de partidas activas
 	registry *MatchRegistry
 
 	// ID del receptor -> Lista de IDs de quienes le han retado
