@@ -7,6 +7,7 @@ import (
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -22,6 +23,8 @@ func main() {
 		log.Fatalln("Error: DB_URL no encontrada")
 	}
 
+	// == INICIALIZAR BDD ===============================================
+
 	// Crear pool de conexiones con la db
 	ctx := context.Background()
 	dbPool, err := pgxpool.New(ctx, dbURL)
@@ -36,8 +39,18 @@ func main() {
 	// Inicializar store de sqlc
 	store := db.NewStore(dbPool)
 
+	// == INICIALIZAR HUBS ===============================================
+
+	// Inicializar el registro de partidas activas
+	matchRegistry := rt.NewMatchRegistry()
+
+	// Inicializar el hub privado
+	privateHub := rt.NewPrivateHub(matchRegistry)
+
+	// == INICIALIZAR ROUTER =============================================
+
 	// Inicializar router de gin
-	router := api.SetupRouter(store)
+	router := api.SetupRouter(store, privateHub)
 
 	// Ejecutar el router en el puerto que se le diga (8080 por defecto)
 	port := os.Getenv("PORT")
