@@ -55,8 +55,8 @@ func DetectAndSendError(c *gin.Context, err error) {
 		case errors.Is(err, ErrAlreadyExists):
 			httpCode = http.StatusConflict
 
-		case errors.Is(err, ErrAlreadyExists):
-			httpCode = http.StatusConflict
+		case errors.Is(err, ErrUnauthorized):
+			httpCode = http.StatusUnauthorized
 
 		case errors.Is(err, ErrBadRequest):
 			httpCode = http.StatusBadRequest
