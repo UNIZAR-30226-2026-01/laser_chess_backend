@@ -7,6 +7,26 @@ package game
 
 import "fmt"
 
+// --- Constantes --- //
+const XDIM int = 10
+const YDIM int = 8
+
+type pointing_T uint8
+const (
+	DOWN pointing_T = 0
+	LEFT pointing_T = 1
+	UP pointing_T = 2
+	RIGHT pointing_T = 3
+
+)
+
+type team_T uint8
+const (
+	NONE team_T = 0
+	BLUE_TEAM team_T = 1
+	RED_TEAM team_T = 2
+)
+
 // ===================================== //
 //	PIECES								 //
 // ===================================== //
@@ -22,7 +42,7 @@ type BoardPiece interface {
 // ============== VACANT ============== //
 
 type BoardPieceVacant struct{
-	team rune //temporal (Casillas que no permiten )
+	tile team_T 
 }
 
 func (c *BoardPieceVacant) canMoveTo(x int, y int) bool {
@@ -38,16 +58,16 @@ func (c *BoardPieceVacant) canRotate(d rune) bool {
 //---Depuración---//
 func (c *BoardPieceVacant) VisualRep() string {
 	retval := "·"
-	if (c.team == 'r') { retval = "\033[31;1m" + retval + "\033[0m"}
-	if (c.team == 'b') { retval = "\033[34;1m" + retval + "\033[0m"}
+	if (c.tile == RED_TEAM) { retval = "\033[31;1m" + retval + "\033[0m"}
+	if (c.tile == BLUE_TEAM) { retval = "\033[34;1m" + retval + "\033[0m"}
 	return retval
 }
 
 // ============== KING ============== //
 
 type BoardPieceKing struct{
-	team rune //Equipo al que pertenezco
-	tile rune //Baldosa sobre la que estoy situado
+	team team_T //Equipo al que pertenezco
+	tile team_T //Baldosa sobre la que estoy situado
 }
 
 func (c *BoardPieceKing) canMoveTo(x int, y int) bool {
@@ -63,16 +83,17 @@ func (c *BoardPieceKing) canRotate(d rune) bool {
 //---Depuración---//
 func (c *BoardPieceKing) VisualRep() string {
 	retval := "K"
-	if (c.team == 'r') { retval = "\033[31;1m" + retval + "\033[0m"}
-	if (c.team == 'b') { retval = "\033[34;1m" + retval + "\033[0m"}
+	if (c.team == RED_TEAM) { retval = "\033[31;1m" + retval + "\033[0m"}
+	if (c.team == BLUE_TEAM) { retval = "\033[34;1m" + retval + "\033[0m"}
 	return retval
 }
 
 // ============== SHIELD ============== //
 
 type BoardPieceShield struct{
-	team rune //temporal
-	pointing int //temporal
+	team team_T //temporal
+	tile team_T //Baldosa sobre la que estoy situado
+	pointing pointing_T //temporal
 }
 
 func (c *BoardPieceShield) canMoveTo(x int, y int) bool {
@@ -87,9 +108,90 @@ func (c *BoardPieceShield) canRotate(d rune) bool {
 
 //---Depuración---//
 func (c *BoardPieceShield) VisualRep() string {
-	retval := "S"
-	if (c.team == 'r') { retval = "\033[31;1m" + retval + "\033[0m"}
-	if (c.team == 'b') { retval = "\033[34;1m" + retval + "\033[0m"}
+	var sprites = [4]string{"⬓", "◧", "⬒", "◨"}
+	retval := sprites[c.pointing]
+	if (c.team == RED_TEAM) { retval = "\033[31;1m" + retval + "\033[0m"}
+	if (c.team == BLUE_TEAM) { retval = "\033[34;1m" + retval + "\033[0m"}
+	return retval
+}
+
+// ============== DEFLECTOR ============== //
+
+type BoardPieceDeflector struct{
+	team team_T //temporal
+	tile team_T //Baldosa sobre la que estoy situado
+	pointing pointing_T //temporal
+}
+
+func (c *BoardPieceDeflector) canMoveTo(x int, y int) bool {
+	fmt.Printf("deflector - canMoveTo\n")
+	return true; //TODO
+}
+
+func (c *BoardPieceDeflector) canRotate(d rune) bool {
+	fmt.Printf("deflector - canRotate\n")
+	return true; //TODO
+}
+
+//---Depuración---//
+func (c *BoardPieceDeflector) VisualRep() string {
+	var sprites = [4]string{"◣", "◤", "◥", "◢"}
+	retval := sprites[c.pointing]
+	if (c.team == RED_TEAM) { retval = "\033[31;1m" + retval + "\033[0m"}
+	if (c.team == BLUE_TEAM) { retval = "\033[34;1m" + retval + "\033[0m"}
+	return retval
+}
+
+// ============== SWITCH ============== //
+
+type BoardPieceSwitch struct{
+	team team_T //temporal
+	tile team_T //Baldosa sobre la que estoy situado
+	pointing pointing_T //temporal
+}
+
+func (c *BoardPieceSwitch) canMoveTo(x int, y int) bool {
+	fmt.Printf("Switch - canMoveTo\n")
+	return true; //TODO
+}
+
+func (c *BoardPieceSwitch) canRotate(d rune) bool {
+	fmt.Printf("Switch - canRotate\n")
+	return true; //TODO
+}
+
+//---Depuración---//
+func (c *BoardPieceSwitch) VisualRep() string {
+	var sprites = [4]string{"⧅", "⧄", "⧅", "⧄"}
+	retval := sprites[c.pointing]
+	if (c.team == RED_TEAM) { retval = "\033[31;1m" + retval + "\033[0m"}
+	if (c.team == BLUE_TEAM) { retval = "\033[34;1m" + retval + "\033[0m"}
+	return retval
+}
+
+// ============== LASER ============== //
+
+type BoardPieceLaser struct{
+	team team_T //temporal
+	pointing pointing_T //temporal
+}
+
+func (c *BoardPieceLaser) canMoveTo(x int, y int) bool {
+	fmt.Printf("Switch - canMoveTo\n")
+	return true; //TODO
+}
+
+func (c *BoardPieceLaser) canRotate(d rune) bool {
+	fmt.Printf("Switch - canRotate\n")
+	return true; //TODO
+}
+
+//---Depuración---//
+func (c *BoardPieceLaser) VisualRep() string {
+	var sprites = [4]string{"▼", "◀", "▲", "▶"}
+	retval := sprites[c.pointing]
+	if (c.team == RED_TEAM) { retval = "\033[31;1m" + retval + "\033[0m"}
+	if (c.team == BLUE_TEAM) { retval = "\033[34;1m" + retval + "\033[0m"}
 	return retval
 }
 
@@ -98,7 +200,7 @@ func (c *BoardPieceShield) VisualRep() string {
 // ===================================== //
 
 type Board struct {
-	cells [10][8]BoardPiece
+	cells [XDIM][YDIM]BoardPiece
 }
 
 func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int) bool { 
@@ -111,8 +213,8 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
 
 //---Depuración---//
 func (b *Board) print(){
-	for y := 0; y < 8; y++ {
-		for x := 0; x < 10; x++ {
+	for y := 0; y < YDIM; y++ {
+		for x := 0; x < XDIM; x++ {
 			cell := b.cells[x][y].VisualRep()
 			fmt.Print(cell)
 			fmt.Printf(" ")
