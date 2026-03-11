@@ -232,7 +232,7 @@ func (b *Board) print(){
 
 // --- INTERFAZ DE COMUNICACIÓN CON EL MÓDULO --- //
 
-func (b *Board) processTurn(instruction string){
+func (b *Board) processTurn(instruction string) bool{
 
 	//La versión de golang del string stream
 	reader := strings.NewReader(instruction)
@@ -254,7 +254,7 @@ func (b *Board) processTurn(instruction string){
 		param3 := token3 - 1 // new x
 		param4 := int(token4 - 'a') // new y
 
-		b.movePiece(param1, param2, param3, param4)
+		return b.movePiece(param2, param1, param4, param3)
 		
 	case 'R', 'L':
 		var token1 int
@@ -266,10 +266,11 @@ func (b *Board) processTurn(instruction string){
 		param2 := int(token2 - 'a') // y
 		param3 := inst
 
-		b.rotatePiece(param1, param2, param3)
+		return b.rotatePiece(param2, param1, param3)
 	}
 
 	if err != nil { 
 		//Error (no cumple con el formato)
 	}
+	return false
 }
