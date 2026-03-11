@@ -61,12 +61,8 @@ func TestProbatTipoDeDato(t *testing.T){
 	tablero.cells[9][3] = &BoardPieceDeflector{RED_TEAM, RED_TEAM, RIGHT}
 	tablero.cells[7][6] = &BoardPieceDeflector{RED_TEAM, NONE, DOWN}
 
-	// === TESTS AQUI ===
-	tablero.movePiece(6,6,6,7)
-
-	tablero.movePiece(6,7,6,6)
-	
-	tablero.rotatePiece(6,6,'L')
-
 	tablero.print()
+
+	// === TESTS AQUI ===
+	tablero.processTurn("Ta1:a2")
 }
