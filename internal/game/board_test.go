@@ -24,11 +24,13 @@ func TestProbatTipoDeDato(t *testing.T){
 	tablero.cells[8][7] = &BoardPieceVacant{'b'}
 
 	//Poner un rey en una casilla
-	tablero.cells[6][6] = &BoardPieceKing{'r'}
+	tablero.cells[6][6] = &BoardPieceKing{'r', 'n'}
 	
 	
 	tablero.movePiece(6,6,6,7)
 	tablero.movePiece(6,7,6,6)
+
+	tablero.rotatePiece(6,6,'L')
 
 	tablero.print()
 }

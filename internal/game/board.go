@@ -101,20 +101,12 @@ type Board struct {
 	cells [10][8]BoardPiece
 }
 
-func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int){
-	if(b.cells[x_from][y_from].canMoveTo(x_to, y_to)){
-		fmt.Printf("SAID TRUE\n")
-	}else{
-		fmt.Printf("SAID FALSE\n")
-	}
+func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int) bool { 
+	return b.cells[x_from][y_from].canMoveTo(x_to, y_to)
 }
 
-func (b *Board) rotatePiece(x_at int, y_at int, rot rune){
-	if(b.cells[x_at][y_at].canRotate(rot)){
-		fmt.Printf("SAID TRUE\n")
-	}else{
-		fmt.Printf("SAID FALSE\n")
-	}
+func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
+	return b.cells[x_at][y_at].canRotate(rot)
 }
 
 //---Depuración---//
