@@ -117,6 +117,7 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune){
 	}
 }
 
+//---Depuración---//
 func (b *Board) print(){
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 10; x++ {
