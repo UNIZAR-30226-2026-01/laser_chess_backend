@@ -5,27 +5,30 @@ import "testing"
 func TestProbatTipoDeDato(t *testing.T){
 	tablero := Board{}
 
-	for x := 0; x < 3; x++ {
-		tablero.cells[x][0] = &BoardPieceKing{
-			team: 'r',
-		}
-		tablero.cells[x][1] = &BoardPieceShield{
-			team: 'r',
-		}
-		tablero.cells[x][2] = &BoardPieceShield{
-			team: 'b',
+	//Iniciar tablero
+
+	for y := 0; y < 8; y++ {
+		for x := 0; x < 10; x++ {
+			tablero.cells[x][y] = &BoardPieceVacant{'n'}
 		}
 	}
 
-	//SE PRUEBA LA LLAMADA A LO QUE DEBERÍA SER UN REY (TRUE ESPERADO)
-	tablero.movePiece(0, 0, 1, 1)
+	for y := 0; y < 8; y++ {
+		tablero.cells[0][y] = &BoardPieceVacant{'b'}
+		tablero.cells[9][y] = &BoardPieceVacant{'r'}
+	}
 
-	//SE PRUEBA LA LLAMADA A LO QUE DEBERÍA SER UN REY (FALSE ESPERADO)
-	tablero.rotatePiece(0, 1, 'L')
+	tablero.cells[1][0] = &BoardPieceVacant{'r'}
+	tablero.cells[1][7] = &BoardPieceVacant{'r'}
+	tablero.cells[8][0] = &BoardPieceVacant{'b'}
+	tablero.cells[8][7] = &BoardPieceVacant{'b'}
 
-	//SE PRUEBA LA LLAMADA A LO QUE DEBERÍA SER UN ESCUDO (TRUE ESPERADO)
-	tablero.movePiece(0, 1, 1, 1)
+	//Poner un rey en una casilla
+	tablero.cells[6][6] = &BoardPieceKing{'r'}
+	
+	
+	tablero.movePiece(6,6,6,7)
+	tablero.movePiece(6,7,6,6)
 
-	//SE PRUEBA LA LLAMADA A LO QUE DEBERÍA SER UN ESCUDO (TRUE ESPERADO)
-	tablero.rotatePiece(0, 1, 'L')
+	tablero.print()
 }

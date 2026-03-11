@@ -15,12 +15,39 @@ import "fmt"
 type BoardPiece interface {
 	canMoveTo(x int, y int) bool
 	canRotate(d rune) bool //temporal
+	//---Depuración---//
+	VisualRep() string;
+}
+
+// ============== VACANT ============== //
+
+type BoardPieceVacant struct{
+	team rune //temporal (Casillas que no permiten )
+}
+
+func (c *BoardPieceVacant) canMoveTo(x int, y int) bool {
+	fmt.Printf("Empty - canMoveTo\n")
+	return false;
+}
+
+func (c *BoardPieceVacant) canRotate(d rune) bool {
+	fmt.Printf("Empty - canRotate\n")
+	return false;
+}
+
+//---Depuración---//
+func (c *BoardPieceVacant) VisualRep() string {
+	retval := "·"
+	if (c.team == 'r') { retval = "\033[31;1m" + retval + "\033[0m"}
+	if (c.team == 'b') { retval = "\033[34;1m" + retval + "\033[0m"}
+	return retval
 }
 
 // ============== KING ============== //
 
 type BoardPieceKing struct{
-	team rune //temporal
+	team rune //Equipo al que pertenezco
+	tile rune //Baldosa sobre la que estoy situado
 }
 
 func (c *BoardPieceKing) canMoveTo(x int, y int) bool {
@@ -31,6 +58,14 @@ func (c *BoardPieceKing) canMoveTo(x int, y int) bool {
 func (c *BoardPieceKing) canRotate(d rune) bool {
 	fmt.Printf("king - canRotate\n")
 	return false; //TODO
+}
+
+//---Depuración---//
+func (c *BoardPieceKing) VisualRep() string {
+	retval := "K"
+	if (c.team == 'r') { retval = "\033[31;1m" + retval + "\033[0m"}
+	if (c.team == 'b') { retval = "\033[34;1m" + retval + "\033[0m"}
+	return retval
 }
 
 // ============== SHIELD ============== //
@@ -50,12 +85,20 @@ func (c *BoardPieceShield) canRotate(d rune) bool {
 	return true; //TODO
 }
 
+//---Depuración---//
+func (c *BoardPieceShield) VisualRep() string {
+	retval := "S"
+	if (c.team == 'r') { retval = "\033[31;1m" + retval + "\033[0m"}
+	if (c.team == 'b') { retval = "\033[34;1m" + retval + "\033[0m"}
+	return retval
+}
+
 // ===================================== //
 //	BOARD								 //
 // ===================================== //
 
 type Board struct {
-	cells [3][3]BoardPiece
+	cells [10][8]BoardPiece
 }
 
 func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int){
@@ -71,5 +114,16 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune){
 		fmt.Printf("SAID TRUE\n")
 	}else{
 		fmt.Printf("SAID FALSE\n")
+	}
+}
+
+func (b *Board) print(){
+	for y := 0; y < 8; y++ {
+		for x := 0; x < 10; x++ {
+			cell := b.cells[x][y].VisualRep()
+			fmt.Print(cell)
+			fmt.Printf(" ")
+		}
+		fmt.Printf("\n")
 	}
 }
