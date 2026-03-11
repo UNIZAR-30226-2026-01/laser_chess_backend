@@ -217,7 +217,7 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
 //---Depuración---//
 func (b *Board) print(){
 	for y := 0; y < YDIM; y++ {
-		fmt.Printf("%d | ", y) // numero
+		fmt.Printf("%d | ", y + 1) // numero
 		for x := 0; x < XDIM; x++ {
 			cell := b.cells[x][y].VisualRep()
 			fmt.Print(cell)

@@ -65,4 +65,12 @@ func TestProbatTipoDeDato(t *testing.T){
 
 	// === TESTS AQUI ===
 	tablero.processTurn("Ta1:a2")
+
+	tablero.processTurn("Rd5")
+
+	tablero.processTurn("Le4")
+
+	tablero.processTurn("Te4:f4")
+
+	tablero.processTurn("Ra1")
 }
