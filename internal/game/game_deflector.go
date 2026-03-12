@@ -34,14 +34,16 @@ func (c *BoardPieceDeflector) VisualRep() string {
 }
 
 func (c *BoardPieceDeflector)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
-	switch ((c.pointing - pointing_T)%4){
+	switch ((c.pointing - dir)%4){
 	case UP:
-		return nil, HIT
+		return 0, HIT
 	case LEFT:
 		return UP, CONTINUE
 	case DOWN:
 		return RIGHT, CONTINUE
-	case RIGHT
-		return nil, HIT
+	case RIGHT:
+		return 0, HIT
 	}
+
+	return 0,0 //Nunca llega es para que no se queje el compilador
 }
