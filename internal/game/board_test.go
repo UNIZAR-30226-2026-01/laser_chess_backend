@@ -267,6 +267,7 @@ func TestProbatTipoDeDato(t *testing.T){
 	tablero.cells[6][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
 	if tablero.processTurn("Tg8:f8") != true {
         t.Errorf("X - Se ha rechazado un movimiento válido (posible error permutación)")
+
     }else{
 		t.Log("OK")
 	}
