@@ -32,3 +32,17 @@ func (c *BoardPieceSwitch) VisualRep() string {
 	}
 	return retval
 }
+
+
+func (c *BoardPieceShield)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
+	switch ((c.pointing - pointing_T)%4){
+	case UP:
+		return LEFT, CONTINUE
+	case LEFT:
+		return UP, CONTINUE
+	case DOWN:
+		return RIGHT, CONTINUE
+	case RIGHT
+		return DOWN, CONTINUE
+	}
+}

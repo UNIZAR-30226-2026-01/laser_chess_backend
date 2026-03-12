@@ -31,3 +31,7 @@ func (c *BoardPieceVacant) VisualRep() string {
 	}
 	return retval
 }
+
+func (c *BoardPieceVacant)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
+	return dir, CONTINUE
+}
