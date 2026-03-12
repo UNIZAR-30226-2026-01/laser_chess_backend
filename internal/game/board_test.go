@@ -2,8 +2,8 @@ package game
 
 import "testing"
 
-func reiniciarTablero(tablero *Board){
-	
+func reiniciarTablero(tablero *Board) {
+
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 10; x++ {
 			tablero.cells[x][y] = &BoardPieceVacant{NONE}
@@ -27,8 +27,10 @@ func reiniciarTablero(tablero *Board){
 	tablero.cells[4][7] = &BoardPieceKing{RED_TEAM, NONE}
 
 	//Poner laseres
-	tablero.cells[0][0] = &BoardPieceLaser{BLUE_TEAM, DOWN}
-	tablero.cells[9][7] = &BoardPieceLaser{RED_TEAM, UP}
+	tablero.blueTeamLaser = &BoardPieceLaser{BLUE_TEAM, DOWN}
+	tablero.cells[0][0] = tablero.blueTeamLaser
+	tablero.redTeamLaser = &BoardPieceLaser{RED_TEAM, UP}
+	tablero.cells[9][7] = tablero.redTeamLaser
 
 	//Poner escudos
 	tablero.cells[4][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN}
@@ -59,7 +61,7 @@ func reiniciarTablero(tablero *Board){
 	tablero.cells[7][6] = &BoardPieceDeflector{RED_TEAM, NONE, DOWN}
 }
 
-func TestProbatTipoDeDato(t *testing.T){
+func TestProbatTipoDeDato(t *testing.T) {
 	tablero := Board{}
 
 	//Iniciar tablero
@@ -73,46 +75,46 @@ func TestProbatTipoDeDato(t *testing.T){
 	t.Log("== Rey ==")
 
 	if tablero.ProcessTurn("Te8:e6") != false {
-        t.Errorf("X - Se ha aceptado un movimiento fuera del alcance de la pieza")
+		t.Errorf("X - Se ha aceptado un movimiento fuera del alcance de la pieza")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Te8:e9") != false {
-        t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
+		t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Te8:d8") != false {
-        t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada")
+		t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
-	tablero.cells[4][6] = &BoardPieceVacant{BLUE_TEAM} 
+	tablero.cells[4][6] = &BoardPieceVacant{BLUE_TEAM}
 	if tablero.ProcessTurn("Te8:e7") != false {
-        t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
+		t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 	tablero.cells[4][6] = &BoardPieceVacant{NONE}
 
 	if tablero.ProcessTurn("Te8:e7") != true {
-        t.Errorf("X - Se ha rechazado un movimiento válido")
-    }else{
+		t.Errorf("X - Se ha rechazado un movimiento válido")
+	} else {
 		reiniciarTablero(&tablero)
 		t.Log("OK")
 	}
 
-	tablero.cells[4][6] = &BoardPieceVacant{RED_TEAM} 
+	tablero.cells[4][6] = &BoardPieceVacant{RED_TEAM}
 	if tablero.ProcessTurn("Te8:e7") != true {
-        t.Errorf("X - Se ha rechazado un movimiento válido")
-    }else{
+		t.Errorf("X - Se ha rechazado un movimiento válido")
+	} else {
 		reiniciarTablero(&tablero)
 		t.Log("OK")
 	}
@@ -120,47 +122,47 @@ func TestProbatTipoDeDato(t *testing.T){
 
 	t.Log("== Escudo ==")
 
-	if tablero.ProcessTurn("Td8:d6") != false {        
+	if tablero.ProcessTurn("Td8:d6") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del alcance de la pieza")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Td8:d9") != false {
-        t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
+		t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Tf8:e8") != false {
-        t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada")
+		t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
-	tablero.cells[3][6] = &BoardPieceVacant{BLUE_TEAM} 
+	tablero.cells[3][6] = &BoardPieceVacant{BLUE_TEAM}
 	if tablero.ProcessTurn("Td8:d7") != false {
-        t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
+		t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 	tablero.cells[3][6] = &BoardPieceVacant{NONE}
 
 	if tablero.ProcessTurn("Td8:c7") != true {
-        t.Errorf("X - Se ha rechazado un movimiento válido")
-    }else{
+		t.Errorf("X - Se ha rechazado un movimiento válido")
+	} else {
 		reiniciarTablero(&tablero)
 		t.Log("OK")
 	}
 
-	tablero.cells[3][6] = &BoardPieceVacant{RED_TEAM} 
+	tablero.cells[3][6] = &BoardPieceVacant{RED_TEAM}
 	if tablero.ProcessTurn("Td8:c7") != true {
-        t.Errorf("X - Se ha rechazado un movimiento válido")
-    }else{
+		t.Errorf("X - Se ha rechazado un movimiento válido")
+	} else {
 		reiniciarTablero(&tablero)
 		t.Log("OK")
 	}
@@ -168,45 +170,45 @@ func TestProbatTipoDeDato(t *testing.T){
 
 	t.Log("== Deflector ==")
 
-	if tablero.ProcessTurn("Tc8:c6") != false {        
+	if tablero.ProcessTurn("Tc8:c6") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del alcance de la pieza")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Tc8:c9") != false {
-        t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
+		t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Th4:h5") != false {
-        t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada")
+		t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
- 
+
 	if tablero.ProcessTurn("Tc2:b1") != false {
-        t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
+		t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Ta4:b3") != true {
-        t.Errorf("X - Se ha rechazado un movimiento válido")
-    }else{
+		t.Errorf("X - Se ha rechazado un movimiento válido")
+	} else {
 		reiniciarTablero(&tablero)
 		t.Log("OK")
 	}
 
-	tablero.cells[3][6] = &BoardPieceVacant{RED_TEAM} 
+	tablero.cells[3][6] = &BoardPieceVacant{RED_TEAM}
 	if tablero.ProcessTurn("Ta4:a3") != true {
-        t.Errorf("X - Se ha rechazado un movimiento válido")
-    }else{
+		t.Errorf("X - Se ha rechazado un movimiento válido")
+	} else {
 		reiniciarTablero(&tablero)
 		t.Log("OK")
 	}
@@ -214,66 +216,75 @@ func TestProbatTipoDeDato(t *testing.T){
 
 	t.Log("== Laser ==")
 
-	if tablero.ProcessTurn("Ta1:a2") != false {        
+	if tablero.ProcessTurn("Ta1:a2") != false {
 		t.Errorf("X - Esta pieza siempre debería devolver false, (rarete)")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	t.Log("== Switch ==")
 
-
-	if tablero.ProcessTurn("Te5:g7") != false {        
+	if tablero.ProcessTurn("Te5:g7") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del alcance de la pieza")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	tablero.cells[6][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
 	if tablero.ProcessTurn("Tg8:g7") != false {
-        t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
+		t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 	tablero.cells[6][7] = &BoardPieceVacant{NONE}
 
 	tablero.cells[6][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
 	if tablero.ProcessTurn("Tg8:h7") != false {
-        t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada (permutación no posible)")
+		t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada (permutación no posible)")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 	tablero.cells[6][7] = &BoardPieceVacant{NONE}
- 
+
 	tablero.cells[7][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
 	if tablero.ProcessTurn("Th8:i8") != false {
-        t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
+		t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
 		reiniciarTablero(&tablero)
-    }else{
+	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Te5:f4") != true {
-        t.Errorf("X - Se ha rechazado un movimiento válido (posible error permutación)")
-    }else{
+		t.Errorf("X - Se ha rechazado un movimiento válido (posible error permutación)")
+	} else {
 		reiniciarTablero(&tablero)
 		t.Log("OK")
 	}
 
 	tablero.cells[6][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
 	if tablero.ProcessTurn("Tg8:f8") != true {
-        t.Errorf("X - Se ha rechazado un movimiento válido (posible error permutación)")
+		t.Errorf("X - Se ha rechazado un movimiento válido (posible error permutación)")
 
-    }else{
+	} else {
 		t.Log("OK")
 	}
 	tablero.cells[6][7] = &BoardPieceVacant{NONE}
 
 	laserpath := []vector2_T{{0, 0}, {0, 1}, {0, 2}, {0, 3}, {1, 3}, {2, 3}, {2, 4}, {1, 4}, {0, 4}, {0, 5}, {0, 6}, {0, 7}}
 	tablero.printlaser(laserpath)
+
+	// Test del recorrido del laser
+	t.Log("Solo dispara el laser y debería finalizar por out of bounds")
+	positions, terminationReason := tablero.blueTeamLaser.shootLaser(0, 0, &tablero)
+	t.Log(positions)
+	if terminationReason != OUT_OF_BOUNDS {
+		t.Errorf("X - No ha terminado por la razón correcta, se esperaba OUT_OF_BOUNDS, recibido %d", terminationReason)
+	} else {
+		t.Log("OK")
+	}
 
 }

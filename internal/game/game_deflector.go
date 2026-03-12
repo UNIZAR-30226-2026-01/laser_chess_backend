@@ -33,8 +33,8 @@ func (c *BoardPieceDeflector) VisualRep() string {
 	return retval
 }
 
-func (c *BoardPieceDeflector)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
-	switch ((c.pointing - dir)%4){
+func (c *BoardPieceDeflector) processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T) {
+	switch (c.pointing + dir) % 4 {
 	case UP:
 		return 0, HIT
 	case LEFT:
@@ -45,5 +45,5 @@ func (c *BoardPieceDeflector)processLaser(dir pointing_T) (pointing_T, laserInte
 		return 0, HIT
 	}
 
-	return 0,0 //Nunca llega es para que no se queje el compilador
+	return 0, 0 //Nunca llega es para que no se queje el compilador
 }
