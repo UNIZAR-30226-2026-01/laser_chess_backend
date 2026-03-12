@@ -45,12 +45,17 @@ func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, l
 		currentPosition.x += laserMovementDirectionVector.x
 		currentPosition.y += laserMovementDirectionVector.y
 
-		// llamamos a la función processLaser de la pieza que coincide con la posicion del laser en este momento
-		// esta nos devolvera la nueva direccion a la que se dirige el haz y si este se detiene o continua
-		laserPointingDirection, interactionRes = board.cells[currentPosition.x][currentPosition.y].processLaser(laserPointingDirection)
+		if board.isInbound(currentPosition.x, currentPosition.y) {
+			// llamamos a la función processLaser de la pieza que coincide con la posicion del laser en este momento
+			// esta nos devolvera la nueva direccion a la que se dirige el haz y si este se detiene o continua
+			laserPointingDirection, interactionRes = board.cells[currentPosition.x][currentPosition.y].processLaser(laserPointingDirection)
 
-		//usamos esta nueva direccion para obtener el nuevo vector de movimiento
-		laserMovementDirectionVector = laserMovementVector[laserPointingDirection]
+			//usamos esta nueva direccion para obtener el nuevo vector de movimiento
+			laserMovementDirectionVector = laserMovementVector[laserPointingDirection]
+		} else {
+			interactionRes = OUT_OF_BOUNDS
+		}
+
 	}
 	// apilamos la posicion en la que se ha detenido el laser
 	traveledPositions = append(traveledPositions, currentPosition)
@@ -80,6 +85,6 @@ func (c *BoardPieceLaser) VisualRep() string {
 	return retval
 }
 
-func (c *BoardPieceLaser)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
+func (c *BoardPieceLaser) processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T) {
 	return 0, STOP
 }
