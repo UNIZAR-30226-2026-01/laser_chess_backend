@@ -36,10 +36,12 @@ func (c *BoardPieceShield) VisualRep() string {
 }
 
 func (c *BoardPieceShield)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
-	switch ((c.pointing - pointing_T)%4){
+	switch ((c.pointing - dir)%4){
 	case UP:
-		return nil, STOP
+		return 0, STOP
 	case DOWN, LEFT, RIGHT:
-		return nil, HIT
+		return 0, HIT
 	}
+
+	return 0,0 //Nunca llega es para que no se queje el compilador
 }
