@@ -22,11 +22,19 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
 }
 
 //---Depuración---//
-func (b *Board) print(){
+func (b *Board) print(laser []vector2_T){
 	for y := 0; y < YDIM; y++ {
 		fmt.Printf("%d | ", y + 1) // numero
 		for x := 0; x < XDIM; x++ {
+
 			cell := b.cells[x][y].VisualRep()
+
+			for i := 0; i < len(laser); i++ {
+				if (laser[i].x == x && laser[i].y == y){
+					cell = "\033[47m"+cell+"\033[0m"
+				}
+			}
+			
 			fmt.Print(cell)
 			fmt.Printf(" ")
 		}
