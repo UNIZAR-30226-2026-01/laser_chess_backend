@@ -39,7 +39,7 @@ func (b *Board) print(){
 
 // --- INTERFAZ DE COMUNICACIÓN CON EL MÓDULO --- //
 
-func (b *Board) processTurn(instruction string) bool{
+func (b *Board) ProcessTurn(instruction string) bool{
 
 	//La versión de golang del string stream
 	reader := strings.NewReader(instruction)
