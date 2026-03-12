@@ -269,7 +269,6 @@ func TestProbatTipoDeDato(t *testing.T){
         t.Errorf("X - Se ha rechazado un movimiento válido (posible error permutación)")
     }else{
 		t.Log("OK")
-		reiniciarTablero(&tablero)
 	}
 	tablero.cells[6][7] = &BoardPieceVacant{NONE}
 
