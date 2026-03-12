@@ -32,3 +32,7 @@ func (c *BoardPieceKing) VisualRep() string {
 	}
 	return retval
 }
+
+func (c *BoardPieceKing)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
+	return nil HIT
+}

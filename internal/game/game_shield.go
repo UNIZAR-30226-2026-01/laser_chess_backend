@@ -34,3 +34,12 @@ func (c *BoardPieceShield) VisualRep() string {
 	}
 	return retval
 }
+
+func (c *BoardPieceShield)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
+	case ((c.pointing - pointing_T)%4){
+		UP:
+			return nil STOP
+		DOWN, LEFT, RIGHT:
+			return nil HIT
+	}
+}

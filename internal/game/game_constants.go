@@ -39,7 +39,7 @@ const (
 type BoardPiece interface {
 	canMoveTo(x int, y int) bool
 	canRotate(d rune) bool //temporal
-	processLaser(pointing_T) (pointing_T)
+	processLaser(pointing_T) (pointing_T, laserInteractionResult_T)
 	//---Depuración---//
 	VisualRep() string;
 }
