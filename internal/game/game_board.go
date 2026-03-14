@@ -46,8 +46,8 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
 	
 }
 
-//---Depuración---//
-func (b *Board) printlaser(laser []vector2_T){
+// ---Depuración---//
+func (b *Board) print(laser []vector2_T) {
 	for y := 0; y < YDIM; y++ {
 		fmt.Printf("%d | ", y+1) // numero
 		for x := 0; x < XDIM; x++ {
@@ -69,14 +69,14 @@ func (b *Board) printlaser(laser []vector2_T){
 	fmt.Println("    A B C D E F G H I J ") // letra
 }
 
-//---Depuración---//
-func (b *Board) print(){
+// ---Depuración---//
+func (b *Board) print() {
 	for y := 0; y < YDIM; y++ {
-		fmt.Printf("%d | ", y+1) // numero
+		fmt.Printf("%d | ", y + 1) // numero
 		for x := 0; x < XDIM; x++ {
 
 			cell := b.cells[x][y].VisualRep()
-
+			
 			fmt.Print(cell)
 			fmt.Printf(" ")
 		}
@@ -86,6 +86,9 @@ func (b *Board) print(){
 	fmt.Println("    A B C D E F G H I J ") // letra
 }
 
+
+=======
+>>>>>>> 9f84ab6a83aec3f1a77687ca01ebcbfa7586d1d6
 // --- INTERFAZ DE COMUNICACIÓN CON EL MÓDULO --- //
 
 func (b *Board) ProcessTurn(instruction string) bool {
