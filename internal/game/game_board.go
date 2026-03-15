@@ -21,15 +21,15 @@ func (b *Board) isInbound(x int, y int) bool {
 }
 
 func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int) bool {
-	if (b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
+	if b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to) {
 		return b.cells[x_from][y_from].canMoveTo(x_to, y_to, b)
 	} else {
 		return false
-	}	
+	}
 }
 
 func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
-	if (b.isInbound(x_at, y_at) && (rot == 'R' || rot == 'L')){
+	if b.isInbound(x_at, y_at) && (rot == 'R' || rot == 'L') {
 		switch laser := b.cells[x_at][y_at].(type) {
 		case *BoardPieceLaser: //evitar rotacion ilegal de laser (Caso límite)
 			x_after, y_after := laser.frontSpaceAfterRotating(x_at, y_at, rot)
@@ -38,16 +38,16 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
 				return false
 			}
 		}
-	
+
 		return b.cells[x_at][y_at].canRotate(rot)
 	} else {
 		return false
 	}
-	
+
 }
 
 // ---Depuración---//
-func (b *Board) print(laser []vector2_T) {
+func (b *Board) printlaser(laser []vector2_T) {
 	for y := 0; y < YDIM; y++ {
 		fmt.Printf("%d | ", y+1) // numero
 		for x := 0; x < XDIM; x++ {
@@ -72,11 +72,11 @@ func (b *Board) print(laser []vector2_T) {
 // ---Depuración---//
 func (b *Board) print() {
 	for y := 0; y < YDIM; y++ {
-		fmt.Printf("%d | ", y + 1) // numero
+		fmt.Printf("%d | ", y+1) // numero
 		for x := 0; x < XDIM; x++ {
 
 			cell := b.cells[x][y].VisualRep()
-			
+
 			fmt.Print(cell)
 			fmt.Printf(" ")
 		}
@@ -86,9 +86,6 @@ func (b *Board) print() {
 	fmt.Println("    A B C D E F G H I J ") // letra
 }
 
-
-=======
->>>>>>> 9f84ab6a83aec3f1a77687ca01ebcbfa7586d1d6
 // --- INTERFAZ DE COMUNICACIÓN CON EL MÓDULO --- //
 
 func (b *Board) ProcessTurn(instruction string) bool {
@@ -111,10 +108,8 @@ func (b *Board) ProcessTurn(instruction string) bool {
 
 		y_from := token1 - 1        // old x
 		x_from := int(token2 - 'a') // old y
-		y_to := token3 - 1        // new x
-		x_to := int(token4 - 'a') // new y
-
-		
+		y_to := token3 - 1          // new x
+		x_to := int(token4 - 'a')   // new y
 
 		return b.movePiece(x_from, y_from, x_to, y_to)
 

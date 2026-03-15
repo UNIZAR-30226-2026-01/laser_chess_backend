@@ -273,7 +273,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	tablero.cells[6][7] = &BoardPieceVacant{NONE}
 
 	laserpath := []vector2_T{{0, 0}, {0, 1}, {0, 2}, {0, 3}, {1, 3}, {2, 3}, {2, 4}, {1, 4}, {0, 4}, {0, 5}, {0, 6}, {0, 7}}
-	tablero.print(laserpath)
+	tablero.printlaser(laserpath)
 
 	// Test del recorrido del laser
 	t.Log("Solo dispara el laser y debería finalizar por out of bounds")
