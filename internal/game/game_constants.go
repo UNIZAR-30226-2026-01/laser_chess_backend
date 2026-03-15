@@ -41,7 +41,7 @@ const (
 
 // Interfaz general, toda pieza de tablero debe tener esto definido
 type BoardPiece interface {
-	canMoveTo(x int, y int) bool
+	canMoveTo(x int, y int, board *Board) bool
 	canRotate(d rune) bool //temporal
 	processLaser(pointing_T) (pointing_T, laserInteractionResult_T)
 	//---Depuración---//

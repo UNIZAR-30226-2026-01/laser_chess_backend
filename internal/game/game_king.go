@@ -11,14 +11,14 @@ type BoardPieceKing struct {
 	tile team_T //Baldosa sobre la que estoy situado
 }
 
-func (c *BoardPieceKing) canMoveTo(x int, y int) bool {
+func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("king - canMoveTo\n")
 	return true //TODO
 }
 
 func (c *BoardPieceKing) canRotate(d rune) bool {
 	fmt.Printf("king - canRotate\n")
-	return false //TODO
+	return false 
 }
 
 // ---Depuración---//

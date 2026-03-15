@@ -22,7 +22,7 @@ func (b *Board) isInbound(x int, y int) bool {
 
 func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int) bool {
 	if (b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
-		return b.cells[x_from][y_from].canMoveTo(x_to, y_to)
+		return b.cells[x_from][y_from].canMoveTo(x_to, y_to, b)
 	} else {
 		return false
 	}	

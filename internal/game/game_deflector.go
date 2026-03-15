@@ -10,7 +10,7 @@ type BoardPieceDeflector struct {
 	pointing pointing_T //temporal
 }
 
-func (c *BoardPieceDeflector) canMoveTo(x int, y int) bool {
+func (c *BoardPieceDeflector) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("deflector - canMoveTo\n")
 	return true //TODO
 }

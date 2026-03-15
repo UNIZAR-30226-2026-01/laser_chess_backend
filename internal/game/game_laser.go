@@ -62,7 +62,7 @@ func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, l
 	return traveledPositions, interactionRes
 }
 
-func (c *BoardPieceLaser) canMoveTo(x int, y int) bool {
+func (c *BoardPieceLaser) canMoveTo(x int, y int, board *Board) bool{
 	fmt.Printf("Laser - canMoveTo\n")
 	return false
 }

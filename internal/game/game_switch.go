@@ -10,7 +10,7 @@ type BoardPieceSwitch struct {
 	pointing pointing_T //temporal
 }
 
-func (c *BoardPieceSwitch) canMoveTo(x int, y int) bool {
+func (c *BoardPieceSwitch) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("Switch - canMoveTo\n")
 	return true //TODO
 }

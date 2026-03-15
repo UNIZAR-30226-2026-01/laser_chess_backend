@@ -12,7 +12,7 @@ type BoardPieceShield struct {
 	pointing pointing_T //temporal
 }
 
-func (c *BoardPieceShield) canMoveTo(x int, y int) bool {
+func (c *BoardPieceShield) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("shield - canMoveTo\n")
 	return true //TODO
 }
@@ -43,5 +43,5 @@ func (c *BoardPieceShield)processLaser(dir pointing_T) (pointing_T, laserInterac
 		return 0, HIT
 	}
 
-	return 0,0 //Nunca llega es para que no se queje el compilador
+	return 0,0 //Nunca llega es para que no se queje eboard *Boardl compilador
 }

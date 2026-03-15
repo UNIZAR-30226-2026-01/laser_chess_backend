@@ -10,7 +10,7 @@ type BoardPieceVacant struct {
 	tile team_T
 }
 
-func (c *BoardPieceVacant) canMoveTo(x int, y int) bool {
+func (c *BoardPieceVacant) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("Empty - canMoveTo\n")
 	return false
 }
