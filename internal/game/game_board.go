@@ -72,11 +72,11 @@ func (b *Board) printlaser(laser []vector2_T){
 //---Depuración---//
 func (b *Board) print(){
 	for y := 0; y < YDIM; y++ {
-		fmt.Printf("%d | ", y + 1) // numero
+		fmt.Printf("%d | ", y+1) // numero
 		for x := 0; x < XDIM; x++ {
 
 			cell := b.cells[x][y].VisualRep()
-			
+
 			fmt.Print(cell)
 			fmt.Printf(" ")
 		}
@@ -85,7 +85,6 @@ func (b *Board) print(){
 	fmt.Println("  +---------------------") // letra
 	fmt.Println("    A B C D E F G H I J ") // letra
 }
-
 
 // --- INTERFAZ DE COMUNICACIÓN CON EL MÓDULO --- //
 

@@ -12,12 +12,15 @@ import (
 type Room struct {
 	Player1 *Client
 	Player2 *Client
-	Game *game.Board
+	Game    *game.Board
 
-	ConP1 chan interface{}
-	ConP2 chan interface{}
+	FromP1 chan ClientSocketMessage
+	FromP2 chan ClientSocketMessage
+
+	ConP1     chan interface{}
+	ConP2     chan interface{}
 	Broadcast chan interface{}
-	
+
 	// tendra mas cosas para hablar con el juego
 	// para mandar movimientos y recibir info que
 	// mandar a los clientes
@@ -27,7 +30,7 @@ type Room struct {
 
 //TODO: todo
 
-func (r *Room) InitRoom (Player1 *Client, Player2 *Client) {
+func (r *Room) InitRoom(Player1 *Client, Player2 *Client) {
 	r.Player1 = Player1
 	r.Player2 = Player2
 	r.ConP1 = make(chan interface{})
@@ -37,9 +40,14 @@ func (r *Room) InitRoom (Player1 *Client, Player2 *Client) {
 	// r.Game lo que sea pero no se puede iniciar aun
 }
 
-func (r *Room) GetGameState () {
-	// Falta funcion del juego para
-	// devolver estado, o lo guardamos en room
+func (r *Room) FilterMessage(player *Client, message ClientSocketMessage) {
+	switch message.Type {
+	case "Move":
+		r.MakeMove(player.AccountID, message.Content)
+	case "GetState":
+		state := r.GetGameState()
+		player.Send <- state
+	}
 }
 
 func (r *Room) Run() {
@@ -47,26 +55,37 @@ func (r *Room) Run() {
 		select {
 		case message := <-r.ConP1:
 			r.Player2.Send <- message
-			
+
 		case message := <-r.ConP2:
 			r.Player2.Send <- message
 
 		case message := <-r.Broadcast:
 			r.Player1.Send <- message
 			r.Player2.Send <- message
-		} 	// AÑADIR OTRO CASE PARA MODELAR LA COMUNICACION CON EL JUEGO
-			// POR CANALES
+		case message := <-r.FromP1:
+			r.FilterMessage(r.Player1, message)
+		case message := <-r.FromP2:
+			r.FilterMessage(r.Player2, message)
+		}
+
+		// AÑADIR OTRO CASE PARA MODELAR LA COMUNICACION CON EL JUEGO
+		// POR CANALES
 	}
 }
+
+/*******************************/
+/* FUNCIONES PARA LOS CLIENTES */
+/*******************************/
 
 func (r *Room) SendMoveToGame(move string) (string, error) {
 	// resul, err := r.Game.ProcessTurn(move)
 	// return resul, err
+	return "", nil
 }
 
-//HACER QUE DEVUELVA UN ERROR EN VEZ DE UN BOOLEANO
+// HACER QUE DEVUELVA UN ERROR EN VEZ DE UN BOOLEANO
 func (r *Room) MakeMove(AccountID int64, move string) bool {
-	
+
 	if AccountID != r.Player1.AccountID && AccountID != r.Player2.AccountID {
 		return false
 	}
@@ -76,5 +95,11 @@ func (r *Room) MakeMove(AccountID int64, move string) bool {
 		return false
 	}
 	r.Broadcast <- state
+	return true
+}
 
+func (r *Room) GetGameState() string {
+	// Falta funcion del juego para
+	// devolver estado, o lo guardamos en room
+	return ""
 }
