@@ -10,6 +10,10 @@ type BoardPieceVacant struct {
 	tile team_T
 }
 
+func (c *BoardPieceVacant) getTeamTile() team_T {
+	return c.tile
+}
+
 func (c *BoardPieceVacant) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("Empty - canMoveTo\n")
 	return false

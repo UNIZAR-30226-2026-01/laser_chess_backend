@@ -12,14 +12,22 @@ type BoardPieceShield struct {
 	pointing pointing_T //temporal
 }
 
+func (c *BoardPieceShield) getTeamTile() team_T {
+	return c.tile
+}
+
 func (c *BoardPieceShield) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("shield - canMoveTo\n")
-	return true //TODO
+	switch cell := board.cells[x][y].(type) {
+		case *BoardPieceVacant:
+			return c.team == cell.getTeamTile() || NONE == cell.getTeamTile() 
+	}
+	return false
 }
 
 func (c *BoardPieceShield) canRotate(d rune) bool {
 	fmt.Printf("shield - canRotate\n")
-	return true //TODO
+	return true
 }
 
 // ---Depuración---//

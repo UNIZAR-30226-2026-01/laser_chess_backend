@@ -33,13 +33,13 @@ func reiniciarTablero(tablero *Board) {
 	tablero.cells[9][7] = tablero.redTeamLaser
 
 	//Poner escudos
-	tablero.cells[4][1] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN} //[][1]
+	tablero.cells[4][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN} 
 	tablero.cells[6][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN}
 	tablero.cells[3][7] = &BoardPieceShield{RED_TEAM, NONE, UP}
 	tablero.cells[5][7] = &BoardPieceShield{RED_TEAM, NONE, UP}
 
 	//poner switches
-	tablero.cells[4][3] = &BoardPieceSwitch{BLUE_TEAM, NONE, LEFT} //DOWN
+	tablero.cells[4][3] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN} //DOWN
 	tablero.cells[5][3] = &BoardPieceSwitch{BLUE_TEAM, NONE, LEFT}
 	tablero.cells[4][4] = &BoardPieceSwitch{RED_TEAM, NONE, LEFT}
 	tablero.cells[5][4] = &BoardPieceSwitch{RED_TEAM, NONE, DOWN}
@@ -54,7 +54,7 @@ func reiniciarTablero(tablero *Board) {
 	tablero.cells[2][1] = &BoardPieceDeflector{BLUE_TEAM, NONE, UP}
 	tablero.cells[2][7] = &BoardPieceDeflector{RED_TEAM, NONE, RIGHT}
 	tablero.cells[2][4] = &BoardPieceDeflector{RED_TEAM, NONE, RIGHT}
-	//tablero.cells[2][3] = &BoardPieceDeflector{RED_TEAM, NONE, UP}
+	tablero.cells[2][3] = &BoardPieceDeflector{RED_TEAM, NONE, UP}
 	tablero.cells[3][2] = &BoardPieceDeflector{RED_TEAM, NONE, RIGHT}
 	tablero.cells[9][4] = &BoardPieceDeflector{RED_TEAM, RED_TEAM, UP}
 	tablero.cells[9][3] = &BoardPieceDeflector{RED_TEAM, RED_TEAM, RIGHT}
@@ -233,7 +233,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	}
 
 	tablero.cells[6][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
-	if tablero.ProcessTurn("Tg8:g7") != false {
+	if tablero.ProcessTurn("Tg8:g9") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
 		reiniciarTablero(&tablero)
 	} else {

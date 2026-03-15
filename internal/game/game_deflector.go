@@ -10,9 +10,17 @@ type BoardPieceDeflector struct {
 	pointing pointing_T //temporal
 }
 
+func (c *BoardPieceDeflector) getTeamTile() team_T {
+	return c.tile
+}
+
 func (c *BoardPieceDeflector) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("deflector - canMoveTo\n")
-	return true //TODO
+	switch cell := board.cells[x][y].(type) {
+		case *BoardPieceVacant:
+			return c.team == cell.getTeamTile() || NONE == cell.getTeamTile() 
+	}
+	return false
 }
 
 func (c *BoardPieceDeflector) canRotate(d rune) bool {

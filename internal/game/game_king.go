@@ -13,7 +13,11 @@ type BoardPieceKing struct {
 
 func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("king - canMoveTo\n")
-	return true //TODO
+	switch cell := board.cells[x][y].(type) {
+		case *BoardPieceVacant:
+			return c.team == cell.getTeamTile() || NONE == cell.getTeamTile() 
+	}
+	return false
 }
 
 func (c *BoardPieceKing) canRotate(d rune) bool {
