@@ -69,7 +69,31 @@ func (c *BoardPieceLaser) canMoveTo(x int, y int) bool {
 
 func (c *BoardPieceLaser) canRotate(d rune) bool {
 	fmt.Printf("Laser - canRotate\n")
-	return true //TODO
+	switch d {
+	case 'L': // -1 Counterclockwise
+		c.pointing = (c.pointing + 3) % 4
+		return true
+	case 'R': // +1 Clockwise
+		c.pointing = (c.pointing + 1) % 4
+		return true
+	}
+
+	return false
+}
+
+func (c *BoardPieceLaser) frontSpaceAfterRotating(x int, y int, rot rune) (int, int) {
+	var pointAux pointing_T
+
+	switch rot {
+	case 'L': // -1 Counterclockwise
+		pointAux = (c.pointing + 3) % 4
+	case 'R': // +1 Clockwise
+		pointAux = (c.pointing + 1) % 4
+	}
+
+	laserMovementDirectionVector := laserMovementVector[pointAux]
+
+	return (x + laserMovementDirectionVector.x), (y + laserMovementDirectionVector.y)
 }
 
 //---Depuración---//

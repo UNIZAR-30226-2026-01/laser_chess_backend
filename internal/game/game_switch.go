@@ -35,16 +35,12 @@ func (c *BoardPieceSwitch) VisualRep() string {
 
 
 func (c *BoardPieceSwitch)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
-	switch ((c.pointing - dir)%4){
-	case UP:
-		return LEFT, CONTINUE
-	case LEFT:
-		return UP, CONTINUE
-	case DOWN:
-		return RIGHT, CONTINUE
-	case RIGHT:
-		return DOWN, CONTINUE
+	switch (c.pointing - dir + 4) % 4 {
+	case DOWN, UP:
+		return (dir + 3) % 4, CONTINUE
+	case RIGHT, LEFT:
+		return (dir + 1) % 4, CONTINUE
 	}
 
-	return 0,0 //Nunca llega es para que no se queje el compilador
+	return 0, 0
 }

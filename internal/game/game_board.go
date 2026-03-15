@@ -21,20 +21,33 @@ func (b *Board) isInbound(x int, y int) bool {
 }
 
 func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int) bool {
-	return b.cells[x_from][y_from].canMoveTo(x_to, y_to)
+	if (b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
+		return b.cells[x_from][y_from].canMoveTo(x_to, y_to)
+	} else {
+		return false
+	}	
 }
 
 func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
-	return b.cells[x_at][y_at].canRotate(rot)
+	if (b.isInbound(x_at, y_at) && (rot == 'R' || rot == 'L')){
+		switch laser := b.cells[x_at][y_at].(type) {
+		case *BoardPieceLaser: //evitar rotacion ilegal de laser (Caso límite)
+			x_after, y_after := laser.frontSpaceAfterRotating(x_at, y_at, rot)
+			if !b.isInbound(x_after, y_after) {
+				fmt.Print("OUT OF BOUND ROTATION")
+				return false
+			}
+		}
+	
+		return b.cells[x_at][y_at].canRotate(rot)
+	} else {
+		return false
+	}
+	
 }
 
-<<<<<<< HEAD
 //---Depuración---//
 func (b *Board) printlaser(laser []vector2_T){
-=======
-// ---Depuración---//
-func (b *Board) print(laser []vector2_T) {
->>>>>>> 9f84ab6a83aec3f1a77687ca01ebcbfa7586d1d6
 	for y := 0; y < YDIM; y++ {
 		fmt.Printf("%d | ", y+1) // numero
 		for x := 0; x < XDIM; x++ {
@@ -56,7 +69,6 @@ func (b *Board) print(laser []vector2_T) {
 	fmt.Println("    A B C D E F G H I J ") // letra
 }
 
-<<<<<<< HEAD
 //---Depuración---//
 func (b *Board) print(){
 	for y := 0; y < YDIM; y++ {
@@ -75,8 +87,6 @@ func (b *Board) print(){
 }
 
 
-=======
->>>>>>> 9f84ab6a83aec3f1a77687ca01ebcbfa7586d1d6
 // --- INTERFAZ DE COMUNICACIÓN CON EL MÓDULO --- //
 
 func (b *Board) ProcessTurn(instruction string) bool {
@@ -97,12 +107,14 @@ func (b *Board) ProcessTurn(instruction string) bool {
 		if err != nil { /*TODO*/
 		}
 
-		param1 := token1 - 1        // old x
-		param2 := int(token2 - 'a') // old y
-		param3 := token3 - 1        // new x
-		param4 := int(token4 - 'a') // new y
+		y_from := token1 - 1        // old x
+		x_from := int(token2 - 'a') // old y
+		y_to := token3 - 1        // new x
+		x_to := int(token4 - 'a') // new y
 
-		return b.movePiece(param2, param1, param4, param3)
+		
+
+		return b.movePiece(x_from, y_from, x_to, y_to)
 
 	case 'R', 'L':
 		var token1 int
@@ -111,11 +123,11 @@ func (b *Board) ProcessTurn(instruction string) bool {
 		if err != nil { /*TODO*/
 		}
 
-		param1 := token1 - 1        // x
-		param2 := int(token2 - 'a') // y
-		param3 := inst
+		y_at := token1 - 1        // x
+		x_at := int(token2 - 'a') // y
+		rot := inst
 
-		return b.rotatePiece(param2, param1, param3)
+		return b.rotatePiece(x_at, y_at, rot)
 	}
 
 	if err != nil {

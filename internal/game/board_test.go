@@ -33,13 +33,13 @@ func reiniciarTablero(tablero *Board) {
 	tablero.cells[9][7] = tablero.redTeamLaser
 
 	//Poner escudos
-	tablero.cells[4][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN}
+	tablero.cells[4][1] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN} //[][1]
 	tablero.cells[6][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN}
 	tablero.cells[3][7] = &BoardPieceShield{RED_TEAM, NONE, UP}
 	tablero.cells[5][7] = &BoardPieceShield{RED_TEAM, NONE, UP}
 
 	//poner switches
-	tablero.cells[4][3] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
+	tablero.cells[4][3] = &BoardPieceSwitch{BLUE_TEAM, NONE, LEFT} //DOWN
 	tablero.cells[5][3] = &BoardPieceSwitch{BLUE_TEAM, NONE, LEFT}
 	tablero.cells[4][4] = &BoardPieceSwitch{RED_TEAM, NONE, LEFT}
 	tablero.cells[5][4] = &BoardPieceSwitch{RED_TEAM, NONE, DOWN}
@@ -54,7 +54,7 @@ func reiniciarTablero(tablero *Board) {
 	tablero.cells[2][1] = &BoardPieceDeflector{BLUE_TEAM, NONE, UP}
 	tablero.cells[2][7] = &BoardPieceDeflector{RED_TEAM, NONE, RIGHT}
 	tablero.cells[2][4] = &BoardPieceDeflector{RED_TEAM, NONE, RIGHT}
-	tablero.cells[2][3] = &BoardPieceDeflector{RED_TEAM, NONE, UP}
+	//tablero.cells[2][3] = &BoardPieceDeflector{RED_TEAM, NONE, UP}
 	tablero.cells[3][2] = &BoardPieceDeflector{RED_TEAM, NONE, RIGHT}
 	tablero.cells[9][4] = &BoardPieceDeflector{RED_TEAM, RED_TEAM, UP}
 	tablero.cells[9][3] = &BoardPieceDeflector{RED_TEAM, RED_TEAM, RIGHT}
@@ -274,17 +274,25 @@ func TestProbatTipoDeDato(t *testing.T) {
 	}
 	tablero.cells[6][7] = &BoardPieceVacant{NONE}
 
-	laserpath := []vector2_T{{0, 0}, {0, 1}, {0, 2}, {0, 3}, {1, 3}, {2, 3}, {2, 4}, {1, 4}, {0, 4}, {0, 5}, {0, 6}, {0, 7}}
-	tablero.printlaser(laserpath)
-
 	// Test del recorrido del laser
 	t.Log("Solo dispara el laser y debería finalizar por out of bounds")
 	positions, terminationReason := tablero.blueTeamLaser.shootLaser(0, 0, &tablero)
-	t.Log(positions)
+	tablero.printlaser(positions)
 	if terminationReason != OUT_OF_BOUNDS {
 		t.Errorf("X - No ha terminado por la razón correcta, se esperaba OUT_OF_BOUNDS, recibido %d", terminationReason)
 	} else {
 		t.Log("OK")
 	}
+
+	t.Log(tablero.ProcessTurn("Ra1"))
+
+	t.Log(tablero.ProcessTurn("La1"))
+	positions, terminationReason = tablero.blueTeamLaser.shootLaser(0, 0, &tablero)
+	tablero.printlaser(positions)
+	t.Log(tablero.ProcessTurn("Ra1"))
+	positions, terminationReason = tablero.blueTeamLaser.shootLaser(0, 0, &tablero)
+	tablero.printlaser(positions)
+
+	
 
 }
