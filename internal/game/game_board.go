@@ -101,17 +101,8 @@ func (b *Board) isInbound(x int, y int) bool {
 }
 
 func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int) bool {
-<<<<<<< HEAD
-	if (b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
-		if (x_from - x_to < -1 || x_from - x_to > 1 || y_from - y_to < -1 || y_from - y_to > 1 ) {
-			return false
-		} else {
-			return b.cells[x_from][y_from].canMoveTo(x_to, y_to, b)
-		}
-=======
 	if b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to) {
 		return b.cells[x_from][y_from].canMoveTo(x_to, y_to, b)
->>>>>>> ec1b0ee9d7c39437640181c9065719bfb002df37
 	} else {
 		return false
 	}
