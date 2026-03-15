@@ -36,8 +36,8 @@ type LaserChessGame struct {
 * --- Resultados ---
 * LaserChessGame - Es la nueva instancia del juego inicializada para comenzar a jugar
  */
-func initLaserChessGame(uidRedPlayer int64, uidBluePlayer int64) LaserChessGame {
-	newBoard := initBoard(ACE)
+func InitLaserChessGame(uidRedPlayer int64, uidBluePlayer int64) LaserChessGame {
+	newBoard := InitBoard(ACE)
 	newGame := LaserChessGame{
 		redPlayer:  uidRedPlayer,
 		bluePlayer: uidBluePlayer,

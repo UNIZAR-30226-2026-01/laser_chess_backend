@@ -15,7 +15,7 @@ type Board struct {
 	redTeamLaser  *BoardPieceLaser
 }
 
-func initBoard(boardType board_T) Board {
+func InitBoard(boardType board_T) Board {
 	var newBoard Board
 	switch boardType {
 	case ACE:
