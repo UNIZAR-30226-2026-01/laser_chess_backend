@@ -15,6 +15,16 @@ const (
 	RIGHT pointing_T = 3
 )
 
+type board_T uint8
+
+const (
+	ACE       board_T = 0
+	CURIOSITY board_T = 1
+	GRAIL     board_T = 2
+	MERCURY   board_T = 3
+	SOPHIE    board_T = 4
+)
+
 type vector2_T struct {
 	x int
 	y int

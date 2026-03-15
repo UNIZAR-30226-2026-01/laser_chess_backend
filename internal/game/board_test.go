@@ -33,7 +33,7 @@ func reiniciarTablero(tablero *Board) {
 	tablero.cells[9][7] = tablero.redTeamLaser
 
 	//Poner escudos
-	tablero.cells[4][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN} 
+	tablero.cells[4][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN}
 	tablero.cells[6][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN}
 	tablero.cells[3][7] = &BoardPieceShield{RED_TEAM, NONE, UP}
 	tablero.cells[5][7] = &BoardPieceShield{RED_TEAM, NONE, UP}
@@ -65,7 +65,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	tablero := Board{}
 
 	//Iniciar tablero
-	reiniciarTablero(&tablero)
+	initACE(&tablero)
 
 	// === Rey === //
 	t.Log("MOVIMIENTO")
@@ -74,21 +74,21 @@ func TestProbatTipoDeDato(t *testing.T) {
 
 	if tablero.ProcessTurn("Te8:e6") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del alcance de la pieza")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Te8:e9") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Te8:d8") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -96,7 +96,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	tablero.cells[4][6] = &BoardPieceVacant{BLUE_TEAM}
 	if tablero.ProcessTurn("Te8:e7") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -105,7 +105,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	if tablero.ProcessTurn("Te8:e7") != true {
 		t.Errorf("X - Se ha rechazado un movimiento válido")
 	} else {
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 		t.Log("OK")
 	}
 
@@ -113,7 +113,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	if tablero.ProcessTurn("Te8:e7") != true {
 		t.Errorf("X - Se ha rechazado un movimiento válido")
 	} else {
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 		t.Log("OK")
 	}
 	tablero.cells[4][6] = &BoardPieceVacant{NONE}
@@ -122,21 +122,21 @@ func TestProbatTipoDeDato(t *testing.T) {
 
 	if tablero.ProcessTurn("Td8:d6") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del alcance de la pieza")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Td8:d9") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Tf8:e8") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -144,7 +144,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	tablero.cells[3][6] = &BoardPieceVacant{BLUE_TEAM}
 	if tablero.ProcessTurn("Td8:d7") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -153,7 +153,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	if tablero.ProcessTurn("Td8:c7") != true {
 		t.Errorf("X - Se ha rechazado un movimiento válido")
 	} else {
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 		t.Log("OK")
 	}
 
@@ -161,7 +161,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	if tablero.ProcessTurn("Td8:c7") != true {
 		t.Errorf("X - Se ha rechazado un movimiento válido")
 	} else {
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 		t.Log("OK")
 	}
 	tablero.cells[3][6] = &BoardPieceVacant{NONE}
@@ -170,28 +170,28 @@ func TestProbatTipoDeDato(t *testing.T) {
 
 	if tablero.ProcessTurn("Tc8:c6") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del alcance de la pieza")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Tc8:c9") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Th4:h5") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
 
 	if tablero.ProcessTurn("Tc2:b1") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -199,7 +199,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	if tablero.ProcessTurn("Ta4:b3") != true {
 		t.Errorf("X - Se ha rechazado un movimiento válido")
 	} else {
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 		t.Log("OK")
 	}
 
@@ -207,7 +207,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	if tablero.ProcessTurn("Ta4:a3") != true {
 		t.Errorf("X - Se ha rechazado un movimiento válido")
 	} else {
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 		t.Log("OK")
 	}
 	tablero.cells[3][6] = &BoardPieceVacant{NONE}
@@ -216,7 +216,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 
 	if tablero.ProcessTurn("Ta1:a2") != false {
 		t.Errorf("X - Esta pieza siempre debería devolver false, (rarete)")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -225,7 +225,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 
 	if tablero.ProcessTurn("Te5:g7") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del alcance de la pieza")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -233,7 +233,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	tablero.cells[6][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
 	if tablero.ProcessTurn("Tg8:g9") != false {
 		t.Errorf("X - Se ha aceptado un movimiento fuera del tablero")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -242,7 +242,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	tablero.cells[6][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
 	if tablero.ProcessTurn("Tg8:h7") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada (permutación no posible)")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -251,7 +251,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	tablero.cells[7][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
 	if tablero.ProcessTurn("Th8:i8") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 	} else {
 		t.Log("OK")
 	}
@@ -259,7 +259,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	if tablero.ProcessTurn("Te5:f4") != true {
 		t.Errorf("X - Se ha rechazado un movimiento válido (posible error permutación)")
 	} else {
-		reiniciarTablero(&tablero)
+		initACE(&tablero)
 		t.Log("OK")
 	}
 
