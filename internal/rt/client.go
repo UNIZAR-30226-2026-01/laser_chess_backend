@@ -10,7 +10,7 @@ import (
 type Client struct {
 	AccountID int64
 	Conn      *websocket.Conn
-	Send      chan interface{} // canal para mandar mensajes al front
+	Send      chan interface{}
 	Room      *Room
 	ToRoom    chan interface{}
 }
@@ -33,8 +33,6 @@ func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn,
 
 // lee mensajes del socket y los manda a la Room
 func (c *Client) ReadPump() error {
-	// aqui ira un bucle for que escucha c.Conn.ReadJSON()
-	// y escribe en algun canal de Room
 	for {
 		var message ClientSocketMessage
 		err := c.Conn.ReadJSON(&message)
@@ -62,5 +60,3 @@ func (c *Client) WritePump() error {
 func (c *Client) Close() {
 	c.Conn.Close()
 }
-
-//TODO: rellenar las funciones
