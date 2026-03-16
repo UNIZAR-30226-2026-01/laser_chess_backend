@@ -7,8 +7,6 @@ type RoomMsg struct {
 }
 
 type ResponseToRoom struct {
-	PlayerUid  int64
-	MsgType    string
 	MsgContent string
 }
 
@@ -36,14 +34,17 @@ type LaserChessGame struct {
 * --- Resultados ---
 * LaserChessGame - Es la nueva instancia del juego inicializada para comenzar a jugar
  */
-func InitLaserChessGame(uidRedPlayer int64, uidBluePlayer int64) LaserChessGame {
-	newBoard := InitBoard(ACE)
-	newGame := LaserChessGame{
-		redPlayer:  uidRedPlayer,
-		bluePlayer: uidBluePlayer,
-		turn:       uidRedPlayer,
-		gameBoard:  newBoard}
-	return newGame
+func (g *LaserChessGame) InitLaserChessGame(uidRedPlayer int64, uidBluePlayer int64) {
+	g.redPlayer = uidRedPlayer
+	g.bluePlayer = uidBluePlayer
+	g.turn = uidRedPlayer
+	g.gameBoard = InitBoard(ACE)
+	// newBoard := InitBoard(ACE)
+	// newGame := LaserChessGame{
+	// 	redPlayer:  uidRedPlayer,
+	// 	bluePlayer: uidBluePlayer,
+	// 	turn:       uidRedPlayer,
+	// 	gameBoard:  newBoard}
 }
 
 func (g *LaserChessGame) Run() {
