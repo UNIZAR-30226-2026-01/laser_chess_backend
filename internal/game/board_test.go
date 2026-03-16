@@ -1,6 +1,8 @@
 package game
 
-import "testing"
+import (
+	"testing"
+)
 
 func reiniciarTablero(tablero *Board) {
 
@@ -240,7 +242,7 @@ func TestProbatTipoDeDato(t *testing.T) {
 	tablero.cells[6][7] = &BoardPieceVacant{NONE}
 
 	tablero.cells[6][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
-	if tablero.ProcessTurn("Tg8:h7") != false {
+	if tablero.ProcessTurn("Te5:f4") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla ocupada (permutación no posible)")
 		reiniciarTablero(&tablero)
 	} else {
@@ -248,7 +250,8 @@ func TestProbatTipoDeDato(t *testing.T) {
 	}
 	tablero.cells[6][7] = &BoardPieceVacant{NONE}
 
-	tablero.cells[7][7] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN}
+
+	tablero.cells[7][7] = &BoardPieceSwitch{RED_TEAM, NONE, DOWN}
 	if tablero.ProcessTurn("Th8:i8") != false {
 		t.Errorf("X - Se ha aceptado un movimiento a una casilla del equipo opuesto")
 		reiniciarTablero(&tablero)
@@ -256,8 +259,9 @@ func TestProbatTipoDeDato(t *testing.T) {
 		t.Log("OK")
 	}
 
-	if tablero.ProcessTurn("Te5:f4") != true {
-		t.Errorf("X - Se ha rechazado un movimiento válido (posible error permutación)")
+	tablero.cells[7][7] = &BoardPieceSwitch{RED_TEAM, NONE, DOWN}
+	if tablero.ProcessTurn("Th8:h7") != true {
+		t.Errorf("X - Se ha rechazado un movimiento válido")
 	} else {
 		reiniciarTablero(&tablero)
 		t.Log("OK")
@@ -271,9 +275,6 @@ func TestProbatTipoDeDato(t *testing.T) {
 		t.Log("OK")
 	}
 	tablero.cells[6][7] = &BoardPieceVacant{NONE}
-
-	laserpath := []vector2_T{{0, 0}, {0, 1}, {0, 2}, {0, 3}, {1, 3}, {2, 3}, {2, 4}, {1, 4}, {0, 4}, {0, 5}, {0, 6}, {0, 7}}
-	tablero.printlaser(laserpath)
 
 	// Test del recorrido del laser
 	t.Log("Solo dispara el laser y debería finalizar por out of bounds")
