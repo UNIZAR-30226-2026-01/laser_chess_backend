@@ -18,8 +18,13 @@ func (c *BoardPieceDeflector) setTeamTile(t team_T) {
 	c.tile = t
 }
 
-func (c *BoardPieceDeflector) canMoveTo(x int, y int, board *Board) bool {
+func (c *BoardPieceDeflector) canMoveTo(x int, y int, board *Board, team team_T) bool {
 	fmt.Printf("deflector - canMoveTo\n")
+
+	if (team != c.team){
+		return false
+	}
+
 	switch cell := board.cells[x][y].(type) {
 		case *BoardPieceVacant:
 			return c.team == cell.getTeamTile() || NONE == cell.getTeamTile() 
@@ -27,8 +32,12 @@ func (c *BoardPieceDeflector) canMoveTo(x int, y int, board *Board) bool {
 	return false
 }
 
-func (c *BoardPieceDeflector) canRotate(d rune) bool {
+func (c *BoardPieceDeflector) canRotate(d rune, team team_T) bool {
 	fmt.Printf("deflector - canRotate\n")
+
+	if (team != c.team){
+		return false
+	}
 	
 	switch d {
 	case 'L': // -1 Counterclockwise

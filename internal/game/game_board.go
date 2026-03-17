@@ -5,6 +5,7 @@ package game
 // ===================================== //
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -100,13 +101,13 @@ func (b *Board) isInbound(x int, y int) bool {
 	return (0 <= x && x < XDIM) && (0 <= y && y < YDIM)
 }
 
-func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int) bool {
+func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_T) bool {
 	canmove := false
 	if (b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
 		if (x_from - x_to < -1 || x_from - x_to > 1 || y_from - y_to < -1 || y_from - y_to > 1 ) {
 			return false
 		} else {
-			canmove = b.cells[x_from][y_from].canMoveTo(x_to, y_to, b)
+			canmove = b.cells[x_from][y_from].canMoveTo(x_to, y_to, b, team)
 		}
 	}
 
@@ -130,7 +131,7 @@ func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int) bool {
 	return true
 }
 
-func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
+func (b *Board) rotatePiece(x_at int, y_at int, rot rune, team team_T) bool {
 	if (b.isInbound(x_at, y_at) && (rot == 'R' || rot == 'L')){
 		switch laser := b.cells[x_at][y_at].(type) {
 		case *BoardPieceLaser: //evitar rotacion ilegal de laser (Caso límite)
@@ -141,11 +142,18 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
 			}
 		}
 	
-		return b.cells[x_at][y_at].canRotate(rot)
+		return b.cells[x_at][y_at].canRotate(rot, team)
 	} else {
 		return false
 	}
 	
+}
+
+func (b *Board) killPiece(x_at int, y_at int) {
+	if (b.isInbound(x_at, y_at)){
+		teamTile := b.cells[x_at][y_at].getTeamTile()
+		b.cells[x_at][y_at] = &BoardPieceVacant{teamTile}
+	}
 }
 
 //---Depuración---//
@@ -190,7 +198,7 @@ func (b *Board) print(){
 
 // --- INTERFAZ DE COMUNICACIÓN CON EL MÓDULO --- //
 
-func (b *Board) ProcessTurn(instruction string) bool {
+func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_T, laserInteractionResult_T, error) {
 
 	//La versión de golang del string stream
 	reader := strings.NewReader(instruction)
@@ -214,9 +222,28 @@ func (b *Board) ProcessTurn(instruction string) bool {
 		y_to := token3 - 1        // new x
 		x_to := int(token4 - 'a') // new y
 
-		
+		legalMove := b.movePiece(x_from, y_from, x_to, y_to, team)
 
-		return b.movePiece(x_from, y_from, x_to, y_to)
+		if !legalMove {
+			return "", nil, 0, errors.New("El movimiento no es legal")
+		}
+
+		switch team {
+		case BLUE_TEAM:
+			laserPath, result :=  b.blueTeamLaser.shootLaser(0, 0, b)
+			if result == HIT {
+				point := laserPath[len(laserPath)-1]
+				b.killPiece(point.x, point.y)
+			}
+			return instruction, laserPath, result, nil
+		case RED_TEAM:
+			laserPath, result :=  b.redTeamLaser.shootLaser(XDIM - 1, YDIM - 1, b)
+			if result == HIT {
+				point := laserPath[len(laserPath)-1]
+				b.killPiece(point.x, point.y)
+			}
+			return instruction, laserPath, result, nil
+		}
 
 	case 'R', 'L':
 	//ROTACIÓN
@@ -230,11 +257,31 @@ func (b *Board) ProcessTurn(instruction string) bool {
 		x_at := int(token2 - 'a') // y
 		rot := inst
 
-		return b.rotatePiece(x_at, y_at, rot)
+		legalMove := b.rotatePiece(x_at, y_at, rot, team)
+
+		if !legalMove {
+			return "", nil, 0, errors.New("La rotación no es legal")
+		}
+		
+		switch team {
+		case BLUE_TEAM:
+			laserPath, result :=  b.blueTeamLaser.shootLaser(0, 0, b)
+			if result == HIT {
+				point := laserPath[len(laserPath)-1]
+				b.killPiece(point.x, point.y)
+			}
+			return instruction, laserPath, result, nil
+		case RED_TEAM:
+			laserPath, result :=  b.redTeamLaser.shootLaser(XDIM - 1, YDIM - 1, b)
+			if result == HIT {
+				point := laserPath[len(laserPath)-1]
+				b.killPiece(point.x, point.y)
+			}
+			return instruction, laserPath, result, nil
+		}
 	}
 
-	if err != nil {
-		//Error (no cumple con el formato)
-	}
-	return false
+
+	return "", nil, 0, errors.New("Formato inválido")
+
 }

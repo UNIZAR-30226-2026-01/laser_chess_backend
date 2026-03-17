@@ -19,8 +19,13 @@ func (c *BoardPieceKing) setTeamTile(t team_T) {
 	c.tile = t
 }
 
-func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board) bool {
+func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board, team team_T) bool {
 	fmt.Printf("king - canMoveTo\n")
+
+	if (team != c.team){
+		return false
+	}
+
 	switch cell := board.cells[x][y].(type) {
 		case *BoardPieceVacant:
 			return c.team == cell.getTeamTile() || NONE == cell.getTeamTile() 
@@ -28,8 +33,12 @@ func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board) bool {
 	return false
 }
 
-func (c *BoardPieceKing) canRotate(d rune) bool {
+func (c *BoardPieceKing) canRotate(d rune, team team_T) bool {
 	fmt.Printf("king - canRotate\n")
+	if (team != c.team){
+		return false
+	}
+	
 	return false 
 }
 

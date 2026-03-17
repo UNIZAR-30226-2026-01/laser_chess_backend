@@ -70,13 +70,23 @@ func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, l
 	return traveledPositions, interactionRes
 }
 
-func (c *BoardPieceLaser) canMoveTo(x int, y int, board *Board) bool{
+func (c *BoardPieceLaser) canMoveTo(x int, y int, board *Board, team team_T) bool{
+
+	if (team != c.team){
+		return false
+	}
+	
 	fmt.Printf("Laser - canMoveTo\n")
 	return false
 }
 
-func (c *BoardPieceLaser) canRotate(d rune) bool {
+func (c *BoardPieceLaser) canRotate(d rune, team team_T) bool {
 	fmt.Printf("Laser - canRotate\n")
+
+	if (team != c.team){
+		return false
+	}
+
 	switch d {
 	case 'L': // -1 Counterclockwise
 		c.pointing = (c.pointing + 3) % 4

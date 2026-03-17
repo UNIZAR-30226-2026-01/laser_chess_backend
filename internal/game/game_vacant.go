@@ -18,12 +18,12 @@ func (c *BoardPieceVacant) setTeamTile(t team_T) {
 	c.tile = t
 }
 
-func (c *BoardPieceVacant) canMoveTo(x int, y int, board *Board) bool {
+func (c *BoardPieceVacant) canMoveTo(x int, y int, board *Board, team team_T) bool {
 	fmt.Printf("Empty - canMoveTo\n")
 	return false
 }
 
-func (c *BoardPieceVacant) canRotate(d rune) bool {
+func (c *BoardPieceVacant) canRotate(d rune, team team_T) bool {
 	fmt.Printf("Empty - canRotate\n")
 	return false
 }
