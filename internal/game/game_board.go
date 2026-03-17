@@ -101,15 +101,33 @@ func (b *Board) isInbound(x int, y int) bool {
 }
 
 func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int) bool {
+	canmove := false
 	if (b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
 		if (x_from - x_to < -1 || x_from - x_to > 1 || y_from - y_to < -1 || y_from - y_to > 1 ) {
 			return false
 		} else {
-			return b.cells[x_from][y_from].canMoveTo(x_to, y_to, b)
+			canmove = b.cells[x_from][y_from].canMoveTo(x_to, y_to, b)
 		}
-	} else {
+	}
+
+	if !canmove {
 		return false
 	}
+
+	// Realizamos el movimiento legal
+	destinyTileType := b.cells[x_to][y_to].getTeamTile()
+	originTileType := b.cells[x_from][y_from].getTeamTile()
+	
+	b.cells[x_from][y_from].setTeamTile(destinyTileType)
+	b.cells[x_from][y_from].setTeamTile(originTileType)
+
+	destinyPiece := b.cells[x_to][y_to]
+	originPiece := b.cells[x_from][y_from]
+
+	b.cells[x_to][y_to] = originPiece
+	b.cells[x_from][y_from] = destinyPiece
+
+	return true
 }
 
 func (b *Board) rotatePiece(x_at int, y_at int, rot rune) bool {
@@ -183,6 +201,7 @@ func (b *Board) ProcessTurn(instruction string) bool {
 	}
 
 	switch inst {
+	//MOVIMIENTO TRANSLACIÓN
 	case 'T', 'P':
 		var token1, token3 int
 		var token2, token4 rune
@@ -200,6 +219,7 @@ func (b *Board) ProcessTurn(instruction string) bool {
 		return b.movePiece(x_from, y_from, x_to, y_to)
 
 	case 'R', 'L':
+	//ROTACIÓN
 		var token1 int
 		var token2 rune
 		_, err := fmt.Fscanf(reader, "%c%d", &token2, &token1)

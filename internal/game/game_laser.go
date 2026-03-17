@@ -9,6 +9,14 @@ type BoardPieceLaser struct {
 	pointing pointing_T //temporal
 }
 
+func (c *BoardPieceLaser) getTeamTile() team_T {
+	return c.team //NO HACE NADA SOLO CUMPLE CON INTERFAZ
+}
+
+func (c *BoardPieceLaser) setTeamTile(t team_T) {
+	//NO HACE NADA, SOLO CUMPLE CON INTERFAZ
+}
+
 /*
 * Desc: Esta funcion realiza el procesamiento del recorrido del haz laser en el tablero
 *
@@ -57,7 +65,7 @@ func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, l
 		}
 
 	}
-	// apilamos la posicion en la que se ha detenido el laser
+	// apilamos la posicion en la que se ha detenido el laser 
 	traveledPositions = append(traveledPositions, currentPosition)
 	return traveledPositions, interactionRes
 }

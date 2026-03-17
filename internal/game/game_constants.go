@@ -54,6 +54,8 @@ type BoardPiece interface {
 	canMoveTo(x int, y int, board *Board) bool
 	canRotate(d rune) bool //temporal
 	processLaser(pointing_T) (pointing_T, laserInteractionResult_T)
+	getTeamTile() team_T
+	setTeamTile(t team_T) 
 	//---Depuración---//
 	VisualRep() string
 }

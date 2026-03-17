@@ -10,6 +10,14 @@ type BoardPieceSwitch struct {
 	pointing pointing_T //temporal
 }
 
+func (c *BoardPieceSwitch) getTeamTile() team_T {
+	return c.tile
+}
+
+func (c *BoardPieceSwitch) setTeamTile(t team_T) {
+	c.tile = t
+}
+
 func (c *BoardPieceSwitch) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("Switch - canMoveTo\n")
 	switch cell := board.cells[x][y].(type) {
@@ -25,7 +33,17 @@ func (c *BoardPieceSwitch) canMoveTo(x int, y int, board *Board) bool {
 
 func (c *BoardPieceSwitch) canRotate(d rune) bool {
 	fmt.Printf("Switch - canRotate\n")
-	return true //TODO
+	
+	switch d {
+	case 'L': // -1 Counterclockwise
+		c.pointing = (c.pointing + 3) % 4
+		return true
+	case 'R': // +1 Clockwise
+		c.pointing = (c.pointing + 1) % 4
+		return true
+	}
+
+	return false 
 }
 
 //---Depuración---//

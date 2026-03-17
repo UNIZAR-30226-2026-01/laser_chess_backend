@@ -11,6 +11,14 @@ type BoardPieceKing struct {
 	tile team_T //Baldosa sobre la que estoy situado
 }
 
+func (c *BoardPieceKing) getTeamTile() team_T {
+	return c.tile
+}
+
+func (c *BoardPieceKing) setTeamTile(t team_T) {
+	c.tile = t
+}
+
 func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("king - canMoveTo\n")
 	switch cell := board.cells[x][y].(type) {

@@ -14,6 +14,10 @@ func (c *BoardPieceDeflector) getTeamTile() team_T {
 	return c.tile
 }
 
+func (c *BoardPieceDeflector) setTeamTile(t team_T) {
+	c.tile = t
+}
+
 func (c *BoardPieceDeflector) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("deflector - canMoveTo\n")
 	switch cell := board.cells[x][y].(type) {
@@ -25,7 +29,17 @@ func (c *BoardPieceDeflector) canMoveTo(x int, y int, board *Board) bool {
 
 func (c *BoardPieceDeflector) canRotate(d rune) bool {
 	fmt.Printf("deflector - canRotate\n")
-	return true //TODO
+	
+	switch d {
+	case 'L': // -1 Counterclockwise
+		c.pointing = (c.pointing + 3) % 4
+		return true
+	case 'R': // +1 Clockwise
+		c.pointing = (c.pointing + 1) % 4
+		return true
+	}
+
+	return false
 }
 
 //---Depuración---//

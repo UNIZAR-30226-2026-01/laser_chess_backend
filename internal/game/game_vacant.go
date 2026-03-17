@@ -14,6 +14,10 @@ func (c *BoardPieceVacant) getTeamTile() team_T {
 	return c.tile
 }
 
+func (c *BoardPieceVacant) setTeamTile(t team_T) {
+	c.tile = t
+}
+
 func (c *BoardPieceVacant) canMoveTo(x int, y int, board *Board) bool {
 	fmt.Printf("Empty - canMoveTo\n")
 	return false

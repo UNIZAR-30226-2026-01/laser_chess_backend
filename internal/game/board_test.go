@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -235,5 +236,25 @@ func TestProbatTipoDeDato(t *testing.T) {
 	t.Log(tablero.ProcessTurn("Ra1"))
 	positions, terminationReason = tablero.blueTeamLaser.shootLaser(0, 0, &tablero)
 	tablero.printlaser(positions)
+
+}
+
+func TestMovements(t *testing.T) {
+	tablero := Board{}
+
+	//Iniciar tablero
+	initACE(&tablero)
+
+	fmt.Print("== TEST TRANSFORMACIONES ==\n")
+	tablero.print()
+
+	tablero.ProcessTurn("La1")
+	positions, _ := tablero.blueTeamLaser.shootLaser(0, 0, &tablero)
+	tablero.printlaser(positions)
+	
+	tablero.ProcessTurn("Lj4")
+	positions, _ = tablero.redTeamLaser.shootLaser(XDIM-1, YDIM-1, &tablero)
+	tablero.printlaser(positions)
+
 
 }
