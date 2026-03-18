@@ -16,7 +16,7 @@ type Board struct {
 	redTeamLaser  *BoardPieceLaser
 }
 
-func InitBoard(boardType board_T) Board {
+func InitBoard(boardType Board_T) Board {
 	var newBoard Board
 	switch boardType {
 	case ACE:
@@ -103,8 +103,8 @@ func (b *Board) isInbound(x int, y int) bool {
 
 func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_T) bool {
 	canmove := false
-	if (b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
-		if (x_from - x_to < -1 || x_from - x_to > 1 || y_from - y_to < -1 || y_from - y_to > 1 ) {
+	if b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to) {
+		if x_from-x_to < -1 || x_from-x_to > 1 || y_from-y_to < -1 || y_from-y_to > 1 {
 			return false
 		} else {
 			canmove = b.cells[x_from][y_from].canMoveTo(x_to, y_to, b, team)
@@ -118,7 +118,7 @@ func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_
 	// Realizamos el movimiento legal
 	destinyTileType := b.cells[x_to][y_to].getTeamTile()
 	originTileType := b.cells[x_from][y_from].getTeamTile()
-	
+
 	b.cells[x_from][y_from].setTeamTile(destinyTileType)
 	b.cells[x_from][y_from].setTeamTile(originTileType)
 
@@ -132,7 +132,7 @@ func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_
 }
 
 func (b *Board) rotatePiece(x_at int, y_at int, rot rune, team team_T) bool {
-	if (b.isInbound(x_at, y_at) && (rot == 'R' || rot == 'L')){
+	if b.isInbound(x_at, y_at) && (rot == 'R' || rot == 'L') {
 		switch laser := b.cells[x_at][y_at].(type) {
 		case *BoardPieceLaser: //evitar rotacion ilegal de laser (Caso límite)
 			x_after, y_after := laser.frontSpaceAfterRotating(x_at, y_at, rot)
@@ -141,23 +141,23 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune, team team_T) bool {
 				return false
 			}
 		}
-	
+
 		return b.cells[x_at][y_at].canRotate(rot, team)
 	} else {
 		return false
 	}
-	
+
 }
 
 func (b *Board) killPiece(x_at int, y_at int) {
-	if (b.isInbound(x_at, y_at)){
+	if b.isInbound(x_at, y_at) {
 		teamTile := b.cells[x_at][y_at].getTeamTile()
 		b.cells[x_at][y_at] = &BoardPieceVacant{teamTile}
 	}
 }
 
-//---Depuración---//
-func (b *Board) printlaser(laser []vector2_T){
+// ---Depuración---//
+func (b *Board) printlaser(laser []vector2_T) {
 	for y := 0; y < YDIM; y++ {
 		fmt.Printf("%d | ", y+1) // numero
 		for x := 0; x < XDIM; x++ {
@@ -179,8 +179,8 @@ func (b *Board) printlaser(laser []vector2_T){
 	fmt.Println("    A B C D E F G H I J ") // letra
 }
 
-//---Depuración---//
-func (b *Board) print(){
+// ---Depuración---//
+func (b *Board) print() {
 	for y := 0; y < YDIM; y++ {
 		fmt.Printf("%d | ", y+1) // numero
 		for x := 0; x < XDIM; x++ {
@@ -219,8 +219,8 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 
 		y_from := token1 - 1        // old x
 		x_from := int(token2 - 'a') // old y
-		y_to := token3 - 1        // new x
-		x_to := int(token4 - 'a') // new y
+		y_to := token3 - 1          // new x
+		x_to := int(token4 - 'a')   // new y
 
 		legalMove := b.movePiece(x_from, y_from, x_to, y_to, team)
 
@@ -230,14 +230,14 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 
 		switch team {
 		case BLUE_TEAM:
-			laserPath, result :=  b.blueTeamLaser.shootLaser(0, 0, b)
+			laserPath, result := b.blueTeamLaser.shootLaser(0, 0, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
 			}
 			return instruction, laserPath, result, nil
 		case RED_TEAM:
-			laserPath, result :=  b.redTeamLaser.shootLaser(XDIM - 1, YDIM - 1, b)
+			laserPath, result := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
@@ -246,7 +246,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 		}
 
 	case 'R', 'L':
-	//ROTACIÓN
+		//ROTACIÓN
 		var token1 int
 		var token2 rune
 		_, err := fmt.Fscanf(reader, "%c%d", &token2, &token1)
@@ -262,17 +262,17 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 		if !legalMove {
 			return "", nil, 0, errors.New("La rotación no es legal")
 		}
-		
+
 		switch team {
 		case BLUE_TEAM:
-			laserPath, result :=  b.blueTeamLaser.shootLaser(0, 0, b)
+			laserPath, result := b.blueTeamLaser.shootLaser(0, 0, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
 			}
 			return instruction, laserPath, result, nil
 		case RED_TEAM:
-			laserPath, result :=  b.redTeamLaser.shootLaser(XDIM - 1, YDIM - 1, b)
+			laserPath, result := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
@@ -280,7 +280,6 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			return instruction, laserPath, result, nil
 		}
 	}
-
 
 	return "", nil, 0, errors.New("Formato inválido")
 
