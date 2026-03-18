@@ -52,7 +52,7 @@ INSERT INTO public.account (
 VALUES(
     'user1@gmail.com',
     'user1', 
-    '$2a$12$gZCIUMOOEuMhWvNlygdI3uTmXN90EEDBNVTCi/mWFuVfcRNQ.pIxi',
+    '$2a$12$Q0RsprBAXFgSSttIet3nNe/rwKOFOJychVd9F2BH6q/Q3Pp5lnV3.',
     false,
     0,
     0,
@@ -63,7 +63,7 @@ VALUES(
 ), (
     'user2@gmail.com',
     'user2', 
-    '$2a$12$Pm4HvVrVjvxfbihkZbfFneJtIZUb0G6CD7IERVrZQuaaAM/hASYT2',
+    '$2a$12$ApqnzgaPJ3LpimwZGjxJk.rBhWQ5EIQ.YNBDxXJZKmDXlxY42cNFK',
     false,
     0,
     0,
