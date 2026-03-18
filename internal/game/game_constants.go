@@ -15,14 +15,14 @@ const (
 	RIGHT pointing_T = 3
 )
 
-type board_T uint8
+type Board_T uint8
 
 const (
-	ACE       board_T = 0
-	CURIOSITY board_T = 1
-	GRAIL     board_T = 2
-	MERCURY   board_T = 3
-	SOPHIE    board_T = 4
+	ACE       Board_T = 0
+	CURIOSITY Board_T = 1
+	GRAIL     Board_T = 2
+	MERCURY   Board_T = 3
+	SOPHIE    Board_T = 4
 )
 
 type vector2_T struct {
@@ -52,10 +52,10 @@ const (
 // Interfaz general, toda pieza de tablero debe tener esto definido
 type BoardPiece interface {
 	canMoveTo(x int, y int, board *Board, team team_T) bool
-	canRotate(d rune , team team_T) bool //temporal
+	canRotate(d rune, team team_T) bool //temporal
 	processLaser(pointing_T) (pointing_T, laserInteractionResult_T)
 	getTeamTile() team_T
-	setTeamTile(t team_T) 
+	setTeamTile(t team_T)
 	//---Depuración---//
 	VisualRep() string
 }
