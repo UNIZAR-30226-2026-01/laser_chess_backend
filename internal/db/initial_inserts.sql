@@ -71,6 +71,17 @@ VALUES(
     1,
     2,
     3
+), (
+    'user3@gmail.com',
+    'user3', 
+    '$2a$12$HX2kns7L6joaJo07PrGafO8Sjz044snkwRBIh7pjdtHps4u.2kBLa',
+    false,
+    0,
+    0,
+    0,
+    1,
+    2,
+    3
 );
 
 INSERT INTO item_owner (
