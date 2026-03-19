@@ -86,6 +86,16 @@ func (s *AccountService) GetByID(ctx context.Context, accountID int64) (*Account
 	}, nil
 }
 
+// Devuelve el username de la cuenta del user con id == accountID
+func (s *AccountService) GetIDByUsername(ctx context.Context, username string) (int64, error) {
+	res, err := s.store.GetAccountIDByUsername(ctx, username)
+	if err != nil {
+		return 0, err
+	}
+
+	return res, nil
+}
+
 // Actualiza el username o cosmeticos del usuario con
 // id == accountID. Solo actualiza los campos no nulos
 func (s *AccountService) Update(

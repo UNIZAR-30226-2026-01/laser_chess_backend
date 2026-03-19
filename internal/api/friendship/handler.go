@@ -2,19 +2,20 @@ package friendship
 
 import (
 	"net/http"
-	"strconv"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 type FriendshipHandler struct {
-	service *FriendshipService
+	friendshipService *FriendshipService
+	accountService    *account.AccountService
 }
 
-func NewHandler(s *FriendshipService) *FriendshipHandler {
-	return &FriendshipHandler{service: s}
+func NewHandler(s *FriendshipService, a *account.AccountService) *FriendshipHandler {
+	return &FriendshipHandler{friendshipService: s, accountService: a}
 }
 
 /*
@@ -36,13 +37,15 @@ func (h *FriendshipHandler) GetFriendshipStatus(c *gin.Context) {
 		return
 	}
 
-	user2ID, err := strconv.ParseInt(c.Param("user2ID"), 10, 64)
+	user2Username := c.Param("user2Username")
+	user2ID, err := h.accountService.GetIDByUsername(c, user2Username)
+
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := h.service.GetFriendshipStatus(c.Request.Context(), &FriendshipDTO{
+	res, err := h.friendshipService.GetFriendshipStatus(c.Request.Context(), &FriendshipDTO{
 		SenderID:   &user1ID,
 		ReceiverID: user2ID,
 	})
@@ -74,7 +77,7 @@ func (h *FriendshipHandler) GetUserFriendships(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetUserFriendships(c.Request.Context(), accountID)
+	res, err := h.friendshipService.GetUserFriendships(c.Request.Context(), accountID)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -103,7 +106,7 @@ func (h *FriendshipHandler) GetUserPendingSentFriendships(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetUserPendingSentFriendships(c.Request.Context(), accountID)
+	res, err := h.friendshipService.GetUserPendingSentFriendships(c.Request.Context(), accountID)
 
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
@@ -133,7 +136,7 @@ func (h *FriendshipHandler) GetUserPendingReceivedFriendships(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetUserPendingReceivedFriendships(c.Request.Context(), accountID)
+	res, err := h.friendshipService.GetUserPendingReceivedFriendships(c.Request.Context(), accountID)
 
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
@@ -161,13 +164,15 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 		return
 	}
 
-	user2ID, err := strconv.ParseInt(c.Param("user2ID"), 10, 64)
+	user2Username := c.Param("user2Username")
+	user2ID, err := h.accountService.GetIDByUsername(c, user2Username)
+
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	err = h.service.AcceptFriendship(c.Request.Context(), &FriendshipDTO{
+	err = h.friendshipService.AcceptFriendship(c.Request.Context(), &FriendshipDTO{
 		SenderID:   &user1ID,
 		ReceiverID: user2ID,
 	})
@@ -198,13 +203,16 @@ func (h *FriendshipHandler) DeleteFriendship(c *gin.Context) {
 		return
 	}
 
-	user2ID, err := strconv.ParseInt(c.Param("user2ID"), 10, 64)
+	user2Username := c.Param("user2Username")
+
+	user2ID, err := h.accountService.GetIDByUsername(c, user2Username)
+
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	err = h.service.DeleteFriendship(c.Request.Context(), &FriendshipDTO{
+	err = h.friendshipService.DeleteFriendship(c.Request.Context(), &FriendshipDTO{
 		SenderID:   &user1ID,
 		ReceiverID: user2ID,
 	})
@@ -236,15 +244,17 @@ func (h *FriendshipHandler) Create(c *gin.Context) {
 	}
 
 	var body FriendshipDTO
+	var jsonRecieved FriendshipByUsername
 
 	// Mira si el json que nos han pasado coincide con el dto
-	if err := c.ShouldBindJSON(&body); err != nil {
+	if err := c.ShouldBindJSON(&jsonRecieved); err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body.SenderID = &accountID
-	err = h.service.Create(c.Request.Context(), &body)
+	body.ReceiverID, err = h.accountService.GetIDByUsername(c, jsonRecieved.ReceiverUsername)
+	err = h.friendshipService.Create(c.Request.Context(), &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return

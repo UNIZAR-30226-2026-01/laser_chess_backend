@@ -2,6 +2,10 @@ package friendship
 
 // DTOs para tratar con frienships
 
+type FriendshipByUsername struct {
+	ReceiverUsername string `json:"receiver_username" binding:"required"`
+}
+
 // Para crear una petición de amistad
 type FriendshipDTO struct {
 	SenderID   *int64 `json:"sender_id"`

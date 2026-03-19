@@ -129,7 +129,7 @@ func (s FriendshipService) GetUserFriendships(
 		return nil, err
 	}
 
-	return parseFriendshipRow(res), nil
+	return ParseFriendshipRow(res), nil
 }
 
 /*
@@ -245,7 +245,7 @@ func (s FriendshipService) DeleteFriendship(
 // FUNCIONES AUXILIARES
 
 // Funcion auxiliar: pasar de db.GetUserFriendshipsRow a FriendshipReturnDTO
-func parseFriendshipRow(data []db.GetUserFriendshipsRow) []FriendshipReturnDTO {
+func ParseFriendshipRow(data []db.GetUserFriendshipsRow) []FriendshipReturnDTO {
 	var res []FriendshipReturnDTO
 
 	for _, value := range data {

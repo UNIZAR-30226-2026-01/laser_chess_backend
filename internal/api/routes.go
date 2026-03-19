@@ -53,7 +53,7 @@ func SetupRouter(store *db.Store, privateHub *rt.PrivateHub) *gin.Engine {
 	ratingHandler := rating.NewHandler(ratingService)
 
 	friendshipService := friendship.NewService(store)
-	friendshipHandler := friendship.NewHandler(friendshipService)
+	friendshipHandler := friendship.NewHandler(friendshipService, accountService)
 
 	// Establecer las rutas de las peticiones http por grupos
 
@@ -123,9 +123,9 @@ func SetupRouter(store *db.Store, privateHub *rt.PrivateHub) *gin.Engine {
 		friendshipRoute.GET("/pending",
 			friendshipHandler.GetUserPendingReceivedFriendships)
 
-		friendshipRoute.GET("/:user2ID", friendshipHandler.GetFriendshipStatus)
-		friendshipRoute.PUT("/:user2ID", friendshipHandler.AcceptFriendship)
-		friendshipRoute.DELETE("/:user2ID", friendshipHandler.DeleteFriendship)
+		friendshipRoute.GET("/:user2Username", friendshipHandler.GetFriendshipStatus)
+		friendshipRoute.PUT("/:user2Username", friendshipHandler.AcceptFriendship)
+		friendshipRoute.DELETE("/:user2Username", friendshipHandler.DeleteFriendship)
 	}
 
 	// TODO: meter los endpoints de websockets
