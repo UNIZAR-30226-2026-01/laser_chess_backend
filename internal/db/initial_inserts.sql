@@ -104,3 +104,15 @@ INSERT INTO public."match" (
     300,
     5
 );
+
+INSERT INTO public."friendship" (
+    user1_id,
+    user2_id,
+    accepted_1,
+    accepted_2
+) VALUES (
+    1,
+    2,
+    true,
+    true
+);
