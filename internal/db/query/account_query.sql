@@ -16,6 +16,9 @@ WHERE account_id = $1 AND is_deleted = FALSE LIMIT 1;
 SELECT account_id FROM account
 WHERE username = $1 AND is_deleted = FALSE LIMIT 1;
 
+-- name: GetUsernameByID :one
+SELECT username FROM account
+WHERE account_id = $1 AND is_deleted = FALSE LIMIT 1;
 
 -- solo cambia cosas qué se pueden cambiar por el user
 -- usa coalesce para solo actualizar los params que no 

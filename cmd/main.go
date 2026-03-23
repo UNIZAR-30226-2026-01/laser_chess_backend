@@ -50,7 +50,7 @@ func main() {
 	// == INICIALIZAR ROUTER =============================================
 
 	// Inicializar router de gin
-	router := api.SetupRouter(store, privateHub)
+	router := api.SetupRouter(store, matchRegistry, privateHub)
 
 	// Ejecutar el router en el puerto que se le diga (8080 por defecto)
 	port := os.Getenv("PORT")

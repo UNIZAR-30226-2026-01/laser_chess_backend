@@ -130,6 +130,18 @@ func (q *Queries) GetAccountIDByUsername(ctx context.Context, username string) (
 	return account_id, err
 }
 
+const getUsernameByID = `-- name: GetUsernameByID :one
+SELECT username FROM account
+WHERE account_id = $1 AND is_deleted = FALSE LIMIT 1
+`
+
+func (q *Queries) GetUsernameByID(ctx context.Context, accountID int64) (string, error) {
+	row := q.db.QueryRow(ctx, getUsernameByID, accountID)
+	var username string
+	err := row.Scan(&username)
+	return username, err
+}
+
 const updateAccount = `-- name: UpdateAccount :one
 UPDATE account
 SET 

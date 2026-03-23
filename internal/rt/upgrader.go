@@ -1,18 +1,23 @@
 package rt
 
+// fichero que se encarga de upgradear conexiones HTTP a websoket
+
 import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
 
-// fichero que se encarga de upgradear conexiones HTTP a websoket
-// tendrá endpoints para partidas competitivas y privadas.
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024, // size of read buffer
+	WriteBufferSize: 1024, // size of write buffer
+	CheckOrigin: func(r *http.Request) bool { //allowing CORS request
 
-func UpgradeConn(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error){
-	var upgrader *websocket.Upgrader
-	conn, err := upgrader.Upgrade(w, r, nil)
-	return conn, err
+		//TODO: cambiar esto a algo seguro
+		return true
+	},
 }
 
-//TODO: todo
+func UpgradeConn(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error) {
+	return upgrader.Upgrade(w, r, nil)
+}

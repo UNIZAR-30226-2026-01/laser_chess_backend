@@ -1,7 +1,10 @@
 package rt
 
 import (
+	"fmt"
+
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
+	"github.com/gin-gonic/gin"
 )
 
 // fichero que gestiona las rooms
@@ -28,11 +31,20 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client) {
 	r.ConP1 = make(chan interface{})
 	r.ConP2 = make(chan interface{})
 	r.Broadcast = make(chan interface{})
+
+	r.Game = &game.LaserChessGame{}
 	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID)
+
 	go r.Run()
 }
 
 func (r *Room) Run() {
+	// Notificar a ambos clientes que la partida ha empezado
+	startMsg := gin.H{"type": "MatchStarted"}
+	r.Broadcast <- startMsg
+
+	fmt.Println("La partida ha iniciado :)")
+
 	for {
 		select {
 		case message := <-r.ConP1:

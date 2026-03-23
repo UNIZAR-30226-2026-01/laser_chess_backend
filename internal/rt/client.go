@@ -11,8 +11,10 @@ type Client struct {
 	AccountID int64
 	Conn      *websocket.Conn
 	Send      chan interface{}
-	Room      *Room
 	ToRoom    chan interface{}
+
+	// Canal para avisar de fin
+	Done chan struct{}
 }
 
 type ClientSocketMessage struct {
@@ -21,11 +23,13 @@ type ClientSocketMessage struct {
 }
 
 func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn,
-	Room *Room, ToRoom chan interface{}) {
+	ToRoom chan interface{}) {
 	c.AccountID = AccountID
 	c.Conn = Conn
 	c.Send = make(chan interface{})
-	c.Room = Room
+	c.ToRoom = ToRoom
+
+	c.Done = make(chan struct{})
 
 	go c.ReadPump()
 	go c.WritePump()
@@ -33,6 +37,11 @@ func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn,
 
 // lee mensajes del socket y los manda a la Room
 func (c *Client) ReadPump() error {
+	defer func() {
+		close(c.Done)
+		c.Conn.Close()
+	}()
+
 	for {
 		var message ClientSocketMessage
 		err := c.Conn.ReadJSON(&message)
@@ -42,21 +51,26 @@ func (c *Client) ReadPump() error {
 		}
 
 		c.ToRoom <- message
-
 	}
+
+	return nil
 }
 
 // saca mensajes del canal c.Send y los escribe en el navegador
 func (c *Client) WritePump() error {
-	for {
-		select {
-		case message := <-c.Send:
-			c.Conn.WriteJSON(message)
+	defer c.Conn.Close()
+
+	for message := range c.Send {
+		err := c.Conn.WriteJSON(message)
+		if err != nil {
+			return err
 		}
 	}
+
+	return nil
 }
 
-// cierra la conexion de un cliente
-func (c *Client) Close() {
-	c.Conn.Close()
+// Cierra la conexion de un cliente
+func (c *Client) Close() error {
+	return c.Conn.Close()
 }

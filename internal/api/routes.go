@@ -22,7 +22,11 @@ import (
 // Hace el setup del router
 // Crea handlers y services, y mapea endpoints
 // Tambien activa el middleware del jwt
-func SetupRouter(store *db.Store, privateHub *rt.PrivateHub) *gin.Engine {
+func SetupRouter(store *db.Store,
+	registry *rt.MatchRegistry,
+	privateHub *rt.PrivateHub,
+) *gin.Engine {
+
 	router := gin.Default()
 
 	// Cross-Origin Resource Sharing para conexion con Angular
@@ -128,7 +132,15 @@ func SetupRouter(store *db.Store, privateHub *rt.PrivateHub) *gin.Engine {
 		friendshipRoute.DELETE("/:user2Username", friendshipHandler.DeleteFriendship)
 	}
 
-	// TODO: meter los endpoints de websockets
+	// Endpoints de websockets
+	privateHandler := rt.NewPrivateHandler(privateHub, registry, accountService)
+
+	{
+		rtRoute := protected.Group("/rt/")
+		rtRoute.GET("/challenge", privateHandler.Challenge)
+		rtRoute.GET("/challenge/accept", privateHandler.AcceptChallenge)
+		rtRoute.GET("/challenges", privateHandler.GetChallenges)
+	}
 
 	return router
 }

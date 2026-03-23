@@ -21,6 +21,9 @@ var (
 	ErrBadRequest          = errors.New("bad request")
 	ErrInvalidToken        = errors.New("invalid token")
 	ErrUnauthorized        = errors.New("unauthorized access")
+
+	ErrSelfChallenge  = errors.New("you can't challenge yourself")
+	ErrAlreadyInMatch = errors.New("user already in match")
 )
 
 // Función que detecta el tipo de error, y manda el código de error
