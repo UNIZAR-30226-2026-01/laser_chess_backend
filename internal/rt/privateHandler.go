@@ -2,9 +2,9 @@ package rt
 
 // private_handler.go — endpoints para partidas privadas
 //
-// GET  api/rt/private/challenge        -> upgradea a WS, crea el reto y espera
-// GET  api/rt/private/challenge/accept -> upgradea a WS, acepta el reto y arranca la Room
-// GET  api/rt/private/challenges       -> devuelve la lista de retos pendientes (HTTP normal)
+// GET  api/rt/challenge        -> upgradea a WS, crea el reto y espera
+// GET  api/rt/challenge/accept -> upgradea a WS, acepta el reto y arranca la Room
+// GET  api/rt/challenges       -> devuelve la lista de retos pendientes (HTTP normal)
 
 import (
 	"net/http"
