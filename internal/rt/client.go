@@ -53,7 +53,6 @@ func (c *Client) ReadPump() error {
 		c.ToRoom <- message
 	}
 
-	return nil
 }
 
 // saca mensajes del canal c.Send y los escribe en el navegador

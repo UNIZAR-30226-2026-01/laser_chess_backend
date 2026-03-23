@@ -156,7 +156,7 @@ func (s FriendshipService) GetUserPendingSentFriendships(
 		return nil, err
 	}
 
-	return parsePendingSentRow(res), nil
+	return ParsePendingSentRow(res), nil
 }
 
 /*
@@ -183,7 +183,7 @@ func (s FriendshipService) GetUserPendingReceivedFriendships(
 		return nil, err
 	}
 
-	return parsePendingReceivedRow(res), nil
+	return ParsePendingReceivedRow(res), nil
 }
 
 /*
@@ -262,7 +262,7 @@ func ParseFriendshipRow(data []db.GetUserFriendshipsRow) []FriendshipReturnDTO {
 
 // Funcion auxiliar: pasar de db.GetUserPendingSentFriendshipsRow
 // a FriendshipReturnDTO
-func parsePendingSentRow(
+func ParsePendingSentRow(
 	data []db.GetUserPendingSentFriendshipsRow,
 ) []FriendshipReturnDTO {
 	var res []FriendshipReturnDTO
@@ -281,7 +281,7 @@ func parsePendingSentRow(
 
 // Funcion auxiliar: pasar de db.GetUserPendingReceivedFriendshipsRow
 // a FriendshipReturnDTO
-func parsePendingReceivedRow(
+func ParsePendingReceivedRow(
 	data []db.GetUserPendingReceivedFriendshipsRow,
 ) []FriendshipReturnDTO {
 

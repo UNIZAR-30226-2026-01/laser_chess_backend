@@ -25,7 +25,7 @@ type Room struct {
 	Broadcast chan interface{}
 }
 
-func (r *Room) InitRoom(Player1 *Client, Player2 *Client) {
+func (r *Room) InitRoom(Player1 *Client, Player2 *Client, BoardType game.Board_T) {
 	r.Player1 = Player1
 	r.Player2 = Player2
 	r.ConP1 = make(chan interface{})
@@ -33,7 +33,7 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client) {
 	r.Broadcast = make(chan interface{})
 
 	r.Game = &game.LaserChessGame{}
-	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID)
+	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID, BoardType)
 
 	go r.Run()
 }

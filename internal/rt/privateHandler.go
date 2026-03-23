@@ -171,7 +171,7 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 
 	// Crear la Room y arrancar la partida
 	room := &Room{}
-	room.InitRoom(info.challengerClient, challengedClient)
+	room.InitRoom(info.challengerClient, challengedClient, game.ACE) // ESPECIFICAR EL TABLERO
 
 	// Registrar ambos jugadores en el registry
 	h.registry.RegisterMatch(challengerID, challengedID, room)

@@ -34,11 +34,13 @@ type LaserChessGame struct {
 * --- Resultados ---
 * LaserChessGame - Es la nueva instancia del juego inicializada para comenzar a jugar
  */
-func (g *LaserChessGame) InitLaserChessGame(uidRedPlayer int64, uidBluePlayer int64) {
-	g.redPlayer = uidRedPlayer
-	g.bluePlayer = uidBluePlayer
-	g.turn = uidRedPlayer
-	g.gameBoard = InitBoard(ACE)
+func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer int64,
+	BoardType Board_T) {
+	g.redPlayer = UidRedPlayer
+	g.bluePlayer = UidBluePlayer
+	g.turn = UidRedPlayer
+	g.gameBoard = InitBoard(BoardType)
+	go g.Run()
 	// newBoard := InitBoard(ACE)
 	// newGame := LaserChessGame{
 	// 	redPlayer:  uidRedPlayer,
@@ -48,5 +50,24 @@ func (g *LaserChessGame) InitLaserChessGame(uidRedPlayer int64, uidBluePlayer in
 }
 
 func (g *LaserChessGame) Run() {
+	for {
+		select {
+		case message := <-g.FromRoom:
 
+			switch message.MsgType {
+			case "Move":
+				if g.turn == g.redPlayer {
+					resul, _, _, _ := g.gameBoard.ProcessTurn(message.MsgContent, RED_TEAM)
+					g.ToRoom <- ResponseToRoom{MsgContent: resul}
+				} else if g.turn == g.bluePlayer {
+					resul, _, _, _ := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
+					g.ToRoom <- ResponseToRoom{MsgContent: resul}
+				}
+
+			case "GetState":
+				// Funcion para coger el estado
+			}
+
+		}
+	}
 }

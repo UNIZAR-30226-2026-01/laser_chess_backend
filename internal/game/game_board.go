@@ -23,16 +23,16 @@ func InitBoard(boardType Board_T) Board {
 		initACE(&newBoard)
 	case CURIOSITY:
 		//TODO
-		break
+		initACE(&newBoard)
 	case GRAIL:
 		//TODO
-		break
+		initACE(&newBoard)
 	case MERCURY:
 		//TODO
-		break
+		initACE(&newBoard)
 	case SOPHIE:
 		//TODO
-		break
+		initACE(&newBoard)
 	}
 	return newBoard
 }
