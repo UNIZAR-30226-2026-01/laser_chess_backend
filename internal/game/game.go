@@ -20,9 +20,6 @@ type LaserChessGame struct {
 	ToRoom   chan ResponseToRoom
 
 	gameBoard Board
-
-	piecesTakenByRed  []BoardPiece
-	piecesTakenByBlue []BoardPiece
 }
 
 /*
@@ -41,12 +38,6 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.turn = UidRedPlayer
 	g.gameBoard = InitBoard(BoardType)
 	go g.Run()
-	// newBoard := InitBoard(ACE)
-	// newGame := LaserChessGame{
-	// 	redPlayer:  uidRedPlayer,
-	// 	bluePlayer: uidBluePlayer,
-	// 	turn:       uidRedPlayer,
-	// 	gameBoard:  newBoard}
 }
 
 func (g *LaserChessGame) Run() {
@@ -65,7 +56,8 @@ func (g *LaserChessGame) Run() {
 				}
 
 			case "GetState":
-				// Funcion para coger el estado
+				// state := g.gameBoard.GetState()
+				// g.ToRoom <- ResponseToRoom{MsgContent: state}
 			}
 
 		}
