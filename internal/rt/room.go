@@ -36,12 +36,12 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client) {
 	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID)
 
 	go r.Run()
-}
-
-func (r *Room) Run() {
 	// Notificar a ambos clientes que la partida ha empezado
 	startMsg := gin.H{"type": "MatchStarted"}
 	r.Broadcast <- startMsg
+}
+
+func (r *Room) Run() {
 
 	fmt.Println("La partida ha iniciado :)")
 
