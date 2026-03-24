@@ -17,7 +17,7 @@ type FriendshipStatusDTO struct {
 	SenderID       int64 `json:"sender_id" binding:"required"`
 	ReceiverID     int64 `json:"receiver_id" binding:"required"`
 	SenderAccept   bool  `json:"sender_accept" binding:"required"`
-	ReceiverAccept bool  `json:"reciever_accept" binding:"required"`
+	ReceiverAccept bool  `json:"receiver_accept" binding:"required"`
 }
 
 // Para devolver los datos de los usuarios amigos de una consulta
