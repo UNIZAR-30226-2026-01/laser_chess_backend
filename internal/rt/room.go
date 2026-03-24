@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
-	"github.com/gin-gonic/gin"
 )
 
 // fichero que gestiona las rooms
@@ -17,28 +16,18 @@ type Room struct {
 	Player2 *Client
 	Game    *game.LaserChessGame
 
-	FromP1 chan ClientSocketMessage
-	FromP2 chan ClientSocketMessage
-
-	ConP1     chan interface{}
-	ConP2     chan interface{}
 	Broadcast chan interface{}
 }
 
 func (r *Room) InitRoom(Player1 *Client, Player2 *Client, BoardType game.Board_T) {
 	r.Player1 = Player1
 	r.Player2 = Player2
-	r.ConP1 = make(chan interface{})
-	r.ConP2 = make(chan interface{})
-	r.Broadcast = make(chan interface{})
+	r.Broadcast = make(chan interface{}, 1)
 
 	r.Game = &game.LaserChessGame{}
 	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID, BoardType)
 
 	go r.Run()
-	// Notificar a ambos clientes que la partida ha empezado
-	startMsg := gin.H{"type": "MatchStarted"}
-	r.Broadcast <- startMsg
 }
 
 func (r *Room) Run() {
@@ -47,24 +36,24 @@ func (r *Room) Run() {
 
 	for {
 		select {
-		case message := <-r.ConP1:
-			r.Player2.Send <- message
-
-		case message := <-r.ConP2:
-			r.Player2.Send <- message
-
 		case message := <-r.Broadcast:
+			fmt.Println("Broadcast: ", message)
 			r.Player1.Send <- message
 			r.Player2.Send <- message
-		case message := <-r.FromP1:
+
+		case message := <-r.Player1.ToRoom:
 			r.FilterMessage(r.Player1, message)
-		case message := <-r.FromP2:
+		case message := <-r.Player2.ToRoom:
 			r.FilterMessage(r.Player2, message)
 		}
 	}
 }
 
 func (r *Room) FilterMessage(player *Client, message ClientSocketMessage) {
+	// debug
+	fmt.Println("Type: ", message.Type)
+	fmt.Println("Content: ", message.Content)
+
 	switch message.Type {
 	case "Move":
 		r.MakeMove(player.AccountID, message.Content)

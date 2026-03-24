@@ -1,5 +1,7 @@
 package game
 
+import "fmt"
+
 type RoomMsg struct {
 	PlayerUid  int64
 	MsgType    string
@@ -37,7 +39,13 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
 	g.gameBoard = InitBoard(BoardType)
+
+	g.FromRoom = make(chan RoomMsg)
+	g.ToRoom = make(chan ResponseToRoom)
+
 	go g.Run()
+
+	fmt.Println("Game inicializado")
 }
 
 func (g *LaserChessGame) Run() {
@@ -46,11 +54,36 @@ func (g *LaserChessGame) Run() {
 		case "Move":
 			switch g.turn {
 			case g.redPlayer:
-				resul, _, _, _ := g.gameBoard.ProcessTurn(message.MsgContent, RED_TEAM)
-				g.ToRoom <- ResponseToRoom{MsgContent: resul}
+				if message.PlayerUid == g.redPlayer {
+					fmt.Println("RED:", message.MsgContent)
+					resul, _, _, err := g.gameBoard.ProcessTurn(message.MsgContent, RED_TEAM)
+					fmt.Println("ANSWER:", resul)
+					g.ToRoom <- ResponseToRoom{MsgContent: resul}
+
+					// Si el moviento es correcto se pasa el turno
+					if err == nil {
+						g.turn = g.bluePlayer
+					}
+
+				} else {
+					// TODO: Esto habrá tratarlo mejor
+					g.ToRoom <- ResponseToRoom{MsgContent: "no es tu turno"}
+				}
 			case g.bluePlayer:
-				resul, _, _, _ := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
-				g.ToRoom <- ResponseToRoom{MsgContent: resul}
+				if message.PlayerUid == g.bluePlayer {
+					fmt.Println("BLUE:", message.MsgContent)
+					resul, _, _, err := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
+					fmt.Println("ANSWER:", resul)
+					g.ToRoom <- ResponseToRoom{MsgContent: resul}
+
+					// Si el moviento es correcto se pasa el turno
+					if err == nil {
+						g.turn = g.redPlayer
+					}
+				} else {
+					// TODO: Esto habrá tratarlo mejor
+					g.ToRoom <- ResponseToRoom{MsgContent: "no es tu turno"}
+				}
 			}
 		case "GetState":
 			// state := g.gameBoard.GetState()

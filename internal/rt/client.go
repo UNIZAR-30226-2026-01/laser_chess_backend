@@ -7,27 +7,26 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type ClientSocketMessage struct {
+	Type    string `json:"type" binding:"required"`
+	Content string `json:"content" binding:"required"`
+}
+
 type Client struct {
 	AccountID int64
 	Conn      *websocket.Conn
 	Send      chan interface{}
-	ToRoom    chan interface{}
+	ToRoom    chan ClientSocketMessage
 
 	// Canal para avisar de fin
 	Done chan struct{}
 }
 
-type ClientSocketMessage struct {
-	Type    string
-	Content string
-}
-
-func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn,
-	ToRoom chan interface{}) {
+func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
 	c.AccountID = AccountID
 	c.Conn = Conn
 	c.Send = make(chan interface{})
-	c.ToRoom = ToRoom
+	c.ToRoom = make(chan ClientSocketMessage)
 
 	c.Done = make(chan struct{})
 

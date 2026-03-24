@@ -80,10 +80,9 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 		return
 	}
 
-	// Construir Client (sin Room todavia)
-	toRoom := make(chan interface{})
+	// Construir Client
 	client := &Client{}
-	client.InitClient(challengerID, conn, toRoom)
+	client.InitClient(challengerID, conn)
 
 	// Registrar reto en el hub privado
 	info := &ChallengeInfo{
@@ -165,13 +164,12 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 	}
 
 	// Construir el Client del challenged
-	toRoom := make(chan interface{})
 	challengedClient := &Client{}
-	challengedClient.InitClient(challengedID, conn, toRoom)
+	challengedClient.InitClient(challengedID, conn)
 
 	// Crear la Room y arrancar la partida
 	room := &Room{}
-	room.InitRoom(info.challengerClient, challengedClient, game.ACE) // ESPECIFICAR EL TABLERO
+	room.InitRoom(info.challengerClient, challengedClient, info.board)
 
 	// Registrar ambos jugadores en el registry
 	h.registry.RegisterMatch(challengerID, challengedID, room)
