@@ -13,9 +13,9 @@ const createAccount = `-- name: CreateAccount :one
 
 INSERT INTO account (
     password_hash, mail, username, 
-    board_skin, piece_skin, win_animation
+    board_skin, piece_skin, win_animation, avatar
 )
-VALUES ($1, $2, $3, $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING account_id
 `
 
@@ -26,6 +26,7 @@ type CreateAccountParams struct {
 	BoardSkin    int32  `json:"board_skin"`
 	PieceSkin    int32  `json:"piece_skin"`
 	WinAnimation int32  `json:"win_animation"`
+	Avatar       int32  `json:"avatar"`
 }
 
 // Queries públicas desde endpoints
@@ -37,6 +38,7 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (i
 		arg.BoardSkin,
 		arg.PieceSkin,
 		arg.WinAnimation,
+		arg.Avatar,
 	)
 	var account_id int64
 	err := row.Scan(&account_id)
@@ -59,7 +61,7 @@ func (q *Queries) DeleteAccount(ctx context.Context, accountID int64) error {
 }
 
 const getAccountByID = `-- name: GetAccountByID :one
-SELECT account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation FROM account
+SELECT account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar FROM account
 WHERE account_id = $1 AND is_deleted = FALSE LIMIT 1
 `
 
@@ -78,6 +80,7 @@ func (q *Queries) GetAccountByID(ctx context.Context, accountID int64) (Account,
 		&i.BoardSkin,
 		&i.PieceSkin,
 		&i.WinAnimation,
+		&i.Avatar,
 	)
 	return i, err
 }
@@ -148,9 +151,10 @@ SET
     username = COALESCE($2, username),
     board_skin = COALESCE($3, board_skin),
     piece_skin = COALESCE($4, piece_skin),
-    win_animation = COALESCE($5, win_animation)
+    win_animation = COALESCE($5, win_animation),
+    avatar = COALESCE($6, avatar)
 WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation
+RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar
 `
 
 type UpdateAccountParams struct {
@@ -159,6 +163,7 @@ type UpdateAccountParams struct {
 	BoardSkin    *int32  `json:"board_skin"`
 	PieceSkin    *int32  `json:"piece_skin"`
 	WinAnimation *int32  `json:"win_animation"`
+	Avatar       *int32  `json:"avatar"`
 }
 
 // solo cambia cosas qué se pueden cambiar por el user
@@ -172,6 +177,7 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (A
 		arg.BoardSkin,
 		arg.PieceSkin,
 		arg.WinAnimation,
+		arg.Avatar,
 	)
 	var i Account
 	err := row.Scan(
@@ -186,6 +192,7 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (A
 		&i.BoardSkin,
 		&i.PieceSkin,
 		&i.WinAnimation,
+		&i.Avatar,
 	)
 	return i, err
 }
@@ -195,7 +202,7 @@ UPDATE account
 SET
     mail = $2
 WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation
+RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar
 `
 
 type UpdateMailParams struct {
@@ -218,6 +225,7 @@ func (q *Queries) UpdateMail(ctx context.Context, arg UpdateMailParams) (Account
 		&i.BoardSkin,
 		&i.PieceSkin,
 		&i.WinAnimation,
+		&i.Avatar,
 	)
 	return i, err
 }
@@ -246,7 +254,7 @@ SET
     xp = $3,
     money = $4
 WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation
+RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar
 `
 
 type UpdateStatsParams struct {
@@ -276,6 +284,7 @@ func (q *Queries) UpdateStats(ctx context.Context, arg UpdateStatsParams) (Accou
 		&i.BoardSkin,
 		&i.PieceSkin,
 		&i.WinAnimation,
+		&i.Avatar,
 	)
 	return i, err
 }

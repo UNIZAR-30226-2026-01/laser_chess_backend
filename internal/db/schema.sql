@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS "account" (
 	"board_skin" INTEGER NOT NULL,
 	"piece_skin" INTEGER NOT NULL,
 	"win_animation" INTEGER NOT NULL,
+	"avatar" INTEGER NOT NULL,
 
 	PRIMARY KEY("account_id")
 );

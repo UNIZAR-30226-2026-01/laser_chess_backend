@@ -287,6 +287,7 @@ type Account struct {
 	BoardSkin    int32  `json:"board_skin"`
 	PieceSkin    int32  `json:"piece_skin"`
 	WinAnimation int32  `json:"win_animation"`
+	Avatar       int32  `json:"avatar"`
 }
 
 type Friendship struct {

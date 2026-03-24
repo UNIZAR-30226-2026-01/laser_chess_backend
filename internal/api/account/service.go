@@ -47,6 +47,7 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 			BoardSkin:    1,
 			PieceSkin:    2,
 			WinAnimation: 3,
+			Avatar:       1,
 		})
 
 		if errTx != nil {
@@ -83,6 +84,7 @@ func (s *AccountService) GetByID(ctx context.Context, accountID int64) (*Account
 		BoardSkin:    &res.BoardSkin,
 		PieceSkin:    &res.PieceSkin,
 		WinAnimation: &res.WinAnimation,
+		Avatar:       &res.Avatar,
 	}, nil
 }
 
@@ -119,6 +121,7 @@ func (s *AccountService) Update(
 		BoardSkin:    body.BoardSkin,
 		PieceSkin:    body.PieceSkin,
 		WinAnimation: body.WinAnimation,
+		Avatar:       body.Avatar,
 	})
 	if err != nil {
 		return nil, err
@@ -130,6 +133,7 @@ func (s *AccountService) Update(
 		BoardSkin:    &res.BoardSkin,
 		PieceSkin:    &res.PieceSkin,
 		WinAnimation: &res.WinAnimation,
+		Avatar:       &res.Avatar,
 	}, nil
 }
 

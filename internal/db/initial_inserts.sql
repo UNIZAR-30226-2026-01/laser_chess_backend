@@ -47,7 +47,8 @@ INSERT INTO public.account (
     "money",
     board_skin,
     piece_skin,
-    win_animation
+    win_animation,
+    avatar
 )
 VALUES(
     'user1@gmail.com',
@@ -59,7 +60,8 @@ VALUES(
     0,
     1,
     2,
-    3
+    3,
+    1
 ), (
     'user2@gmail.com',
     'user2', 
@@ -70,7 +72,8 @@ VALUES(
     0,
     1,
     2,
-    3
+    3,
+    1
 ), (
     'user3@gmail.com',
     'user3', 
@@ -81,7 +84,8 @@ VALUES(
     0,
     1,
     2,
-    3
+    3,
+    1
 );
 
 INSERT INTO item_owner (

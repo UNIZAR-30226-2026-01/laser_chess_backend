@@ -3,9 +3,9 @@
 -- name: CreateAccount :one
 INSERT INTO account (
     password_hash, mail, username, 
-    board_skin, piece_skin, win_animation
+    board_skin, piece_skin, win_animation, avatar
 )
-VALUES ($1, $2, $3, $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING account_id;
 
 -- name: GetAccountByID :one
@@ -29,7 +29,8 @@ SET
     username = COALESCE(sqlc.narg('username'), username),
     board_skin = COALESCE(sqlc.narg('board_skin'), board_skin),
     piece_skin = COALESCE(sqlc.narg('piece_skin'), piece_skin),
-    win_animation = COALESCE(sqlc.narg('win_animation'), win_animation)
+    win_animation = COALESCE(sqlc.narg('win_animation'), win_animation),
+    avatar = COALESCE(sqlc.narg('avatar'), avatar)
 WHERE account_id = $1 AND is_deleted = FALSE
 RETURNING *;
 
