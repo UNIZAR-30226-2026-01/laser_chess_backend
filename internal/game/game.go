@@ -41,25 +41,20 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 }
 
 func (g *LaserChessGame) Run() {
-	for {
-		select {
-		case message := <-g.FromRoom:
-
-			switch message.MsgType {
-			case "Move":
-				if g.turn == g.redPlayer {
-					resul, _, _, _ := g.gameBoard.ProcessTurn(message.MsgContent, RED_TEAM)
-					g.ToRoom <- ResponseToRoom{MsgContent: resul}
-				} else if g.turn == g.bluePlayer {
-					resul, _, _, _ := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
-					g.ToRoom <- ResponseToRoom{MsgContent: resul}
-				}
-
-			case "GetState":
-				// state := g.gameBoard.GetState()
-				// g.ToRoom <- ResponseToRoom{MsgContent: state}
+	for message := range g.FromRoom {
+		switch message.MsgType {
+		case "Move":
+			switch g.turn {
+			case g.redPlayer:
+				resul, _, _, _ := g.gameBoard.ProcessTurn(message.MsgContent, RED_TEAM)
+				g.ToRoom <- ResponseToRoom{MsgContent: resul}
+			case g.bluePlayer:
+				resul, _, _, _ := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
+				g.ToRoom <- ResponseToRoom{MsgContent: resul}
 			}
-
+		case "GetState":
+			// state := g.gameBoard.GetState()
+			// g.ToRoom <- ResponseToRoom{MsgContent: state}
 		}
 	}
 }
