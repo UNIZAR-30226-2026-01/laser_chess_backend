@@ -10,7 +10,7 @@ func TestMovements(t *testing.T) {
 	tablero := Board{}
 
 	//Iniciar tablero
-	initACE(&tablero)
+	tablero.InitBoard("boardTemplates/ace.csv")
 
 	fmt.Print("== TEST TRANSFORMACIONES ==\n")
 	tablero.print()

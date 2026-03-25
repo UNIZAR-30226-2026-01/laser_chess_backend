@@ -38,7 +38,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
-	g.gameBoard = InitBoard(BoardType)
+	g.gameBoard.InitBoard("boardTemplates/ace.csv")
 
 	g.FromRoom = make(chan RoomMsg)
 	g.ToRoom = make(chan ResponseToRoom)

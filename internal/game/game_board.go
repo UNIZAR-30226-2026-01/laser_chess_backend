@@ -5,8 +5,10 @@ package game
 // ===================================== //
 
 import (
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -17,85 +19,123 @@ type Board struct {
 	redTeamLaser  *BoardPieceLaser
 }
 
-func InitBoard(boardType Board_T) Board {
-	var newBoard Board
-	switch boardType {
-	case ACE:
-		initACE(&newBoard)
-	case CURIOSITY:
-		//TODO
-		initACE(&newBoard)
-	case GRAIL:
-		//TODO
-		initACE(&newBoard)
-	case MERCURY:
-		//TODO
-		initACE(&newBoard)
-	case SOPHIE:
-		//TODO
-		initACE(&newBoard)
+func (b *Board) InitBoard(rutaCSV string) error {
+	f, err := os.Open(rutaCSV)
+	var kingsBlue, kingsRed int;
+	var lasersBlue, lasersRed int
+
+	if err != nil {
+		return fmt.Errorf("error al abrir <%s> %w",rutaCSV, err)
 	}
-	return newBoard
-}
 
-func initACE(tablero *Board) {
+	//encodingCSV para leer csv especificamente
+	reader := csv.NewReader(f)
+	records, err := reader.ReadAll()
 
-	for y := 0; y < 8; y++ {
-		for x := 0; x < 10; x++ {
-			tablero.cells[x][y] = &BoardPieceVacant{NONE}
+	if err != nil {
+		return fmt.Errorf("error al leer como CSV: %w", err)
+	}
+
+	//Recorrer el csv todos los "records" grabados para crear el tablero
+	for y, fila := range records {
+		for x, celdaStr := range fila {
+			//Calculamos tipo de baldosa
+			var baldosa team_T
+			if x == 0 {
+				baldosa = BLUE_TEAM
+			} else if x == 9{
+				baldosa = RED_TEAM
+			} else if x == 1 && (y == 0 || y == 7) {
+				baldosa = RED_TEAM
+			} else if x == 8 && (y == 0 || y == 7) {
+				baldosa = BLUE_TEAM
+			} else {
+				baldosa = NONE
+			}
+
+			//creamos una pieza y la colocamos en la baldosa correspondiente
+			pieza := constructorPieza(celdaStr, baldosa)
+			b.cells[x][y] = pieza
+
+			//NO ES NECESARIA LA PARTE DE CONTAR, PERO AÑADE FIABILIDAD
+
+			//Guardar los punteros a los laseres y contar para no declarar un
+			//estado inicial inválido
+			if laser, ok := pieza.(*BoardPieceLaser); ok {
+				switch laser.team {
+					case BLUE_TEAM:
+						lasersBlue++
+						b.blueTeamLaser = laser
+					case RED_TEAM:
+						lasersRed++
+						b.redTeamLaser = laser
+				}
+			}
+
+			if king, ok := pieza.(*BoardPieceKing); ok {
+				switch king.team {
+					case BLUE_TEAM : kingsBlue++
+					case RED_TEAM : kingsRed++
+				}
+			}
 		}
 	}
 
-	for y := 0; y < 8; y++ {
-		tablero.cells[0][y] = &BoardPieceVacant{BLUE_TEAM}
-		tablero.cells[9][y] = &BoardPieceVacant{RED_TEAM}
+	if lasersBlue != 1 || lasersRed != 1 {
+		return fmt.Errorf("Numero incorrecto de laseres - AZUL:%d -ROJO:%d", lasersBlue, lasersRed)
 	}
 
-	tablero.cells[1][0] = &BoardPieceVacant{RED_TEAM}
-	tablero.cells[1][7] = &BoardPieceVacant{RED_TEAM}
-	tablero.cells[8][0] = &BoardPieceVacant{BLUE_TEAM}
-	tablero.cells[8][7] = &BoardPieceVacant{BLUE_TEAM}
+	if lasersBlue != 1 || lasersRed != 1 {
+		return fmt.Errorf("Numero incorrecto de Reyes - AZUL:%d -ROJO:%d", kingsBlue, kingsRed)
+	}
 
-	//Pruebas sobre tablero "ACE"
+	return nil
 
-	//Poner reyes
-	tablero.cells[5][0] = &BoardPieceKing{BLUE_TEAM, NONE}
-	tablero.cells[4][7] = &BoardPieceKing{RED_TEAM, NONE}
-
-	//Poner laseres
-	tablero.blueTeamLaser = &BoardPieceLaser{BLUE_TEAM, DOWN}
-	tablero.cells[0][0] = tablero.blueTeamLaser
-	tablero.redTeamLaser = &BoardPieceLaser{RED_TEAM, UP}
-	tablero.cells[9][7] = tablero.redTeamLaser
-
-	//Poner escudos
-	tablero.cells[4][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN} //[][1]
-	tablero.cells[6][0] = &BoardPieceShield{BLUE_TEAM, NONE, DOWN}
-	tablero.cells[3][7] = &BoardPieceShield{RED_TEAM, NONE, UP}
-	tablero.cells[5][7] = &BoardPieceShield{RED_TEAM, NONE, UP}
-
-	//poner switches
-	tablero.cells[4][3] = &BoardPieceSwitch{BLUE_TEAM, NONE, DOWN} //DOWN
-	tablero.cells[5][3] = &BoardPieceSwitch{BLUE_TEAM, NONE, LEFT}
-	tablero.cells[4][4] = &BoardPieceSwitch{RED_TEAM, NONE, LEFT}
-	tablero.cells[5][4] = &BoardPieceSwitch{RED_TEAM, NONE, DOWN}
-
-	//poner deflectores
-	tablero.cells[7][0] = &BoardPieceDeflector{BLUE_TEAM, NONE, LEFT}
-	tablero.cells[7][3] = &BoardPieceDeflector{BLUE_TEAM, NONE, LEFT}
-	tablero.cells[7][4] = &BoardPieceDeflector{BLUE_TEAM, NONE, DOWN}
-	tablero.cells[6][5] = &BoardPieceDeflector{BLUE_TEAM, NONE, LEFT}
-	tablero.cells[0][3] = &BoardPieceDeflector{BLUE_TEAM, BLUE_TEAM, DOWN}
-	tablero.cells[0][4] = &BoardPieceDeflector{BLUE_TEAM, BLUE_TEAM, LEFT}
-	tablero.cells[2][1] = &BoardPieceDeflector{BLUE_TEAM, NONE, UP}
-	tablero.cells[2][7] = &BoardPieceDeflector{RED_TEAM, NONE, RIGHT}
-	tablero.cells[2][4] = &BoardPieceDeflector{RED_TEAM, NONE, RIGHT}
-	tablero.cells[2][3] = &BoardPieceDeflector{RED_TEAM, NONE, UP}
-	tablero.cells[3][2] = &BoardPieceDeflector{RED_TEAM, NONE, RIGHT}
-	tablero.cells[9][4] = &BoardPieceDeflector{RED_TEAM, RED_TEAM, UP}
-	tablero.cells[9][3] = &BoardPieceDeflector{RED_TEAM, RED_TEAM, RIGHT}
-	tablero.cells[7][6] = &BoardPieceDeflector{RED_TEAM, NONE, DOWN}
 }
+
+func constructorPieza(codigo string, baldosa team_T) BoardPiece {
+	if codigo == "" {
+		return &BoardPieceVacant{baldosa}
+	}
+
+	// Extraemos Equipo
+	var team team_T
+	if len(codigo) >= 2 {
+		switch codigo[1]{
+			case 'A' : team = BLUE_TEAM
+			case 'R' : team = RED_TEAM
+		}
+	}
+
+	// Extraemos Dirección
+	var dir pointing_T
+	if len(codigo) >= 3 {
+		switch codigo[2] {
+			case 'U': dir = UP
+			case 'D': dir = DOWN
+			case 'L': dir = LEFT
+			case 'R': dir = RIGHT
+		}
+	}
+
+
+	// Mapeamos al struct correcto según la primera letra
+	switch codigo[0] {
+		case 'K': // King 
+			return &BoardPieceKing{team, baldosa}
+		case 'L': // Laser
+			return &BoardPieceLaser{team, dir}
+		case 'E': // Escudo (Shield)
+			return &BoardPieceShield{team, baldosa, dir}
+		case 'S': // Switch
+			return &BoardPieceSwitch{team, baldosa, dir}
+		case 'D': // Deflector
+			return &BoardPieceDeflector{team, baldosa, dir}
+		default :
+			return nil
+		}
+}
+
 
 // devuelve true si la posicion que se le pasa esta dentro del tablero
 func (b *Board) isInbound(x int, y int) bool {
