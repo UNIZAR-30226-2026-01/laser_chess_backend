@@ -25,5 +25,5 @@ type FriendshipReturnDTO struct {
 	UserID   int64  `json:"account_id" binding:"required"`
 	Username string `json:"username"`
 	Level    int32  `json:"level"`
-	Xp       int32  `json:"xp"`
+	Avatar   int32  `json:"avatar"`
 }

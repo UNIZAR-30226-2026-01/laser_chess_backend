@@ -253,7 +253,7 @@ func ParseFriendshipRow(data []db.GetUserFriendshipsRow) []FriendshipReturnDTO {
 			UserID:   value.UserID,
 			Username: value.Username,
 			Level:    value.Level,
-			Xp:       value.Xp,
+			Avatar:   value.Avatar,
 		})
 	}
 
@@ -272,7 +272,7 @@ func ParsePendingSentRow(
 			UserID:   value.UserID,
 			Username: value.Username,
 			Level:    value.Level,
-			Xp:       value.Xp,
+			Avatar:   value.Avatar,
 		})
 	}
 
@@ -292,7 +292,7 @@ func ParsePendingReceivedRow(
 			UserID:   value.UserID,
 			Username: value.Username,
 			Level:    value.Level,
-			Xp:       value.Xp,
+			Avatar:   value.Avatar,
 		})
 	}
 

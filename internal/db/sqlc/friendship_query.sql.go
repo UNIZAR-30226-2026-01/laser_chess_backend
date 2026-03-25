@@ -90,14 +90,14 @@ func (q *Queries) GetFriendship(ctx context.Context, arg GetFriendshipParams) (F
 }
 
 const getUserFriendships = `-- name: GetUserFriendships :many
-SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user2_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = friendship.user1_id
 
 UNION
 
-SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = friendship.user2_id
@@ -107,7 +107,7 @@ type GetUserFriendshipsRow struct {
 	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
 	Level    int32  `json:"level"`
-	Xp       int32  `json:"xp"`
+	Avatar   int32  `json:"avatar"`
 }
 
 func (q *Queries) GetUserFriendships(ctx context.Context, user1ID int64) ([]GetUserFriendshipsRow, error) {
@@ -123,7 +123,7 @@ func (q *Queries) GetUserFriendships(ctx context.Context, user1ID int64) ([]GetU
 			&i.UserID,
 			&i.Username,
 			&i.Level,
-			&i.Xp,
+			&i.Avatar,
 		); err != nil {
 			return nil, err
 		}
@@ -136,14 +136,14 @@ func (q *Queries) GetUserFriendships(ctx context.Context, user1ID int64) ([]GetU
 }
 
 const getUserPendingReceivedFriendships = `-- name: GetUserPendingReceivedFriendships :many
-SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user2_id = account.account_id
 WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user1_id
 
 UNION
 
-SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user2_id
@@ -153,7 +153,7 @@ type GetUserPendingReceivedFriendshipsRow struct {
 	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
 	Level    int32  `json:"level"`
-	Xp       int32  `json:"xp"`
+	Avatar   int32  `json:"avatar"`
 }
 
 func (q *Queries) GetUserPendingReceivedFriendships(ctx context.Context, user1ID int64) ([]GetUserPendingReceivedFriendshipsRow, error) {
@@ -169,7 +169,7 @@ func (q *Queries) GetUserPendingReceivedFriendships(ctx context.Context, user1ID
 			&i.UserID,
 			&i.Username,
 			&i.Level,
-			&i.Xp,
+			&i.Avatar,
 		); err != nil {
 			return nil, err
 		}
@@ -182,14 +182,14 @@ func (q *Queries) GetUserPendingReceivedFriendships(ctx context.Context, user1ID
 }
 
 const getUserPendingSentFriendships = `-- name: GetUserPendingSentFriendships :many
-SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user2_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user1_id
 
 UNION
 
-SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user2_id
@@ -199,7 +199,7 @@ type GetUserPendingSentFriendshipsRow struct {
 	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
 	Level    int32  `json:"level"`
-	Xp       int32  `json:"xp"`
+	Avatar   int32  `json:"avatar"`
 }
 
 func (q *Queries) GetUserPendingSentFriendships(ctx context.Context, user1ID int64) ([]GetUserPendingSentFriendshipsRow, error) {
@@ -215,7 +215,7 @@ func (q *Queries) GetUserPendingSentFriendships(ctx context.Context, user1ID int
 			&i.UserID,
 			&i.Username,
 			&i.Level,
-			&i.Xp,
+			&i.Avatar,
 		); err != nil {
 			return nil, err
 		}

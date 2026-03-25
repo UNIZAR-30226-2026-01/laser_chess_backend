@@ -10,42 +10,42 @@ SELECT * FROM friendship
 WHERE ($1 = user1_id AND $2 = user2_id) OR ($1 = user2_id AND $2 = user1_id);
 
 -- name: GetUserFriendships :many
-SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user2_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = friendship.user1_id
 
 UNION
 
-SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = TRUE AND $1 = friendship.user2_id;
 
 
 -- name: GetUserPendingSentFriendships :many
-SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user2_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user1_id
 
 UNION
 
-SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user2_id;
 
 
 -- name: GetUserPendingReceivedFriendships :many
-SELECT friendship.user2_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user2_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user2_id = account.account_id
 WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user1_id
 
 UNION
 
-SELECT friendship.user1_id AS user_id, account.username, account.level, account.xp 
+SELECT friendship.user1_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 
 JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user2_id;
