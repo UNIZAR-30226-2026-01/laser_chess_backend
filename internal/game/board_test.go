@@ -5,12 +5,36 @@ import (
 	"testing"
 )
 
+func TestAllBoards(t *testing.T) {
+	tablero := Board{}
+
+	fmt.Print("== ACE ==\n")
+	tablero.InitBoard("boardTemplates/ace.csv")
+	tablero.print()
+
+	fmt.Print("== CURIOSITY ==\n")
+	tablero.InitBoard("boardTemplates/curiosity.csv")
+	tablero.print()
+
+	fmt.Print("== GRAIL ==\n")
+	tablero.InitBoard("boardTemplates/grail.csv")
+	tablero.print()
+
+	fmt.Print("== MERCURY ==\n")
+	// tablero.InitBoard("boardTemplates/mercury.csv") TODO
+	// tablero.print()
+
+	fmt.Print("== SOPHIE ==\n")
+	// tablero.InitBoard("boardTemplates/sophie.csv") TODO
+	// tablero.print()
+}
+
 //Test final de una partida y su resultado esperado
 func TestMovements(t *testing.T) {
 	tablero := Board{}
 
 	//Iniciar tablero
-	tablero.InitBoard("boardTemplates/ace.csv")
+	tablero.InitBoard("boardTemplates/grail.csv")
 
 	fmt.Print("== TEST TRANSFORMACIONES ==\n")
 	tablero.print()
