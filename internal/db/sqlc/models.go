@@ -59,10 +59,10 @@ func (ns NullBoardType) Value() (driver.Value, error) {
 type EloType string
 
 const (
-	EloTypeBlitz   EloType = "blitz"
-	EloTypeBullet  EloType = "bullet"
-	EloTypeRapid   EloType = "rapid"
-	EloTypeClassic EloType = "classic"
+	EloTypeBlitz    EloType = "blitz"
+	EloTypeExtended EloType = "extended"
+	EloTypeRapid    EloType = "rapid"
+	EloTypeClassic  EloType = "classic"
 )
 
 func (e *EloType) Scan(src interface{}) error {

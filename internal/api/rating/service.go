@@ -58,6 +58,9 @@ func (s *RatingService) CreateRating(ctx context.Context, userID int64) (*AllRat
 *
  */
 func (s RatingService) SqlcParamToDTO(res []db.Rating) *AllRatingsDTO {
+	if len(res) == 0 {
+		return &AllRatingsDTO{}
+	}
 	return &AllRatingsDTO{
 		UserID: res[0].UserID,
 		Elo1: GenericRatingDto{
@@ -128,8 +131,8 @@ func (s *RatingService) GetBlitzEloByID(ctx context.Context, userID int64) (*Rat
 	}, nil
 }
 
-func (s *RatingService) GetBulletEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
-	res, err := s.store.GetBulletElo(ctx, userID)
+func (s *RatingService) GetExtendedEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
+	res, err := s.store.GetExtendedElo(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

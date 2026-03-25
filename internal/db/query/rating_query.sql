@@ -4,16 +4,16 @@ INSERT INTO rating (
 )
 VALUES 
 (
-    $1, elo_type.blitz,   $2
+    $1, 'blitz',   $2
 ),
 (
-    $1, elo_type.bullet,  $3
+    $1, 'extended',  $3
 ),
 (
-    $1, elo_type.rapid,   $4
+    $1, 'rapid',   $4
 ),
 (
-    $1, elo_type.classic, $5
+    $1, 'classic', $5
 )
 RETURNING *;
 
@@ -25,9 +25,9 @@ WHERE user_id = $1;
 SELECT * FROM rating
 WHERE user_id = $1 AND elo_type = elo_type.blitz;
 
--- name: GetBulletElo :one
+-- name: GetExtendedElo :one
 SELECT * FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.bullet;
+WHERE user_id = $1 AND elo_type = elo_type.extended;
 
 -- name: GetRapidElo :one
 SELECT * FROM rating

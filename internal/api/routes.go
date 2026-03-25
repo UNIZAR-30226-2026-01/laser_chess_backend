@@ -44,17 +44,17 @@ func SetupRouter(store *db.Store,
 	loginService := login.NewService(store)
 	loginHandler := login.NewHandler(loginService)
 
+	ratingService := rating.NewService(store)
+	ratingHandler := rating.NewHandler(ratingService)
+
 	accountService := account.NewService(store)
-	accountHandler := account.NewHandler(accountService)
+	accountHandler := account.NewHandler(accountService, ratingService)
 
 	matchService := match.NewService(store)
 	matchHandler := match.NewHandler(matchService)
 
 	itemService := item.NewService(store)
 	itemHandler := item.NewHandler(itemService)
-
-	ratingService := rating.NewService(store)
-	ratingHandler := rating.NewHandler(ratingService)
 
 	friendshipService := friendship.NewService(store)
 	friendshipHandler := friendship.NewHandler(friendshipService, accountService)
@@ -110,7 +110,7 @@ func SetupRouter(store *db.Store,
 		ratingRoute := protected.Group("/rating")
 		ratingRoute.GET("/:userID", ratingHandler.GetAllElos)
 		ratingRoute.GET("/:userID/blitz", ratingHandler.GetBlitzElo)
-		ratingRoute.GET("/:userID/bullet", ratingHandler.GetBulletElo)
+		ratingRoute.GET("/:userID/extended", ratingHandler.GetExtendedElo)
 		ratingRoute.GET("/:userID/rapid", ratingHandler.GetRapidElo)
 		ratingRoute.GET("/:userID/classic", ratingHandler.GetClassicElo)
 	}

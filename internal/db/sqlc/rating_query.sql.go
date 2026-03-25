@@ -15,16 +15,16 @@ INSERT INTO rating (
 )
 VALUES 
 (
-    $1, elo_type.blitz,   $2
+    $1, 'blitz',   $2
 ),
 (
-    $1, elo_type.bullet,  $3
+    $1, 'extended',  $3
 ),
 (
-    $1, elo_type.rapid,   $4
+    $1, 'rapid',   $4
 ),
 (
-    $1, elo_type.classic, $5
+    $1, 'classic', $5
 )
 RETURNING user_id, elo_type, value
 `
@@ -100,18 +100,6 @@ func (q *Queries) GetBlitzElo(ctx context.Context, userID int64) (Rating, error)
 	return i, err
 }
 
-const getBulletElo = `-- name: GetBulletElo :one
-SELECT user_id, elo_type, value FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.bullet
-`
-
-func (q *Queries) GetBulletElo(ctx context.Context, userID int64) (Rating, error) {
-	row := q.db.QueryRow(ctx, getBulletElo, userID)
-	var i Rating
-	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
-	return i, err
-}
-
 const getClassicElo = `-- name: GetClassicElo :one
 SELECT user_id, elo_type, value FROM rating
 WHERE user_id = $1 AND elo_type = elo_type.classic
@@ -119,6 +107,18 @@ WHERE user_id = $1 AND elo_type = elo_type.classic
 
 func (q *Queries) GetClassicElo(ctx context.Context, userID int64) (Rating, error) {
 	row := q.db.QueryRow(ctx, getClassicElo, userID)
+	var i Rating
+	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
+	return i, err
+}
+
+const getExtendedElo = `-- name: GetExtendedElo :one
+SELECT user_id, elo_type, value FROM rating
+WHERE user_id = $1 AND elo_type = elo_type.extended
+`
+
+func (q *Queries) GetExtendedElo(ctx context.Context, userID int64) (Rating, error) {
+	row := q.db.QueryRow(ctx, getExtendedElo, userID)
 	var i Rating
 	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
 	return i, err

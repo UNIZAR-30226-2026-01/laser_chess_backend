@@ -35,7 +35,7 @@ CREATE TYPE "item_type" AS ENUM (
 
 CREATE TYPE "elo_type" AS ENUM (
 	'blitz',
-	'bullet',
+	'extended',
 	'rapid',
 	'classic'
 );

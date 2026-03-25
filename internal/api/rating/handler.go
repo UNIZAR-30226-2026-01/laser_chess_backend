@@ -73,14 +73,14 @@ func (h *RatingHandler) GetBlitzElo(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func (h *RatingHandler) GetBulletElo(c *gin.Context) {
+func (h *RatingHandler) GetExtendedElo(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("userID"), 10, 64)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
 	}
 
-	res, err := h.service.GetBulletEloByID(c.Request.Context(), id)
+	res, err := h.service.GetExtendedEloByID(c.Request.Context(), id)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return

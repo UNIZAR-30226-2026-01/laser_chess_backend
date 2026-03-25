@@ -1,22 +1,25 @@
 package account
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	"github.com/gin-gonic/gin"
 )
 
 // Handler http con endpoints para tratar con cuentas de usuario
 
 type AccountHandler struct {
-	service *AccountService
+	accountService *AccountService
+	ratingService  *rating.RatingService
 }
 
-func NewHandler(s *AccountService) *AccountHandler {
-	return &AccountHandler{service: s}
+func NewHandler(s *AccountService, r *rating.RatingService) *AccountHandler {
+	return &AccountHandler{accountService: s, ratingService: r}
 }
 
 // Crea un nuevo usuario a partir de un CreateAccountDTO
@@ -29,9 +32,16 @@ func (h *AccountHandler) Create(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.Create(c.Request.Context(), &body)
+	res, err := h.accountService.Create(c.Request.Context(), &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	_, err = h.ratingService.CreateRating(c, *res.AccountID)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		fmt.Println(err)
 		return
 	}
 
@@ -47,7 +57,7 @@ func (h *AccountHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetByID(c.Request.Context(), int64(id))
+	res, err := h.accountService.GetByID(c.Request.Context(), int64(id))
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -74,7 +84,7 @@ func (h *AccountHandler) Update(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.Update(c.Request.Context(), accountID, &body)
+	res, err := h.accountService.Update(c.Request.Context(), accountID, &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -88,7 +98,7 @@ func (h *AccountHandler) Delete(c *gin.Context) {
 
 	id, err := middleware.ExtractAccountID(c)
 
-	err = h.service.Delete(c.Request.Context(), int64(id))
+	err = h.accountService.Delete(c.Request.Context(), int64(id))
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
