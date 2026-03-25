@@ -7,6 +7,7 @@ package game
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -159,7 +160,7 @@ func (b *Board) killPiece(x_at int, y_at int) {
 // ---Depuración---//
 func (b *Board) printlaser(laser []vector2_T) {
 	for y := 0; y < YDIM; y++ {
-		fmt.Printf("%d | ", y+1) // numero
+		fmt.Printf("%d | ", 8-y) // numero
 		for x := 0; x < XDIM; x++ {
 
 			cell := b.cells[x][y].VisualRep()
@@ -182,7 +183,7 @@ func (b *Board) printlaser(laser []vector2_T) {
 // ---Depuración---//
 func (b *Board) print() {
 	for y := 0; y < YDIM; y++ {
-		fmt.Printf("%d | ", y+1) // numero
+		fmt.Printf("%d | ", 8-y) // numero
 		for x := 0; x < XDIM; x++ {
 
 			cell := b.cells[x][y].VisualRep()
@@ -202,6 +203,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 
 	//La versión de golang del string stream
 	reader := strings.NewReader(instruction)
+	retVal := instruction
 
 	var inst rune //Instrucción
 	_, err := fmt.Fscanf(reader, "%c", &inst)
@@ -217,9 +219,9 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 		if err != nil { /*TODO*/
 		}
 
-		y_from := token1 - 1        // old x
+		y_from := 8 - token1        // old x
 		x_from := int(token2 - 'a') // old y
-		y_to := token3 - 1          // new x
+		y_to := 8 - token3 	        // new x
 		x_to := int(token4 - 'a')   // new y
 
 		legalMove := b.movePiece(x_from, y_from, x_to, y_to, team)
@@ -234,15 +236,17 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
+				retVal = instruction + "x" + string(rune(point.x + 'a')) + strconv.Itoa(point.y + 8)  // y
 			}
-			return instruction, laserPath, result, nil
+			return retVal, laserPath, result, nil
 		case RED_TEAM:
 			laserPath, result := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
+			retVal = instruction + "x" + string(rune(point.x + 'a')) + strconv.Itoa(point.y + 8)  // y
 			}
-			return instruction, laserPath, result, nil
+			return retVal, laserPath, result, nil
 		}
 
 	case 'R', 'L':
@@ -253,7 +257,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 		if err != nil { /*TODO*/
 		}
 
-		y_at := token1 - 1        // x
+		y_at := 8 - token1        // x
 		x_at := int(token2 - 'a') // y
 		rot := inst
 
@@ -269,18 +273,19 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
+				retVal = instruction + "x" + string(rune(point.x + 'a')) + strconv.Itoa(point.y + 8)  // y
 			}
-			return instruction, laserPath, result, nil
+			return retVal, laserPath, result, nil
 		case RED_TEAM:
 			laserPath, result := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
+				retVal = instruction + "x" + string(rune(point.x + 'a')) + strconv.Itoa(point.y + 8)  // y
 			}
-			return instruction, laserPath, result, nil
+			return retVal, laserPath, result, nil
 		}
 	}
 
 	return "", nil, 0, errors.New("Formato inválido")
-
 }
