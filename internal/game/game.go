@@ -45,11 +45,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
-
-	g.boardType = BoardType
-
-	g.gameBoard = Board{}
-	g.gameBoard.InitBoard("boardTemplates/ace.csv") // TODO: NO poner el nombre del csv, poner un switch case
+	g.gameBoard, _ = InitBoard("boardTemplates/ace.csv") // TODO: NO poner el nombre del csv, poner un switch case
 
 	g.FromRoom = make(chan RoomMsg)
 	g.ToRoom = make(chan ResponseToRoom)

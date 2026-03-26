@@ -6,18 +6,28 @@ import (
 )
 
 func TestAllBoards(t *testing.T) {
-	tablero := Board{}
+	tablero, err := InitBoard("boardTemplates/ace.csv")
+	if err != nil {
+		t.Error(err)
+	}
 
 	fmt.Print("== ACE ==\n")
-	tablero.InitBoard("boardTemplates/ace.csv")
+	
 	tablero.print()
 
 	fmt.Print("== CURIOSITY ==\n")
-	tablero.InitBoard("boardTemplates/curiosity.csv")
+
+	tablero, err = InitBoard("boardTemplates/curiosity.csv")
+	if err != nil {
+		t.Error(err)
+	}
 	tablero.print()
 
 	fmt.Print("== GRAIL ==\n")
-	tablero.InitBoard("boardTemplates/grail.csv")
+	tablero, err = InitBoard("boardTemplates/curiosity.grail")
+	if err != nil {
+		t.Error(err)
+	}
 	tablero.print()
 
 	fmt.Print("== MERCURY ==\n")
@@ -31,18 +41,23 @@ func TestAllBoards(t *testing.T) {
 
 //Test final de una partida y su resultado esperado
 func TestMovements(t *testing.T) {
-	tablero := Board{}
+
 	fmt.Print("== TEST TRANSFORMACIONES ==\n")
 	
 	//Iniciar tablero
-	tablero.InitBoard("boardTemplates/ace.csv")
+	tablero, err := InitBoard("boardTemplates/curiosity.csv")
+	if err != nil {
+		t.Error(err)
+	}
+	tablero.print()
+
 	
 	tablero.print()
 
 	var log string
 	var logPiece string
 	var path []vector2_T
-	var err error
+
 
 	//Ejemplo de procesamiento
 	movimiento_front := "La8"
