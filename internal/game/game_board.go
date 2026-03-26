@@ -19,13 +19,15 @@ type Board struct {
 	redTeamLaser  *BoardPieceLaser
 }
 
-func (b *Board) InitBoard(rutaCSV string) error {
+func InitBoard(rutaCSV string) (Board, error) {
+	var b Board
+
 	f, err := os.Open(rutaCSV)
 	var kingsBlue, kingsRed int;
 	var lasersBlue, lasersRed int
 
 	if err != nil {
-		return fmt.Errorf("error al abrir <%s> %w",rutaCSV, err)
+		return Board{}, fmt.Errorf("error al abrir <%s> %w",rutaCSV, err)
 	}
 
 	//encodingCSV para leer csv especificamente
@@ -33,7 +35,7 @@ func (b *Board) InitBoard(rutaCSV string) error {
 	records, err := reader.ReadAll()
 
 	if err != nil {
-		return fmt.Errorf("error al leer como CSV: %w", err)
+		return Board{}, fmt.Errorf("error al leer como CSV: %w", err)
 	}
 
 	//Recorrer el csv todos los "records" grabados para crear el tablero
@@ -82,14 +84,14 @@ func (b *Board) InitBoard(rutaCSV string) error {
 	}
 
 	if lasersBlue != 1 || lasersRed != 1 {
-		return fmt.Errorf("Numero incorrecto de laseres - AZUL:%d -ROJO:%d", lasersBlue, lasersRed)
+		return Board{}, fmt.Errorf("Numero incorrecto de laseres - AZUL:%d -ROJO:%d", lasersBlue, lasersRed)
 	}
 
 	if lasersBlue != 1 || lasersRed != 1 {
-		return fmt.Errorf("Numero incorrecto de Reyes - AZUL:%d -ROJO:%d", kingsBlue, kingsRed)
+		return Board{}, fmt.Errorf("Numero incorrecto de Reyes - AZUL:%d -ROJO:%d", kingsBlue, kingsRed)
 	}
 
-	return nil
+	return b, nil
 
 }
 
