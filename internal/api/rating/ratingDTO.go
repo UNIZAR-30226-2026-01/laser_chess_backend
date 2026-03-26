@@ -20,9 +20,9 @@ type GenericRatingDto struct {
 
 // Para mover todos los ratings de golpe
 type AllRatingsDTO struct {
-	UserID int64 `json:"user_id" binding:"required"`
-	Elo1   GenericRatingDto
-	Elo2   GenericRatingDto
-	Elo3   GenericRatingDto
-	Elo4   GenericRatingDto
+	UserID   int64 `json:"user_id" binding:"required"`
+	Blitz    int32 `json:"blitz" binding:"required"`
+	Extended int32 `json:"extended" binding:"required"`
+	Rapid    int32 `json:"rapid" binding:"required"`
+	Classic  int32 `json:"classic" binding:"required"`
 }

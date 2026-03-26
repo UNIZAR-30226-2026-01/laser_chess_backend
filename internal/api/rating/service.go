@@ -61,24 +61,30 @@ func (s RatingService) SqlcParamToDTO(res []db.Rating) *AllRatingsDTO {
 	if len(res) == 0 {
 		return &AllRatingsDTO{}
 	}
+	var blitz int32
+	var rapid int32
+	var extended int32
+	var classic int32
+
+	for _, r := range res {
+		switch r.EloType {
+		case "blitz":
+			blitz = r.Value
+		case "rapid":
+			rapid = r.Value
+		case "extended":
+			extended = r.Value
+		case "classic":
+			classic = r.Value
+		}
+	}
+
 	return &AllRatingsDTO{
-		UserID: res[0].UserID,
-		Elo1: GenericRatingDto{
-			EloType: res[0].EloType,
-			Value:   res[0].Value,
-		},
-		Elo2: GenericRatingDto{
-			EloType: res[1].EloType,
-			Value:   res[1].Value,
-		},
-		Elo3: GenericRatingDto{
-			EloType: res[2].EloType,
-			Value:   res[2].Value,
-		},
-		Elo4: GenericRatingDto{
-			EloType: res[3].EloType,
-			Value:   res[3].Value,
-		},
+		UserID:   res[0].UserID,
+		Blitz:    blitz,
+		Rapid:    rapid,
+		Extended: extended,
+		Classic:  classic,
 	}
 }
 
