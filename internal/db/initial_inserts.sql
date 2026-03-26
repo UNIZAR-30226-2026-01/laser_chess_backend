@@ -55,9 +55,9 @@ VALUES(
     'user1', 
     '$2a$12$Q0RsprBAXFgSSttIet3nNe/rwKOFOJychVd9F2BH6q/Q3Pp5lnV3.',
     false,
-    0,
-    0,
-    0,
+    1,
+    11,
+    101,
     1,
     2,
     3,
@@ -67,9 +67,9 @@ VALUES(
     'user2', 
     '$2a$12$ApqnzgaPJ3LpimwZGjxJk.rBhWQ5EIQ.YNBDxXJZKmDXlxY42cNFK',
     false,
-    0,
-    0,
-    0,
+    2,
+    12,
+    201,
     1,
     2,
     3,
@@ -79,9 +79,9 @@ VALUES(
     'user3', 
     '$2a$12$HX2kns7L6joaJo07PrGafO8Sjz044snkwRBIh7pjdtHps4u.2kBLa',
     false,
-    0,
-    0,
-    0,
+    3,
+    13,
+    301,
     1,
     2,
     3,
@@ -130,4 +130,42 @@ INSERT INTO public."friendship" (
     2,
     true,
     true
+);
+
+INSERT INTO public."rating" (
+    user_id,
+    elo_type,
+    value
+) VALUES (
+    1,
+    'blitz',
+    1
+), (
+    1,
+    'rapid',
+    11
+), (
+    1,
+    'classic',
+    111
+), (
+    1,
+    'extended',
+    1111
+), (
+    2,
+    'blitz',
+    2
+), (
+    2,
+    'rapid',
+    22
+), (
+    2,
+    'classic',
+    222
+), (
+    2,
+    'extended',
+    2222
 );
