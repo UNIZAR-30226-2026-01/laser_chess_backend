@@ -49,6 +49,44 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	fmt.Println("Game inicializado")
 }
 
+func extraerEsquinas(laserPath []vector2_T) []vector2_T {
+	// En caso de ser menor a 2 no hace falta extaer esquinas
+	if len(laserPath) <= 2 {
+		return laserPath
+	}
+
+	var l []vector2_T
+
+	// Agregamos el primer punto
+	l = append(l, laserPath[0])
+
+	// Vamos agregando todas las esquinas
+	for i := 1; i < len(laserPath)-1; i++ {
+		anterior 	:= laserPath[i-1]
+		actual 		:= laserPath[i]
+		siguiente 	:= laserPath[i+1]
+
+		// Vector 1 (del punto anterior al actual)
+		dx1 := actual.x - anterior.x
+		dy1 := actual.y - anterior.y
+
+		// Vector 2 (del punto actual al siguiente)
+		dx2 := siguiente.x - actual.x
+		dy2 := siguiente.y - actual.y
+
+		// Se hace el producto cruzado para ver si es una esquina
+		if (dx1*dy2)-(dy1*dx2) != 0 {
+			l = append(l, actual)
+		}
+	}
+
+	// Agregamos el último punto
+	l = append(l, laserPath[len(laserPath)-1])
+
+	return l
+}
+
+
 func (g *LaserChessGame) Run() {
 	for message := range g.FromRoom {
 		switch message.MsgType {
@@ -75,7 +113,7 @@ func (g *LaserChessGame) Run() {
 					fmt.Println("BLUE:", message.MsgContent)
 					resul, laser, _, err := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
 					fmt.Println("ANSWER:", resul)
-					g.ToRoom <- ResponseToRoom{MsgContent: resul, Laser: fmt.Sprint(laser)}
+					g.ToRoom <- ResponseToRoom{MsgContent: resul, Laser: fmt.Sprint(extraerEsquinas(laser))}
 
 					// Si el moviento es correcto se pasa el turno
 					if err == nil {
@@ -92,3 +130,4 @@ func (g *LaserChessGame) Run() {
 		}
 	}
 }
+
