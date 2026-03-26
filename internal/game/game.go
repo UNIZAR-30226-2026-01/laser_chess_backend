@@ -81,7 +81,7 @@ func formatearLaserPath(laserPath []vector2_T) string {
 	for i, point := range(laserPath){
 		// Transformación de los enteros a coordenadas de tablero
 		retVal += string(rune(point.x+'a')) + strconv.Itoa(8-point.y)
-		if i != len(laserPath){
+		if i != len(laserPath) - 1{
 			retVal += ","
 		}
 	}
