@@ -57,6 +57,7 @@ func TestMovements(t *testing.T) {
 
 	var log string
 	var logPiece string
+	var laser_end laserInteractionResult_T
 	var path []vector2_T
 
 	//Ejemplo de procesamiento
@@ -64,7 +65,7 @@ func TestMovements(t *testing.T) {
 
 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, _, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
 	logPiece = logPiece + "%{0}"
 
 	//Error movimiento inválido
@@ -73,16 +74,18 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
+		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
 	}
 
 	//Ejemplo de procesamiento
-	movimiento_front = "Lb4"
+	movimiento_front = "Lj5"
 
 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, _, err = tablero.ProcessTurn(movimiento_front, RED_TEAM)
+	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, RED_TEAM)
 	logPiece = logPiece + "%{0}"
 
 	//Error movimiento inválido
@@ -91,6 +94,8 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
+		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Terminación del laser:", tablero.redTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
 	}
@@ -100,7 +105,7 @@ func TestMovements(t *testing.T) {
 
 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, _, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
 	logPiece = logPiece + "%{0}"
 
 	//Error movimiento inválido
@@ -109,6 +114,8 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
+		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
 	}
@@ -118,7 +125,7 @@ func TestMovements(t *testing.T) {
 
 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, _, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
 	logPiece = logPiece + "%{0}"
 
 	//Error movimiento inválido
@@ -127,6 +134,8 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
+		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
 	}

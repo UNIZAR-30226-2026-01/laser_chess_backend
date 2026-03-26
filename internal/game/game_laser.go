@@ -139,3 +139,17 @@ func (c *BoardPieceLaser) VisualRep() string {
 func (c *BoardPieceLaser) processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T) {
 	return 0, STOP
 }
+
+//DEBUG
+func (c *BoardPieceLaser) printLaserInteractionResult(e laserInteractionResult_T) string {
+	switch e {
+	case 0:
+		return "CONTINUE"
+	case 1:
+		return "HIT"
+	case 2:
+		return "STOP"
+	default:
+		return "OUT_OF_BOUNDS"
+	}
+}
