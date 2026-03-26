@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"strconv"
 
 	boardtemplates "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game/boardTemplates"
 )
@@ -74,41 +75,17 @@ func (g *LaserChessGame) getInitialState() string {
 	}
 }
 
-func extraerEsquinas(laserPath []vector2_T) []vector2_T {
-	// En caso de ser menor a 2 no hace falta extaer esquinas
-	if len(laserPath) <= 2 {
-		return laserPath
-	}
-
-	var l []vector2_T
-
-	// Agregamos el primer punto
-	l = append(l, laserPath[0])
-
-	// Vamos agregando todas las esquinas
-	for i := 1; i < len(laserPath)-1; i++ {
-		anterior := laserPath[i-1]
-		actual := laserPath[i]
-		siguiente := laserPath[i+1]
-
-		// Vector 1 (del punto anterior al actual)
-		dx1 := actual.x - anterior.x
-		dy1 := actual.y - anterior.y
-
-		// Vector 2 (del punto actual al siguiente)
-		dx2 := siguiente.x - actual.x
-		dy2 := siguiente.y - actual.y
-
-		// Se hace el producto cruzado para ver si es una esquina
-		if (dx1*dy2)-(dy1*dx2) != 0 {
-			l = append(l, actual)
+func formatearLaserPath(laserPath []vector2_T) string {
+	
+	retVal := ""
+	for i, point := range(laserPath){
+		// Transformación de los enteros a coordenadas de tablero
+		retVal += string(rune(point.x+'a')) + strconv.Itoa(8-point.y)
+		if i != len(laserPath){
+			retVal += ","
 		}
 	}
-
-	// Agregamos el último punto
-	l = append(l, laserPath[len(laserPath)-1])
-
-	return l
+	return retVal
 }
 
 func (g *LaserChessGame) Run() {
@@ -124,7 +101,7 @@ func (g *LaserChessGame) Run() {
 					g.ToRoom <- ResponseToRoom{
 						Type:    Move,
 						Content: resul,
-						Laser:   fmt.Sprint(laser),
+						Laser:   fmt.Sprint(formatearLaserPath(laser)),
 					}
 
 					// Si el moviento es correcto se pasa el turno
@@ -148,7 +125,7 @@ func (g *LaserChessGame) Run() {
 					g.ToRoom <- ResponseToRoom{
 						Type:    Move,
 						Content: resul,
-						Laser:   fmt.Sprint(extraerEsquinas(laser)),
+						Laser:   fmt.Sprint(formatearLaserPath(laser)),
 					}
 
 					// Si el moviento es correcto se pasa el turno
