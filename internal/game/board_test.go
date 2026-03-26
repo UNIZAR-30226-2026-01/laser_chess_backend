@@ -3,10 +3,12 @@ package game
 import (
 	"fmt"
 	"testing"
+
+	boardtemplates "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game/boardTemplates"
 )
 
 func TestAllBoards(t *testing.T) {
-	tablero, err := InitBoard("boardTemplates/ace.csv")
+	tablero, err := InitBoard(boardtemplates.ACE)
 	if err != nil {
 		t.Error(err)
 	}
@@ -17,14 +19,14 @@ func TestAllBoards(t *testing.T) {
 
 	fmt.Print("== CURIOSITY ==\n")
 
-	tablero, err = InitBoard("boardTemplates/curiosity.csv")
+	tablero, err = InitBoard(boardtemplates.CURIOSITY)
 	if err != nil {
 		t.Error(err)
 	}
 	tablero.print()
 
 	fmt.Print("== GRAIL ==\n")
-	tablero, err = InitBoard("boardTemplates/curiosity.grail")
+	tablero, err = InitBoard(boardtemplates.GRAIL)
 	if err != nil {
 		t.Error(err)
 	}
@@ -45,7 +47,7 @@ func TestMovements(t *testing.T) {
 	fmt.Print("== TEST TRANSFORMACIONES ==\n")
 
 	//Iniciar tablero
-	tablero, err := InitBoard("boardTemplates/curiosity.csv")
+	tablero, err := InitBoard(boardtemplates.CURIOSITY)
 	if err != nil {
 		t.Error(err)
 	}
@@ -76,7 +78,7 @@ func TestMovements(t *testing.T) {
 	}
 
 	//Ejemplo de procesamiento
-	movimiento_front = "Lh2"
+	movimiento_front = "Lb4"
 
 	fmt.Println("LLEGA:\t" + movimiento_front)
 
@@ -110,4 +112,23 @@ func TestMovements(t *testing.T) {
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
 	}
+
+	//Ejemplo de procesamiento
+	movimiento_front = "Ra8"
+
+	fmt.Println("LLEGA:\t" + movimiento_front)
+
+	logPiece, path, _, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+	logPiece = logPiece + "%{0}"
+
+	//Error movimiento inválido
+	if err != nil {
+		t.Error(err)
+	} else {
+		//Camino del laser
+		tablero.printlaser(path)
+		fmt.Print("RESP:\t" + logPiece + "\n")
+		log = log + logPiece + ";"
+	}
+
 }

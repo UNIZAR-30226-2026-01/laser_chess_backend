@@ -27,6 +27,7 @@ func (c *BoardPieceLaser) setTeamTile(t team_T) {
 * 				 el laser pueda tener acceso a el resto de piezas de la partida.
 * --- Resultados ---
 * []vector2_T - Contendrá todas las posiciones del tablero que ha recorrido el laser en orden, de la primera a la última.
+*				MODIFICACIÓN - Ahora devuelve las esquinas del recorrido, los cambios de sentido
 * laserInteractionResult_T - Indica la razón por la que se ha detenido el avance del laser:
 * 							 STOP: ha alcanzado un límite inamovible
 *							 HIT: ha matado a una pieza
@@ -34,6 +35,8 @@ func (c *BoardPieceLaser) setTeamTile(t team_T) {
 func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, laserInteractionResult_T) {
 	var traveledPositions []vector2_T  //vector que guarda las posiciones que ha recorrido el laser
 	currentPosition := vector2_T{x, y} //posicion del laser en una iteracion
+	//apilamos la primera posición
+	traveledPositions = append(traveledPositions, currentPosition)
 
 	// laserPointingDirection: direccion a la que apunta el laser,
 	// se utiliza para procesar la direccion de la siguiente iteracion e indexar el vector de movimientos
@@ -47,7 +50,7 @@ func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, l
 
 	for interactionRes == CONTINUE {
 		// apilamos la posicion actual del laser
-		traveledPositions = append(traveledPositions, currentPosition)
+		// YA NO, AHORA SOLO APILAMOS SI CAMBIA LA DIRECCIÓN
 
 		// avanzamos la posicion en la direccion del vector
 		currentPosition.x += laserMovementDirectionVector.x
@@ -58,24 +61,30 @@ func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, l
 			// esta nos devolvera la nueva direccion a la que se dirige el haz y si este se detiene o continua
 			laserPointingDirection, interactionRes = board.cells[currentPosition.x][currentPosition.y].processLaser(laserPointingDirection)
 
-			//usamos esta nueva direccion para obtener el nuevo vector de movimiento
+			//	si el vector de movimiento que tenemos ahora, va a cambiar en el siguiente movimiento
+			//	esta casilla es una esquina, y la guardamos, mientras no sea un HIT porque en caso de hit la dirección devuelta
+			// 	es irrelevante y la última casilla ya la guardamos al final
+			if laserMovementDirectionVector != laserMovementVector[laserPointingDirection] && interactionRes != HIT {
+				traveledPositions = append(traveledPositions, currentPosition)
+			}
+
+			//usamos esta la direccion para obtener el nuevo vector de movimiento
 			laserMovementDirectionVector = laserMovementVector[laserPointingDirection]
 		} else {
 			interactionRes = OUT_OF_BOUNDS
 		}
-
 	}
-	// apilamos la posicion en la que se ha detenido el laser 
+	// apilamos la posicion en la que se ha detenido el laser
 	traveledPositions = append(traveledPositions, currentPosition)
 	return traveledPositions, interactionRes
 }
 
-func (c *BoardPieceLaser) canMoveTo(x int, y int, board *Board, team team_T) bool{
+func (c *BoardPieceLaser) canMoveTo(x int, y int, board *Board, team team_T) bool {
 
-	if (team != c.team){
+	if team != c.team {
 		return false
 	}
-	
+
 	fmt.Printf("Laser - canMoveTo\n")
 	return false
 }
@@ -83,7 +92,7 @@ func (c *BoardPieceLaser) canMoveTo(x int, y int, board *Board, team team_T) boo
 func (c *BoardPieceLaser) canRotate(d rune, team team_T) bool {
 	fmt.Printf("Laser - canRotate\n")
 
-	if (team != c.team){
+	if team != c.team {
 		return false
 	}
 
