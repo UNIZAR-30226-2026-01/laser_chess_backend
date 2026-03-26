@@ -73,10 +73,10 @@ func (r *Room) MakeMove(accountID int64, move string) {
 
 // FUNCIONES DE COMUNICACIÓN CON EL JUEGO
 
-func (r *Room) SendMoveToGame(accountID int64, move string) string {
+func (r *Room) SendMoveToGame(accountID int64, move string) game.ResponseToRoom {
 	r.Game.FromRoom <- game.RoomMsg{PlayerUid: accountID, MsgType: "Move", MsgContent: move}
 	response := <-r.Game.ToRoom
-	return response.MsgContent
+	return response
 }
 
 func (r *Room) GetGameState() string {

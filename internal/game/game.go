@@ -10,6 +10,7 @@ type RoomMsg struct {
 
 type ResponseToRoom struct {
 	MsgContent string
+	Laser      string
 }
 
 type LaserChessGame struct {
@@ -38,7 +39,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
-	g.gameBoard.InitBoard("boardTemplates/ace.csv")
+	g.gameBoard.InitBoard("boardTemplates/ace.csv") // TODO: NO poner el nombre del csv, poner un switch case
 
 	g.FromRoom = make(chan RoomMsg)
 	g.ToRoom = make(chan ResponseToRoom)
@@ -56,9 +57,9 @@ func (g *LaserChessGame) Run() {
 			case g.redPlayer:
 				if message.PlayerUid == g.redPlayer {
 					fmt.Println("RED:", message.MsgContent)
-					resul, _, _, err := g.gameBoard.ProcessTurn(message.MsgContent, RED_TEAM)
+					resul, laser, _, err := g.gameBoard.ProcessTurn(message.MsgContent, RED_TEAM)
 					fmt.Println("ANSWER:", resul)
-					g.ToRoom <- ResponseToRoom{MsgContent: resul}
+					g.ToRoom <- ResponseToRoom{MsgContent: resul, Laser: fmt.Sprint(laser)}
 
 					// Si el moviento es correcto se pasa el turno
 					if err == nil {
@@ -67,14 +68,14 @@ func (g *LaserChessGame) Run() {
 
 				} else {
 					// TODO: Esto habrá tratarlo mejor
-					g.ToRoom <- ResponseToRoom{MsgContent: "no es tu turno"}
+					g.ToRoom <- ResponseToRoom{MsgContent: "no es tu turno", Laser: ""}
 				}
 			case g.bluePlayer:
 				if message.PlayerUid == g.bluePlayer {
 					fmt.Println("BLUE:", message.MsgContent)
-					resul, _, _, err := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
+					resul, laser, _, err := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
 					fmt.Println("ANSWER:", resul)
-					g.ToRoom <- ResponseToRoom{MsgContent: resul}
+					g.ToRoom <- ResponseToRoom{MsgContent: resul, Laser: fmt.Sprint(laser)}
 
 					// Si el moviento es correcto se pasa el turno
 					if err == nil {
@@ -82,7 +83,7 @@ func (g *LaserChessGame) Run() {
 					}
 				} else {
 					// TODO: Esto habrá tratarlo mejor
-					g.ToRoom <- ResponseToRoom{MsgContent: "no es tu turno"}
+					g.ToRoom <- ResponseToRoom{MsgContent: "no es tu turno", Laser: ""}
 				}
 			}
 		case "GetState":
