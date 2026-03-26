@@ -1,6 +1,10 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+
+	boardtemplates "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game/boardTemplates"
+)
 
 type RoomMsg struct {
 	PlayerUid  int64
@@ -24,6 +28,7 @@ type LaserChessGame struct {
 	ToRoom   chan ResponseToRoom
 
 	gameBoard Board
+	boardType Board_T
 }
 
 /*
@@ -40,6 +45,9 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
+
+	g.boardType = BoardType
+
 	g.gameBoard = Board{}
 	g.gameBoard.InitBoard("boardTemplates/ace.csv") // TODO: NO poner el nombre del csv, poner un switch case
 
@@ -49,6 +57,20 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	go g.Run()
 
 	fmt.Println("Game inicializado")
+}
+
+func (g *LaserChessGame) getInitialState() string {
+	switch g.boardType {
+	case ACE:
+		return boardtemplates.ACE
+	case CURIOSITY:
+		return boardtemplates.CURIOSITY
+	case GRAIL:
+		return boardtemplates.GRAIL
+		// poner el resto
+	default:
+		return ""
+	}
 }
 
 func extraerEsquinas(laserPath []vector2_T) []vector2_T {
@@ -144,6 +166,12 @@ func (g *LaserChessGame) Run() {
 		case GetState:
 			// state := g.gameBoard.GetState()
 			// g.ToRoom <- ResponseToRoom{MsgContent: state}
+		case GetInitialState:
+			initialState := g.getInitialState()
+			g.ToRoom <- ResponseToRoom{
+				Type:    InitialState,
+				Content: initialState,
+			}
 		}
 	}
 }

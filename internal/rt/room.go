@@ -34,6 +34,9 @@ func (r *Room) Run() {
 
 	fmt.Println("La partida ha iniciado :)")
 
+	// Mandar estado inicial
+	r.Broadcast <- r.getInitialGameState()
+
 	for {
 		select {
 		case message := <-r.Broadcast:
@@ -42,38 +45,38 @@ func (r *Room) Run() {
 			r.Player2.Send <- message
 
 		case message := <-r.Player1.ToRoom:
-			r.FilterMessage(r.Player1, message)
+			r.filterMessage(r.Player1, message)
 		case message := <-r.Player2.ToRoom:
-			r.FilterMessage(r.Player2, message)
+			r.filterMessage(r.Player2, message)
 		}
 	}
 }
 
-func (r *Room) FilterMessage(player *Client, message ClientSocketMessage) {
+func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
 	// debug
 	fmt.Println("Type: ", message.Type)
 	fmt.Println("Content: ", message.Content)
 
 	switch game.GameMessageType(message.Type) {
 	case game.Move:
-		r.MakeMove(player.AccountID, message.Content)
+		r.makeMove(player.AccountID, message.Content)
 	case game.GetState:
-		state := r.GetGameState()
+		state := r.getGameState()
 		player.Send <- state
 	}
 }
 
-func (r *Room) MakeMove(accountID int64, move string) {
+func (r *Room) makeMove(accountID int64, move string) {
 	if accountID != r.Player1.AccountID && accountID != r.Player2.AccountID {
 		return
 	}
-	state := r.SendMoveToGame(accountID, move)
+	state := r.sendMoveToGame(accountID, move)
 	r.Broadcast <- state
 }
 
 // FUNCIONES DE COMUNICACIÓN CON EL JUEGO
 
-func (r *Room) SendMoveToGame(accountID int64, move string) game.ResponseToRoom {
+func (r *Room) sendMoveToGame(accountID int64, move string) game.ResponseToRoom {
 	r.Game.FromRoom <- game.RoomMsg{
 		PlayerUid:  accountID,
 		MsgType:    game.Move,
@@ -83,10 +86,20 @@ func (r *Room) SendMoveToGame(accountID int64, move string) game.ResponseToRoom 
 	return response
 }
 
-func (r *Room) GetGameState() game.ResponseToRoom {
+func (r *Room) getGameState() game.ResponseToRoom {
 	r.Game.FromRoom <- game.RoomMsg{
 		PlayerUid:  0,
 		MsgType:    game.GetState,
+		MsgContent: "",
+	}
+	response := <-r.Game.ToRoom
+	return response
+}
+
+func (r *Room) getInitialGameState() game.ResponseToRoom {
+	r.Game.FromRoom <- game.RoomMsg{
+		PlayerUid:  0,
+		MsgType:    game.GetInitialState,
 		MsgContent: "",
 	}
 	response := <-r.Game.ToRoom
