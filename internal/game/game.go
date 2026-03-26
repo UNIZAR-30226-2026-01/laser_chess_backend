@@ -64,59 +64,72 @@ func formatearLaserPath(laserPath []vector2_T) string {
 	return retVal
 }
 
+func (g *LaserChessGame) getTurn() team_T {
+	switch g.turn {
+	case g.bluePlayer:
+		return BLUE_TEAM
+	case g.redPlayer:
+		return RED_TEAM
+	default:
+		// Imposible
+		fmt.Println("Error al calcular el turno")
+		return RED_TEAM
+	}
+}
+
+func (g *LaserChessGame) changeTurn() {
+	switch g.turn {
+	case g.bluePlayer:
+		g.turn = g.redPlayer
+	case g.redPlayer:
+		g.turn = g.bluePlayer
+	}
+}
+
+func (g *LaserChessGame) processMove(message RoomMsg) {
+
+	turno := g.getTurn()
+
+	if message.PlayerUid == g.turn {
+		// Si es tu turno
+
+		fmt.Println(message.PlayerUid, ": ", message.MsgContent)
+		resul, laser, _, err := g.gameEngine.ProcessTurn(message.MsgContent, turno)
+		fmt.Println("ANSWER:", resul)
+
+		if err != nil {
+			g.ToRoom <- ResponseToRoom{
+				Type:    Error,
+				Content: "Movimiento invalido",
+				Laser:   "",
+			}
+
+			return
+		}
+
+		g.ToRoom <- ResponseToRoom{
+			Type:    Move,
+			Content: resul,
+			Laser:   fmt.Sprint(formatearLaserPath(laser)),
+		}
+
+		g.changeTurn()
+
+	} else {
+		// No es tu turno
+		g.ToRoom <- ResponseToRoom{
+			Type:    Error,
+			Content: "no es tu turno",
+			Laser:   "",
+		}
+	}
+}
+
 func (g *LaserChessGame) Run() {
 	for message := range g.FromRoom {
 		switch message.MsgType {
 		case Move:
-			switch g.turn {
-			case g.redPlayer:
-				if message.PlayerUid == g.redPlayer {
-					fmt.Println("RED:", message.MsgContent)
-					resul, laser, _, err := g.gameEngine.ProcessTurn(message.MsgContent, RED_TEAM)
-					fmt.Println("ANSWER:", resul)
-					g.ToRoom <- ResponseToRoom{
-						Type:    Move,
-						Content: resul,
-						Laser:   fmt.Sprint(formatearLaserPath(laser)),
-					}
-
-					// Si el moviento es correcto se pasa el turno
-					if err == nil {
-						g.turn = g.bluePlayer
-					}
-
-				} else {
-					// TODO: Esto habrá tratarlo mejor
-					g.ToRoom <- ResponseToRoom{
-						Type:    Error,
-						Content: "no es tu turno",
-						Laser:   "",
-					}
-				}
-			case g.bluePlayer:
-				if message.PlayerUid == g.bluePlayer {
-					fmt.Println("BLUE:", message.MsgContent)
-					resul, laser, _, err := g.gameEngine.ProcessTurn(message.MsgContent, BLUE_TEAM)
-					fmt.Println("ANSWER:", resul)
-					g.ToRoom <- ResponseToRoom{
-						Type:    Move,
-						Content: resul,
-						Laser:   fmt.Sprint(formatearLaserPath(laser)),
-					}
-
-					// Si el moviento es correcto se pasa el turno
-					if err == nil {
-						g.turn = g.redPlayer
-					}
-				} else {
-					// TODO: Esto habrá tratarlo mejor
-					g.ToRoom <- ResponseToRoom{
-						Type:    Error,
-						Content: "no es tu turno",
-						Laser:   "",
-					}
-				}
-			}
+			g.processMove(message)
 		case GetState:
 			// state := g.gameEngine.GetState()
 			// g.ToRoom <- ResponseToRoom{MsgContent: state}
