@@ -3,8 +3,6 @@ package game
 import (
 	"fmt"
 	"strconv"
-
-	boardtemplates "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game/boardTemplates"
 )
 
 type RoomMsg struct {
@@ -25,11 +23,9 @@ type LaserChessGame struct {
 
 	turn int64
 
-	FromRoom chan RoomMsg
-	ToRoom   chan ResponseToRoom
-
-	gameBoard *Board
-	boardType Board_T
+	FromRoom   chan RoomMsg
+	ToRoom     chan ResponseToRoom
+	gameEngine GameEngine
 }
 
 /*
@@ -46,13 +42,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
-
-	var err error
-	g.gameBoard, err = InitBoard(boardtemplates.ACE) // TODO: NO poner el nombre del csv, poner un switch case
-	if err != nil {
-		fmt.Println("ey tio hay un error", err)
-	}
-
+	g.gameEngine.initEngine(BoardType)
 	g.FromRoom = make(chan RoomMsg)
 	g.ToRoom = make(chan ResponseToRoom)
 
@@ -61,27 +51,13 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	fmt.Println("Game inicializado")
 }
 
-func (g *LaserChessGame) getInitialState() string {
-	switch g.boardType {
-	case ACE:
-		return boardtemplates.ACE
-	case CURIOSITY:
-		return boardtemplates.CURIOSITY
-	case GRAIL:
-		return boardtemplates.GRAIL
-		// poner el resto
-	default:
-		return ""
-	}
-}
-
 func formatearLaserPath(laserPath []vector2_T) string {
-	
+
 	retVal := ""
-	for i, point := range(laserPath){
+	for i, point := range laserPath {
 		// Transformación de los enteros a coordenadas de tablero
 		retVal += string(rune(point.x+'a')) + strconv.Itoa(8-point.y)
-		if i != len(laserPath) - 1{
+		if i != len(laserPath)-1 {
 			retVal += ","
 		}
 	}
@@ -96,7 +72,7 @@ func (g *LaserChessGame) Run() {
 			case g.redPlayer:
 				if message.PlayerUid == g.redPlayer {
 					fmt.Println("RED:", message.MsgContent)
-					resul, laser, _, err := g.gameBoard.ProcessTurn(message.MsgContent, RED_TEAM)
+					resul, laser, _, err := g.gameEngine.ProcessTurn(message.MsgContent, RED_TEAM)
 					fmt.Println("ANSWER:", resul)
 					g.ToRoom <- ResponseToRoom{
 						Type:    Move,
@@ -120,7 +96,7 @@ func (g *LaserChessGame) Run() {
 			case g.bluePlayer:
 				if message.PlayerUid == g.bluePlayer {
 					fmt.Println("BLUE:", message.MsgContent)
-					resul, laser, _, err := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
+					resul, laser, _, err := g.gameEngine.ProcessTurn(message.MsgContent, BLUE_TEAM)
 					fmt.Println("ANSWER:", resul)
 					g.ToRoom <- ResponseToRoom{
 						Type:    Move,
@@ -142,10 +118,10 @@ func (g *LaserChessGame) Run() {
 				}
 			}
 		case GetState:
-			// state := g.gameBoard.GetState()
+			// state := g.gameEngine.GetState()
 			// g.ToRoom <- ResponseToRoom{MsgContent: state}
 		case GetInitialState:
-			initialState := g.getInitialState()
+			initialState := g.gameEngine.getInitialState()
 			g.ToRoom <- ResponseToRoom{
 				Type:    InitialState,
 				Content: initialState,
