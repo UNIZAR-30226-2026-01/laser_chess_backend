@@ -8,8 +8,8 @@ import (
 )
 
 type ClientSocketMessage struct {
-	Type    string `json:"Type" binding:"required"`
-	Content string `json:"Content" binding:"required"`
+	Type    string `json:"Type"`
+	Content string `json:"Content"`
 }
 
 type Client struct {

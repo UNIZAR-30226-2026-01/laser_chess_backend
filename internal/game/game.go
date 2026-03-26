@@ -12,9 +12,9 @@ type RoomMsg struct {
 }
 
 type ResponseToRoom struct {
-	Type    GameMessageType
-	Content string
-	Laser   string
+	Type    GameMessageType `json:"Type"`
+	Content string          `json:"Content"`
+	Laser   string          `json:"Laser,omitempty"`
 }
 
 type LaserChessGame struct {
@@ -101,7 +101,6 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 			g.ToRoom <- ResponseToRoom{
 				Type:    Error,
 				Content: "Movimiento invalido",
-				Laser:   "",
 			}
 
 			return
@@ -120,7 +119,6 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 		g.ToRoom <- ResponseToRoom{
 			Type:    Error,
 			Content: "no es tu turno",
-			Laser:   "",
 		}
 	}
 }
