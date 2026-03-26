@@ -32,11 +32,11 @@ func TestAllBoards(t *testing.T) {
 //Test final de una partida y su resultado esperado
 func TestMovements(t *testing.T) {
 	tablero := Board{}
-
-	//Iniciar tablero
-	tablero.InitBoard("boardTemplates/grail.csv")
-
 	fmt.Print("== TEST TRANSFORMACIONES ==\n")
+	
+	//Iniciar tablero
+	tablero.InitBoard("boardTemplates/ace.csv")
+	
 	tablero.print()
 
 	var log string
@@ -62,12 +62,30 @@ func TestMovements(t *testing.T) {
 		log = log + logPiece + ";"
 	}
 	
-		//Ejemplo de procesamiento
+	//Ejemplo de procesamiento
 	movimiento_front = "Lh2"
 	
 	fmt.Println("LLEGA:\t" + movimiento_front)
 
 	logPiece , path, _ , err = tablero.ProcessTurn(movimiento_front, RED_TEAM)
+	logPiece = logPiece + "%{0}"
+
+	//Error movimiento inválido
+	if err != nil{
+		t.Error(err)
+	} else {
+		//Camino del laser
+		tablero.printlaser(path)
+		fmt.Print("RESP:\t" + logPiece + "\n")
+		log = log + logPiece + ";"
+	}
+
+	//Ejemplo de procesamiento
+	movimiento_front = "Tc7:c8"
+	
+	fmt.Println("LLEGA:\t" + movimiento_front)
+
+	logPiece , path, _ , err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
 	logPiece = logPiece + "%{0}"
 
 	//Error movimiento inválido
