@@ -54,10 +54,10 @@ func (r *Room) FilterMessage(player *Client, message ClientSocketMessage) {
 	fmt.Println("Type: ", message.Type)
 	fmt.Println("Content: ", message.Content)
 
-	switch message.Type {
-	case "Move":
+	switch game.GameMessageType(message.Type) {
+	case game.Move:
 		r.MakeMove(player.AccountID, message.Content)
-	case "GetState":
+	case game.GetState:
 		state := r.GetGameState()
 		player.Send <- state
 	}
@@ -74,13 +74,21 @@ func (r *Room) MakeMove(accountID int64, move string) {
 // FUNCIONES DE COMUNICACIÓN CON EL JUEGO
 
 func (r *Room) SendMoveToGame(accountID int64, move string) game.ResponseToRoom {
-	r.Game.FromRoom <- game.RoomMsg{PlayerUid: accountID, MsgType: "Move", MsgContent: move}
+	r.Game.FromRoom <- game.RoomMsg{
+		PlayerUid:  accountID,
+		MsgType:    game.Move,
+		MsgContent: move,
+	}
 	response := <-r.Game.ToRoom
 	return response
 }
 
-func (r *Room) GetGameState() string {
-	r.Game.FromRoom <- game.RoomMsg{PlayerUid: 0, MsgType: "GetState", MsgContent: ""}
+func (r *Room) GetGameState() game.ResponseToRoom {
+	r.Game.FromRoom <- game.RoomMsg{
+		PlayerUid:  0,
+		MsgType:    game.GetState,
+		MsgContent: "",
+	}
 	response := <-r.Game.ToRoom
-	return response.MsgContent
+	return response
 }

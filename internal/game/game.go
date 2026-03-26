@@ -4,13 +4,14 @@ import "fmt"
 
 type RoomMsg struct {
 	PlayerUid  int64
-	MsgType    string
+	MsgType    GameMessageType
 	MsgContent string
 }
 
 type ResponseToRoom struct {
-	MsgContent string
-	Laser      string
+	Type    GameMessageType
+	Content string
+	Laser   string
 }
 
 type LaserChessGame struct {
@@ -39,6 +40,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
+	g.gameBoard = Board{}
 	g.gameBoard.InitBoard("boardTemplates/ace.csv") // TODO: NO poner el nombre del csv, poner un switch case
 
 	g.FromRoom = make(chan RoomMsg)
@@ -62,9 +64,9 @@ func extraerEsquinas(laserPath []vector2_T) []vector2_T {
 
 	// Vamos agregando todas las esquinas
 	for i := 1; i < len(laserPath)-1; i++ {
-		anterior 	:= laserPath[i-1]
-		actual 		:= laserPath[i]
-		siguiente 	:= laserPath[i+1]
+		anterior := laserPath[i-1]
+		actual := laserPath[i]
+		siguiente := laserPath[i+1]
 
 		// Vector 1 (del punto anterior al actual)
 		dx1 := actual.x - anterior.x
@@ -86,18 +88,21 @@ func extraerEsquinas(laserPath []vector2_T) []vector2_T {
 	return l
 }
 
-
 func (g *LaserChessGame) Run() {
 	for message := range g.FromRoom {
 		switch message.MsgType {
-		case "Move":
+		case Move:
 			switch g.turn {
 			case g.redPlayer:
 				if message.PlayerUid == g.redPlayer {
 					fmt.Println("RED:", message.MsgContent)
 					resul, laser, _, err := g.gameBoard.ProcessTurn(message.MsgContent, RED_TEAM)
 					fmt.Println("ANSWER:", resul)
-					g.ToRoom <- ResponseToRoom{MsgContent: resul, Laser: fmt.Sprint(laser)}
+					g.ToRoom <- ResponseToRoom{
+						Type:    Move,
+						Content: resul,
+						Laser:   fmt.Sprint(laser),
+					}
 
 					// Si el moviento es correcto se pasa el turno
 					if err == nil {
@@ -106,14 +111,22 @@ func (g *LaserChessGame) Run() {
 
 				} else {
 					// TODO: Esto habrá tratarlo mejor
-					g.ToRoom <- ResponseToRoom{MsgContent: "no es tu turno", Laser: ""}
+					g.ToRoom <- ResponseToRoom{
+						Type:    Error,
+						Content: "no es tu turno",
+						Laser:   "",
+					}
 				}
 			case g.bluePlayer:
 				if message.PlayerUid == g.bluePlayer {
 					fmt.Println("BLUE:", message.MsgContent)
 					resul, laser, _, err := g.gameBoard.ProcessTurn(message.MsgContent, BLUE_TEAM)
 					fmt.Println("ANSWER:", resul)
-					g.ToRoom <- ResponseToRoom{MsgContent: resul, Laser: fmt.Sprint(extraerEsquinas(laser))}
+					g.ToRoom <- ResponseToRoom{
+						Type:    Move,
+						Content: resul,
+						Laser:   fmt.Sprint(extraerEsquinas(laser)),
+					}
 
 					// Si el moviento es correcto se pasa el turno
 					if err == nil {
@@ -121,13 +134,16 @@ func (g *LaserChessGame) Run() {
 					}
 				} else {
 					// TODO: Esto habrá tratarlo mejor
-					g.ToRoom <- ResponseToRoom{MsgContent: "no es tu turno", Laser: ""}
+					g.ToRoom <- ResponseToRoom{
+						Type:    Error,
+						Content: "no es tu turno",
+						Laser:   "",
+					}
 				}
 			}
-		case "GetState":
+		case GetState:
 			// state := g.gameBoard.GetState()
 			// g.ToRoom <- ResponseToRoom{MsgContent: state}
 		}
 	}
 }
-
