@@ -8,7 +8,6 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -19,23 +18,17 @@ type Board struct {
 	redTeamLaser  *BoardPieceLaser
 }
 
-func InitBoard(rutaCSV string) (Board, error) {
-	var b Board
+func InitBoard(csvBoard string) (*Board, error) {
+	b := &Board{}
 
-	f, err := os.Open(rutaCSV)
-	var kingsBlue, kingsRed int;
+	var kingsBlue, kingsRed int
 	var lasersBlue, lasersRed int
 
-	if err != nil {
-		return Board{}, fmt.Errorf("error al abrir <%s> %w",rutaCSV, err)
-	}
-
-	//encodingCSV para leer csv especificamente
-	reader := csv.NewReader(f)
+	reader := csv.NewReader(strings.NewReader(csvBoard))
 	records, err := reader.ReadAll()
 
 	if err != nil {
-		return Board{}, fmt.Errorf("error al leer como CSV: %w", err)
+		return nil, fmt.Errorf("error al leer como CSV: %w", err)
 	}
 
 	//Recorrer el csv todos los "records" grabados para crear el tablero
@@ -45,7 +38,7 @@ func InitBoard(rutaCSV string) (Board, error) {
 			var baldosa team_T
 			if x == 0 {
 				baldosa = BLUE_TEAM
-			} else if x == 9{
+			} else if x == 9 {
 				baldosa = RED_TEAM
 			} else if x == 1 && (y == 0 || y == 7) {
 				baldosa = RED_TEAM
@@ -65,30 +58,32 @@ func InitBoard(rutaCSV string) (Board, error) {
 			//estado inicial inválido
 			if laser, ok := pieza.(*BoardPieceLaser); ok {
 				switch laser.team {
-					case BLUE_TEAM:
-						lasersBlue++
-						b.blueTeamLaser = laser
-					case RED_TEAM:
-						lasersRed++
-						b.redTeamLaser = laser
+				case BLUE_TEAM:
+					lasersBlue++
+					b.blueTeamLaser = laser
+				case RED_TEAM:
+					lasersRed++
+					b.redTeamLaser = laser
 				}
 			}
 
 			if king, ok := pieza.(*BoardPieceKing); ok {
 				switch king.team {
-					case BLUE_TEAM : kingsBlue++
-					case RED_TEAM : kingsRed++
+				case BLUE_TEAM:
+					kingsBlue++
+				case RED_TEAM:
+					kingsRed++
 				}
 			}
 		}
 	}
 
 	if lasersBlue != 1 || lasersRed != 1 {
-		return Board{}, fmt.Errorf("Numero incorrecto de laseres - AZUL:%d -ROJO:%d", lasersBlue, lasersRed)
+		return nil, fmt.Errorf("Numero incorrecto de laseres - AZUL:%d -ROJO:%d", lasersBlue, lasersRed)
 	}
 
-	if lasersBlue != 1 || lasersRed != 1 {
-		return Board{}, fmt.Errorf("Numero incorrecto de Reyes - AZUL:%d -ROJO:%d", kingsBlue, kingsRed)
+	if kingsBlue != 1 || kingsRed != 1 {
+		return nil, fmt.Errorf("Numero incorrecto de Reyes - AZUL:%d -ROJO:%d", kingsBlue, kingsRed)
 	}
 
 	return b, nil
@@ -103,9 +98,11 @@ func constructorPieza(codigo string, baldosa team_T) BoardPiece {
 	// Extraemos Equipo
 	var team team_T
 	if len(codigo) >= 2 {
-		switch codigo[1]{
-			case 'A' : team = BLUE_TEAM
-			case 'R' : team = RED_TEAM
+		switch codigo[1] {
+		case 'A':
+			team = BLUE_TEAM
+		case 'R':
+			team = RED_TEAM
 		}
 	}
 
@@ -113,31 +110,33 @@ func constructorPieza(codigo string, baldosa team_T) BoardPiece {
 	var dir pointing_T
 	if len(codigo) >= 3 {
 		switch codigo[2] {
-			case 'U': dir = UP
-			case 'D': dir = DOWN
-			case 'L': dir = LEFT
-			case 'R': dir = RIGHT
+		case 'U':
+			dir = UP
+		case 'D':
+			dir = DOWN
+		case 'L':
+			dir = LEFT
+		case 'R':
+			dir = RIGHT
 		}
 	}
 
-
 	// Mapeamos al struct correcto según la primera letra
 	switch codigo[0] {
-		case 'K': // King 
-			return &BoardPieceKing{team, baldosa}
-		case 'L': // Laser
-			return &BoardPieceLaser{team, dir}
-		case 'E': // Escudo (Shield)
-			return &BoardPieceShield{team, baldosa, dir}
-		case 'S': // Switch
-			return &BoardPieceSwitch{team, baldosa, dir}
-		case 'D': // Deflector
-			return &BoardPieceDeflector{team, baldosa, dir}
-		default :
-			return nil
-		}
+	case 'K': // King
+		return &BoardPieceKing{team, baldosa}
+	case 'L': // Laser
+		return &BoardPieceLaser{team, dir}
+	case 'E': // Escudo (Shield)
+		return &BoardPieceShield{team, baldosa, dir}
+	case 'S': // Switch
+		return &BoardPieceSwitch{team, baldosa, dir}
+	case 'D': // Deflector
+		return &BoardPieceDeflector{team, baldosa, dir}
+	default:
+		return nil
+	}
 }
-
 
 // devuelve true si la posicion que se le pasa esta dentro del tablero
 func (b *Board) isInbound(x int, y int) bool {
@@ -162,7 +161,7 @@ func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_
 	destinyTileType := b.cells[x_to][y_to].getTeamTile()
 	originTileType := b.cells[x_from][y_from].getTeamTile()
 
-	b.cells[x_from][y_from].setTeamTile(destinyTileType)
+	b.cells[x_to][y_to].setTeamTile(destinyTileType)
 	b.cells[x_from][y_from].setTeamTile(originTileType)
 
 	destinyPiece := b.cells[x_to][y_to]
@@ -263,7 +262,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 
 		y_from := 8 - token1        // old x
 		x_from := int(token2 - 'a') // old y
-		y_to := 8 - token3 	        // new x
+		y_to := 8 - token3          // new x
 		x_to := int(token4 - 'a')   // new y
 
 		legalMove := b.movePiece(x_from, y_from, x_to, y_to, team)
@@ -278,7 +277,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
-				retVal = instruction + "x" + string(rune(point.x + 'a')) + strconv.Itoa(8 - point.y)  // y
+				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
 			}
 			return retVal, laserPath, result, nil
 		case RED_TEAM:
@@ -286,7 +285,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
-			retVal = instruction + "x" + string(rune(point.x + 'a')) + strconv.Itoa(8 - point.y)  // y
+				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
 			}
 			return retVal, laserPath, result, nil
 		}
@@ -315,7 +314,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
-				retVal = instruction + "x" + string(rune(point.x + 'a')) + strconv.Itoa(point.y + 8)  // y
+				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(point.y+8) // y
 			}
 			return retVal, laserPath, result, nil
 		case RED_TEAM:
@@ -323,7 +322,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
-				retVal = instruction + "x" + string(rune(point.x + 'a')) + strconv.Itoa(point.y + 8)  // y
+				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(point.y+8) // y
 			}
 			return retVal, laserPath, result, nil
 		}

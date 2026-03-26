@@ -27,7 +27,7 @@ type LaserChessGame struct {
 	FromRoom chan RoomMsg
 	ToRoom   chan ResponseToRoom
 
-	gameBoard Board
+	gameBoard *Board
 	boardType Board_T
 }
 
@@ -45,7 +45,12 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
-	g.gameBoard, _ = InitBoard("boardTemplates/ace.csv") // TODO: NO poner el nombre del csv, poner un switch case
+
+	var err error
+	g.gameBoard, err = InitBoard(boardtemplates.ACE) // TODO: NO poner el nombre del csv, poner un switch case
+	if err != nil {
+		fmt.Println("ey tio hay un error", err)
+	}
 
 	g.FromRoom = make(chan RoomMsg)
 	g.ToRoom = make(chan ResponseToRoom)
