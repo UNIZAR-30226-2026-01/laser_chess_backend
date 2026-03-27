@@ -59,19 +59,17 @@ func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
 
 	switch game.GameMessageType(message.Type) {
 	case game.Move:
-		r.makeMove(player.AccountID, message.Content)
+		result := r.sendMoveToGame(player.AccountID, message.Content)
+		switch result.Type {
+		case game.Move:
+			r.Broadcast <- result
+		case game.Error:
+			player.Send <- result
+		}
 	case game.GetState:
 		state := r.getGameState()
 		player.Send <- state
 	}
-}
-
-func (r *Room) makeMove(accountID int64, move string) {
-	if accountID != r.Player1.AccountID && accountID != r.Player2.AccountID {
-		return
-	}
-	state := r.sendMoveToGame(accountID, move)
-	r.Broadcast <- state
 }
 
 // FUNCIONES DE COMUNICACIÓN CON EL JUEGO
