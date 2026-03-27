@@ -86,7 +86,20 @@ VALUES(
     2,
     3,
     1
+), (
+    'user4@gmail.com',
+    'user4', 
+    '$2b$12$y4/FIcy88bFV6JArmNtq6.ovknJ3I7ynqepkQ6s/4usAtcjH3ouwC',
+    false,
+    4,
+    14,
+    401,
+    1,
+    2,
+    3,
+    1
 );
+
 
 INSERT INTO item_owner (
     user_id,
@@ -130,6 +143,16 @@ INSERT INTO public."friendship" (
     2,
     true,
     true
+), (
+    1,
+    3,
+    false,
+    true
+), (
+    1,
+    4,
+    true,
+    false
 );
 
 INSERT INTO public."rating" (
