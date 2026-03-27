@@ -14,7 +14,7 @@ type RoomMsg struct {
 type ResponseToRoom struct {
 	Type    GameMessageType `json:"Type"`
 	Content string          `json:"Content"`
-	Laser   string          `json:"Laser,omitempty"`
+	Extra   string          `json:"Extra,omitempty"` //campo extra, contiene o el laser, o que jugador eres
 }
 
 type LaserChessGame struct {
@@ -109,7 +109,7 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 		g.ToRoom <- ResponseToRoom{
 			Type:    Move,
 			Content: resul,
-			Laser:   fmt.Sprint(formatearLaserPath(laser)),
+			Extra:   fmt.Sprint(formatearLaserPath(laser)),
 		}
 
 		g.changeTurn()
@@ -136,13 +136,14 @@ func (g *LaserChessGame) Run() {
 			g.ToRoom <- ResponseToRoom{
 				Type:    InitialState,
 				Content: initialState,
+				Extra:   strconv.FormatInt(g.redPlayer, 10),
 			}
 		case Pause:
 			//gestionar pausa del juego
 			g.ToRoom <- ResponseToRoom{
 				Type:    Paused,
 				Content: "", // quizas manda algo aqui
-				Laser:   "",
+				Extra:   "",
 			}
 		}
 	}

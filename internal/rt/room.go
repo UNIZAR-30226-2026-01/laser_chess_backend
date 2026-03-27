@@ -96,7 +96,7 @@ func (r *Room) ManagePause(player *Client) {
 			r.Player2.Send <- game.ResponseToRoom{
 				Type:    game.PauseRequest,
 				Content: "",
-				Laser:   "",
+				Extra:   "",
 			}
 		}
 	case r.Player2.AccountID:
@@ -105,7 +105,7 @@ func (r *Room) ManagePause(player *Client) {
 			r.Player1.Send <- game.ResponseToRoom{
 				Type:    game.PauseRequest,
 				Content: "",
-				Laser:   "",
+				Extra:   "",
 			}
 		}
 	}
