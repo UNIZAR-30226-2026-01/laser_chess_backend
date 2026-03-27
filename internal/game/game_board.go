@@ -18,6 +18,20 @@ type Board struct {
 	redTeamLaser  *BoardPieceLaser
 }
 
+func getTeamTile(x int, y int) team_T{
+	if x == 0 {
+		return BLUE_TEAM
+	} else if x == 9 {
+		return RED_TEAM
+	} else if x == 1 && (y == 0 || y == 7) {
+		return RED_TEAM
+	} else if x == 8 && (y == 0 || y == 7) {
+		return BLUE_TEAM
+	} else {
+		return NONE
+	}
+}
+
 func InitBoard(csvBoard string) (*Board, error) {
 	b := &Board{}
 
@@ -35,18 +49,7 @@ func InitBoard(csvBoard string) (*Board, error) {
 	for y, fila := range records {
 		for x, celdaStr := range fila {
 			//Calculamos tipo de baldosa
-			var baldosa team_T
-			if x == 0 {
-				baldosa = BLUE_TEAM
-			} else if x == 9 {
-				baldosa = RED_TEAM
-			} else if x == 1 && (y == 0 || y == 7) {
-				baldosa = RED_TEAM
-			} else if x == 8 && (y == 0 || y == 7) {
-				baldosa = BLUE_TEAM
-			} else {
-				baldosa = NONE
-			}
+			baldosa := getTeamTile(x, y)
 
 			//creamos una pieza y la colocamos en la baldosa correspondiente
 			pieza := constructorPieza(celdaStr, baldosa)
@@ -143,18 +146,20 @@ func (b *Board) isInbound(x int, y int) bool {
 	return (0 <= x && x < XDIM) && (0 <= y && y < YDIM)
 }
 
-func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_T) bool {
-	canmove := false
-	if b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to) {
-		if x_from-x_to < -1 || x_from-x_to > 1 || y_from-y_to < -1 || y_from-y_to > 1 {
-			return false
-		} else {
-			canmove = b.cells[x_from][y_from].canMoveTo(x_to, y_to, b, team)
-		}
+func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_T) error {
+	// Check board bounds
+	if !( b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
+		return  fmt.Errorf("Error - movimiento fuera de límites")
+	}
+ 
+	// Check reach
+	if (x_from-x_to < -1 || x_from-x_to > 1 || y_from-y_to < -1 || y_from-y_to > 1) {
+		return fmt.Errorf("Error - movimiento fuera de rango")
 	}
 
-	if !canmove {
-		return false
+	// Check if can move
+	if !b.cells[x_from][y_from].canMoveTo(x_to, y_to, b, team) {
+		return  fmt.Errorf("Error - movimiento ilegal")
 	}
 
 	// Realizamos el movimiento legal
@@ -170,25 +175,35 @@ func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_
 	b.cells[x_to][y_to] = originPiece
 	b.cells[x_from][y_from] = destinyPiece
 
-	return true
+	return nil
 }
 
-func (b *Board) rotatePiece(x_at int, y_at int, rot rune, team team_T) bool {
-	if b.isInbound(x_at, y_at) && (rot == 'R' || rot == 'L') {
-		switch laser := b.cells[x_at][y_at].(type) {
-		case *BoardPieceLaser: //evitar rotacion ilegal de laser (Caso límite)
-			x_after, y_after := laser.frontSpaceAfterRotating(x_at, y_at, rot)
-			if !b.isInbound(x_after, y_after) {
-				fmt.Print("OUT OF BOUND ROTATION")
-				return false
-			}
-		}
-
-		return b.cells[x_at][y_at].canRotate(rot, team)
-	} else {
-		return false
+func (b *Board) rotatePiece(x_at int, y_at int, rot rune, team team_T) error {
+	// Check board bounds
+	if !b.isInbound(x_at, y_at){
+		return  fmt.Errorf("Error - rotación fuera de límites")
 	}
 
+	// Check syntax
+	if !(rot == 'R' || rot == 'L'){
+		return  fmt.Errorf("Error - rotación mal especificada")
+	}
+
+	// Check laser legal rotations dependent on x/y
+	switch laser := b.cells[x_at][y_at].(type) {
+	case *BoardPieceLaser: //evitar rotacion ilegal de laser (Caso límite)
+		x_after, y_after := laser.frontSpaceAfterRotating(x_at, y_at, rot)
+		if !b.isInbound(x_after, y_after) {
+			return fmt.Errorf("Error - rotación ilegal del laser")
+		}
+	}
+
+	// Check if can rotate
+	if !b.cells[x_at][y_at].canRotate(rot, team) {
+		return fmt.Errorf("Error - rotación ilegal")
+	}
+
+	return nil
 }
 
 func (b *Board) killPiece(x_at int, y_at int) {
@@ -267,8 +282,8 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 
 		legalMove := b.movePiece(x_from, y_from, x_to, y_to, team)
 
-		if !legalMove {
-			return "", nil, 0, errors.New("El movimiento no es legal")
+		if legalMove != nil {
+			return "", nil, 0, legalMove
 		}
 
 		switch team {
@@ -304,8 +319,8 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 
 		legalMove := b.rotatePiece(x_at, y_at, rot, team)
 
-		if !legalMove {
-			return "", nil, 0, errors.New("La rotación no es legal")
+		if legalMove != nil {
+			return "", nil, 0, legalMove
 		}
 
 		switch team {
