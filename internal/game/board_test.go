@@ -140,4 +140,24 @@ func TestMovements(t *testing.T) {
 		log = log + logPiece + ";"
 	}
 
+	//Ejemplo de procesamiento
+	movimiento_front = "Ra4"
+
+	fmt.Println("LLEGA:\t" + movimiento_front)
+
+	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+	logPiece = logPiece + "%{0}"
+
+	//Error movimiento inválido
+	if err != nil {
+		t.Error(err)
+	} else {
+		//Camino del laser
+		tablero.printlaser(path)
+		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
+		fmt.Print("RESP:\t" + logPiece + "\n")
+		log = log + logPiece + ";"
+	}
+
 }

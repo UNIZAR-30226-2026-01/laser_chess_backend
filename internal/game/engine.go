@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"strconv"
 
 	boardtemplates "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game/boardTemplates"
 )
@@ -56,6 +57,19 @@ func (g *GameEngine) initEngine(boardType Board_T) {
 	}
 }
 
+func formatearLaserPath(laserPath []vector2_T) string {
+
+	retVal := ""
+	for i, point := range laserPath {
+		// Transformación de los enteros a coordenadas de tablero
+		retVal += string(rune(point.x+'a')) + strconv.Itoa(8-point.y)
+		if i != len(laserPath)-1 {
+			retVal += ","
+		}
+	}
+	return retVal
+}
+
 func (g *GameEngine) getInitialState() string {
 	switch g.boardType {
 	case ACE:
@@ -71,8 +85,12 @@ func (g *GameEngine) getInitialState() string {
 }
 
 func (g *GameEngine) ProcessTurn(instruction string, team team_T) (string, []vector2_T, laserInteractionResult_T, error) {
-	resul, laser, laserEnd, err := g.gameBoard.ProcessTurn(instruction, RED_TEAM)
+	resul, laser, laserEnd, err := g.gameBoard.ProcessTurn(instruction, team)
+	if err != nil {
+		return resul, laser, laserEnd, err
+	}
 	//TODO -- Crear el log en cada turno
+	g.gameLog += resul + "%" + formatearLaserPath(laser) + "%{300}" + ";"
 	return resul, laser, laserEnd, err
 }
 

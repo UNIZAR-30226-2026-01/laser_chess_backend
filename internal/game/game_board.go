@@ -314,7 +314,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
-				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(point.y+8) // y
+				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
 			}
 			return retVal, laserPath, result, nil
 		case RED_TEAM:
@@ -322,7 +322,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
 				b.killPiece(point.x, point.y)
-				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(point.y+8) // y
+				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
 			}
 			return retVal, laserPath, result, nil
 		}
