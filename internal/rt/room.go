@@ -17,6 +17,7 @@ type Room struct {
 	Game    *game.LaserChessGame
 
 	Broadcast chan interface{}
+	EndChan   chan interface{}
 }
 
 func (r *Room) InitRoom(Player1 *Client, Player2 *Client, BoardType game.Board_T) {
@@ -48,6 +49,8 @@ func (r *Room) Run() {
 			r.filterMessage(r.Player1, message)
 		case message := <-r.Player2.ToRoom:
 			r.filterMessage(r.Player2, message)
+		case <-r.EndChan:
+			return
 		}
 	}
 }
@@ -63,6 +66,9 @@ func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
 		switch result.Type {
 		case game.Move:
 			r.Broadcast <- result
+		case game.End:
+			r.Broadcast <- result
+			r.End()
 		case game.Error:
 			player.Send <- result
 		}
@@ -102,4 +108,10 @@ func (r *Room) getInitialGameState() game.ResponseToRoom {
 	}
 	response := <-r.Game.ToRoom
 	return response
+}
+
+func (r *Room) End() {
+	r.Player1.Close()
+	r.Player2.Close()
+	r.EndChan <- ""
 }

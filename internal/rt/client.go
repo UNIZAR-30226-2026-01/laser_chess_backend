@@ -4,6 +4,8 @@ package rt
 // de un usuario en un hub
 
 import (
+	"time"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -70,5 +72,34 @@ func (c *Client) WritePump() error {
 
 // Cierra la conexion de un cliente
 func (c *Client) Close() error {
-	return c.Conn.Close()
+	deadline := time.Now().Add(time.Minute)
+	err := c.Conn.WriteControl(
+		websocket.CloseMessage,
+		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+		deadline,
+	)
+	if err != nil {
+		return err
+	}
+
+	err = c.Conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	if err != nil {
+		return err
+	}
+
+	for {
+		_, _, err = c.Conn.NextReader()
+		if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+			break
+		}
+		if err != nil {
+			break
+		}
+	}
+
+	err = c.Conn.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }

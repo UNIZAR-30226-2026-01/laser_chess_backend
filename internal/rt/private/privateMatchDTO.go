@@ -5,10 +5,11 @@ package private
 // Query params del endpoint de crear reto
 // El id del challenger se saca del JWT
 type CreateChallengeDTO struct {
-	ChallengedUsername string `form:"username"       binding:"required"`
-	Board              int    `form:"board" 		 binding:"required"`
-	StartingTime       int    `form:"starting_time"  binding:"required"`
-	TimeIncrement      int    `form:"time_increment" binding:"required"`
+	ChallengedUsername *string `form:"username"`
+	Board              *int    `form:"board"`
+	StartingTime       *int    `form:"starting_time"`
+	TimeIncrement      *int    `form:"time_increment"`
+	MatchId            *int64  `form:"match_id"`
 }
 
 // Elemento de la lista de retos pendientes

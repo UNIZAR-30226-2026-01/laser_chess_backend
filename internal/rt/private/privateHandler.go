@@ -56,7 +56,7 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	}
 
 	// Conseguir id del challenged
-	challengedID, err := h.accountService.GetIDByUsername(c.Request.Context(), dto.ChallengedUsername)
+	challengedID, err := h.accountService.GetIDByUsername(c.Request.Context(), *dto.ChallengedUsername)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -89,9 +89,9 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	info := &rt.ChallengeInfo{
 		ChallengerClient: client,
 		ChallengedId:     challengedID,
-		Board:            game.Board_T(dto.Board),
-		StartingTime:     dto.StartingTime,
-		TimeIncrement:    dto.TimeIncrement,
+		Board:            game.Board_T(*dto.Board),
+		StartingTime:     *dto.StartingTime,
+		TimeIncrement:    *dto.TimeIncrement,
 	}
 
 	err = h.hub.CreateChallenge(challengerID, challengedID, info)
