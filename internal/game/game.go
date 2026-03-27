@@ -137,6 +137,13 @@ func (g *LaserChessGame) Run() {
 				Type:    InitialState,
 				Content: initialState,
 			}
+		case Pause:
+			//gestionar pausa del juego
+			g.ToRoom <- ResponseToRoom{
+				Type:    Paused,
+				Content: "", // quizas manda algo aqui
+				Laser:   "",
+			}
 		}
 	}
 }
