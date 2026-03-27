@@ -1,4 +1,4 @@
-package rt
+package private
 
 // DTOs para partidas privadas
 

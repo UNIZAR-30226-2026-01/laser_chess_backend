@@ -1,4 +1,4 @@
-package rt
+package private
 
 // private_handler.go — endpoints para partidas privadas
 //
@@ -13,16 +13,17 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/gin-gonic/gin"
 )
 
 type PrivateHandler struct {
-	hub            *PrivateHub
-	registry       *MatchRegistry
+	hub            *rt.PrivateHub
+	registry       *rt.MatchRegistry
 	accountService *account.AccountService
 }
 
-func NewPrivateHandler(hub *PrivateHub, registry *MatchRegistry, accounts *account.AccountService) *PrivateHandler {
+func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry, accounts *account.AccountService) *PrivateHandler {
 	return &PrivateHandler{
 		hub:            hub,
 		registry:       registry,
@@ -74,23 +75,23 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	}
 
 	// Hacer el upgrade a websocket
-	conn, err := UpgradeConn(c.Writer, c.Request)
+	conn, err := rt.UpgradeConn(c.Writer, c.Request)
 	if err != nil {
 		// UpgradeConn ya manda al frontend la respuesta de error
 		return
 	}
 
 	// Construir Client
-	client := &Client{}
+	client := &rt.Client{}
 	client.InitClient(challengerID, conn)
 
 	// Registrar reto en el hub privado
-	info := &ChallengeInfo{
-		challengerClient: client,
-		challengedId:     challengedID,
-		board:            game.Board_T(dto.Board),
-		startingTime:     dto.StartingTime,
-		timeIncrement:    dto.TimeIncrement,
+	info := &rt.ChallengeInfo{
+		ChallengerClient: client,
+		ChallengedId:     challengedID,
+		Board:            game.Board_T(dto.Board),
+		StartingTime:     dto.StartingTime,
+		TimeIncrement:    dto.TimeIncrement,
 	}
 
 	err = h.hub.CreateChallenge(challengerID, challengedID, info)
@@ -150,7 +151,7 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 	}
 
 	// Upgrade a WebSocket
-	conn, err := UpgradeConn(c.Writer, c.Request)
+	conn, err := rt.UpgradeConn(c.Writer, c.Request)
 	if err != nil {
 		return
 	}
@@ -164,12 +165,12 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 	}
 
 	// Construir el Client del challenged
-	challengedClient := &Client{}
+	challengedClient := &rt.Client{}
 	challengedClient.InitClient(challengedID, conn)
 
 	// Crear la Room y arrancar la partida
-	room := &Room{}
-	room.InitRoom(info.challengerClient, challengedClient, info.board)
+	room := &rt.Room{}
+	room.InitRoom(info.ChallengerClient, challengedClient, info.Board)
 
 	// Registrar ambos jugadores en el registry
 	h.registry.RegisterMatch(challengerID, challengedID, room)
@@ -207,9 +208,9 @@ func (h *PrivateHandler) GetChallenges(c *gin.Context) {
 		result = append(result, PendingChallengeDTO{
 			ChallengerID:       cID,
 			ChallengerUsername: username,
-			Board:              int(info.board),
-			StartingTime:       info.startingTime,
-			TimeIncrement:      info.timeIncrement,
+			Board:              int(info.Board),
+			StartingTime:       info.StartingTime,
+			TimeIncrement:      info.TimeIncrement,
 		})
 	}
 

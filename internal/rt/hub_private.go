@@ -21,11 +21,11 @@ const numShards = 32
 
 // Info inicial de la partida que se creará
 type ChallengeInfo struct {
-	challengerClient *Client
-	challengedId     int64
-	board            game.Board_T
-	startingTime     int
-	timeIncrement    int
+	ChallengerClient *Client
+	ChallengedId     int64
+	Board            game.Board_T
+	StartingTime     int
+	TimeIncrement    int
 }
 
 // Fragmento que contiene una porción de los mapas del hub

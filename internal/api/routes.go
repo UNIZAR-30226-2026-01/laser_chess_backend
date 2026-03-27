@@ -15,6 +15,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/private"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -133,7 +134,7 @@ func SetupRouter(store *db.Store,
 	}
 
 	// Endpoints de websockets
-	privateHandler := rt.NewPrivateHandler(privateHub, registry, accountService)
+	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService)
 
 	{
 		rtRoute := protected.Group("/rt/")
