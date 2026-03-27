@@ -188,6 +188,36 @@ func (s FriendshipService) GetUserPendingReceivedFriendships(
 
 /*
 *
+* Desc: Esta funcion llama a una query generada por sqlc que devuelve un listado
+de las amistades recibidas pendientes de un jugador dado su id.
+* --- Parametros ---
+* ctx, context.Context - Es el contexto de gin.
+* accountID, int64 - Es el id del usuario.
+* --- Resultados ---
+* []FriendshipReturnDTO - Lista con la información de las amistades recibidas
+pendientes del usuario, incluyendo los datos relevante del otro usuario.
+* error - Es el error que se haya provocado en la consulta, o nil en caso
+contrario.
+*
+*/
+func (s FriendshipService) GetUserPendingReceivedFriendshipsCount(
+	ctx context.Context,
+	accountID int64,
+) (RequestCount, error) {
+
+	res, err := s.store.GetUserPendingReceivedFriendshipsCount(ctx, accountID)
+	if err != nil {
+		return RequestCount{Count: 0}, err
+	}
+	if len(res) == 0 {
+		return RequestCount{Count: 0}, err
+	}
+	return RequestCount{Count: int32(res[0])}, nil
+
+}
+
+/*
+*
 * Desc: Esta funcion llama a una query generada por sqlc que marca una amistad
 como aceptada dados los ids de ambos usuarios.
 * --- Parametros ---

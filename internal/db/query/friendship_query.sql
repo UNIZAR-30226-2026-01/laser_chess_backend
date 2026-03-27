@@ -50,6 +50,22 @@ FROM friendship
 JOIN account ON friendship.user1_id = account.account_id
 WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user2_id;
 
+-- name: GetUserPendingReceivedFriendshipsCount :many
+SELECT COUNT(*) FROM (
+    SELECT *
+    FROM friendship 
+    JOIN account ON friendship.user2_id = account.account_id
+    WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user1_id
+
+    UNION
+
+    SELECT *
+    FROM friendship 
+    JOIN account ON friendship.user1_id = account.account_id
+    WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user2_id
+) AS request_count;
+
+
 -- name: AcceptFriendship :exec
 UPDATE friendship
 SET 

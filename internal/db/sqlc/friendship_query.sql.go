@@ -181,6 +181,42 @@ func (q *Queries) GetUserPendingReceivedFriendships(ctx context.Context, user1ID
 	return items, nil
 }
 
+const getUserPendingReceivedFriendshipsCount = `-- name: GetUserPendingReceivedFriendshipsCount :many
+SELECT COUNT(*) FROM (
+    SELECT user1_id, user2_id, accepted_1, accepted_2, account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar
+    FROM friendship 
+    JOIN account ON friendship.user2_id = account.account_id
+    WHERE accepted_1 = FALSE AND accepted_2 = TRUE AND $1 = friendship.user1_id
+
+    UNION
+
+    SELECT user1_id, user2_id, accepted_1, accepted_2, account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar
+    FROM friendship 
+    JOIN account ON friendship.user1_id = account.account_id
+    WHERE accepted_1 = TRUE AND accepted_2 = FALSE AND $1 = friendship.user2_id
+) AS request_count
+`
+
+func (q *Queries) GetUserPendingReceivedFriendshipsCount(ctx context.Context, user1ID int64) ([]int64, error) {
+	rows, err := q.db.Query(ctx, getUserPendingReceivedFriendshipsCount, user1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var count int64
+		if err := rows.Scan(&count); err != nil {
+			return nil, err
+		}
+		items = append(items, count)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserPendingSentFriendships = `-- name: GetUserPendingSentFriendships :many
 SELECT friendship.user2_id AS user_id, account.username, account.level, account.avatar 
 FROM friendship 

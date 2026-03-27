@@ -148,6 +148,36 @@ func (h *FriendshipHandler) GetUserPendingReceivedFriendships(c *gin.Context) {
 
 /*
 *
+* Desc: Esta funcion llama a otra funcion del service que devuelve un listado de
+las amistades recibidas pendientes de un usuario dado su id.
+* --- Parametros ---
+* c, *gin.Context - Es el contexto de gin del cual obtiene el id del usuario.
+* ------------------
+* Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
+con el listado de las amistades recibidas pendientes que contienen los datos
+relevantes del otro usuario junto con un StatusOK si no hay errores, y un error
+en caso contrario.
+*
+*/
+func (h *FriendshipHandler) GetUserPendingReceivedFriendshipsCount(c *gin.Context) {
+	accountID, err := middleware.ExtractAccountID(c)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	res, err := h.friendshipService.GetUserPendingReceivedFriendshipsCount(c.Request.Context(), accountID)
+
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+/*
+*
 * Desc: Esta funcion llama a otra funcion del service que acepta una amistad
 entre dos usuarios dados sus ids.
 * --- Parametros ---

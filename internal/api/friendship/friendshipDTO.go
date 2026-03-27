@@ -27,3 +27,7 @@ type FriendshipReturnDTO struct {
 	Level    int32  `json:"level"`
 	Avatar   int32  `json:"avatar"`
 }
+
+type RequestCount struct {
+	Count int32 `json:"count" binding:"required"`
+}

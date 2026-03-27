@@ -128,6 +128,9 @@ func SetupRouter(store *db.Store,
 		friendshipRoute.GET("/pending",
 			friendshipHandler.GetUserPendingReceivedFriendships)
 
+		friendshipRoute.GET("/pending/count",
+			friendshipHandler.GetUserPendingReceivedFriendshipsCount)
+
 		friendshipRoute.GET("/:user2Username", friendshipHandler.GetFriendshipStatus)
 		friendshipRoute.PUT("/:user2Username", friendshipHandler.AcceptFriendship)
 		friendshipRoute.DELETE("/:user2Username", friendshipHandler.DeleteFriendship)
