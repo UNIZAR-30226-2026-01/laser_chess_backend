@@ -8,7 +8,7 @@ import (
 
 // fichero que gestiona las rooms
 // una room se encarga de gestionar los mensajes de los dos
-// jugadores de una partida
+// jugadores de una partida :)
 // es el intermediario entre el front y el juego
 
 type Room struct {
@@ -22,7 +22,7 @@ type Room struct {
 	Broadcast chan interface{}
 }
 
-func (r *Room) InitRoom(Player1 *Client, Player2 *Client, BoardType game.Board_T) {
+func (r *Room) InitRoom(Player1 *Client, Player2 *Client, BoardType game.Board_T, Log string) {
 	r.Player1 = Player1
 	r.Player2 = Player2
 	r.P1Pause = false
@@ -30,7 +30,7 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client, BoardType game.Board_T
 	r.Broadcast = make(chan interface{}, 1)
 
 	r.Game = &game.LaserChessGame{}
-	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID, BoardType)
+	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID, BoardType, Log)
 
 	go r.Run()
 }
