@@ -108,16 +108,16 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 
 		fmt.Println(message.PlayerUid, ":", message.MsgContent)
 		fmt.Println(message.PlayerUid, ":", turno)
-		resul, laser, _, err := g.gameEngine.ProcessTurn(message.MsgContent, turno)
+		resul, laser, laserInteractionRes, err := g.gameEngine.ProcessTurn(message.MsgContent, turno)
 		g.gameEngine.gameBoard.printlaser(laser)
 		fmt.Println("ANSWER:", resul)
 
+		// Si hay un error, se notifica de este
 		if err != nil {
 			g.ToRoom <- ResponseToRoom{
 				Type:    Error,
-				Content: "Movimiento invalido",
+				Content: err.Error(),
 			}
-
 			return
 		}
 
@@ -125,6 +125,22 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 			Type:    Move,
 			Content: resul,
 			Extra:   fmt.Sprint(formatearLaserPath(laser)),
+		}
+
+		// Si se ha terminado la partida se notifica de esto
+		switch laserInteractionRes {
+		case HIT_BLUE_KING:
+			g.ToRoom <- ResponseToRoom{
+				Type:    End,
+				Content: "P2_WINS",
+			}
+			return
+		case HIT_RED_KING:
+			g.ToRoom <- ResponseToRoom{
+				Type:    End,
+				Content: "P1_WINS",
+			}
+			return
 		}
 
 		g.changeTurn()

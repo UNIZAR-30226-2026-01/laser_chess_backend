@@ -194,10 +194,21 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune, team team_T) error {
 	return b.cells[x_at][y_at].canRotate(rot, team)
 }
 
-func (b *Board) killPiece(x_at int, y_at int) {
+func (b *Board) killPiece(x_at int, y_at int) laserInteractionResult_T {
+	var hitType laserInteractionResult_T
+	switch k := b.cells[x_at][y_at].(type) {
+		case *BoardPieceKing:
+			switch k.team{
+			case BLUE_TEAM:
+				hitType = HIT_BLUE_KING
+			case RED_TEAM:
+				hitType = HIT_RED_KING
+		}
+	}
 	if b.isInbound(x_at, y_at) {
 		b.cells[x_at][y_at] = &BoardPieceVacant{}
 	}
+	return hitType
 }
 
 // ---Depuración---//
@@ -273,12 +284,13 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			return "", nil, 0, legalMove
 		}
 
+		//PROCESAR EL MOVIMIENTO DEPENDIENDO DEL EQUIPO
 		switch team {
 		case BLUE_TEAM:
 			laserPath, result := b.blueTeamLaser.shootLaser(0, 0, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
-				b.killPiece(point.x, point.y)
+				result = b.killPiece(point.x, point.y)
 				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
 			}
 			return retVal, laserPath, result, nil
@@ -286,7 +298,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			laserPath, result := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
-				b.killPiece(point.x, point.y)
+				result = b.killPiece(point.x, point.y)
 				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
 			}
 			return retVal, laserPath, result, nil
@@ -310,12 +322,13 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			return "", nil, 0, legalMove
 		}
 
+		//PROCESAR EL MOVIMIENTO DEPENDIENDO DEL EQUIPO
 		switch team {
 		case BLUE_TEAM:
 			laserPath, result := b.blueTeamLaser.shootLaser(0, 0, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
-				b.killPiece(point.x, point.y)
+				result = b.killPiece(point.x, point.y)
 				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
 			}
 			return retVal, laserPath, result, nil
@@ -323,7 +336,7 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			laserPath, result := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
 			if result == HIT {
 				point := laserPath[len(laserPath)-1]
-				b.killPiece(point.x, point.y)
+				result = b.killPiece(point.x, point.y)
 				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
 			}
 			return retVal, laserPath, result, nil
