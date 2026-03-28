@@ -78,7 +78,7 @@ func formatearLaserPath(laserPath []vector2_T) string {
 	return retVal
 }
 
-func (g *GameEngine) initEngine(boardType Board_T) {
+func (g *GameEngine) InitEngine(boardType Board_T) {
 	var err error
 	g.boardType = boardType
 	g.gameBoard, err = InitBoard(g.getInitialState())
@@ -104,17 +104,11 @@ func (g *GameEngine) GetState() string {
 func (g *GameEngine) ApplyLogToBoard() (team_T, error) {
 	//dividimos el log en cachitos 
 	logPieces := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
-	var team team_T
+	team := RED_TEAM //empieza
 
 	//aplicamos cada cachito usando processTurn, process turn ignora lo que no necesita
 	//el movimiento "Ta1:b2(%|x).*" se lee como "Ta1:b2"
 	for i, logPiece := range logPieces {
-
-		if i % 2 == 0 {
-			team = RED_TEAM
-		}else{
-			team = BLUE_TEAM
-		}
 
 		//Vamos aplicando todos los elementos del log
 		_, _, _, err := g.gameBoard.ProcessTurn(logPiece, team)
@@ -122,7 +116,15 @@ func (g *GameEngine) ApplyLogToBoard() (team_T, error) {
 		if err != nil {
 			return NONE, fmt.Errorf("El log contiene una especificación incorrecta")
 		}
+
+		if i % 2 == 0 {
+			team = BLUE_TEAM
+		}else{
+			team = RED_TEAM
+		}
 	}
+
+	
 
 	return team, nil
 }

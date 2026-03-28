@@ -182,3 +182,37 @@ func TestMovements(t *testing.T) {
 	}
 
 }
+
+// Test que comprueba el correcto funcionamiento del cargado de un log
+func TestApplyLogToBoard(t *testing.T){
+	var gameEngine GameEngine
+
+	// Cargamos una partida "estado inicial" y "log"//
+	gameEngine.InitEngine(CURIOSITY)
+	gameEngine.gameLog = `Rf1%j1,j4,i4,i5,j5,j9%{300};Tg6:f6%a8,a5,b5,b4,a4,a0%{300};Rb4%j1,j4,i4,i5,j5,j9%{300};Ri5xf6%a8,a5,b5,b4,e4,e5,f5,f6%{300};Re4xf8%j1,j4,i4,i5,f5,f4,e4,e5,f5,f8%{300};`
+
+	// Aplicamos el log al estado inicial
+	team, err := gameEngine.ApplyLogToBoard()
+
+	// Errores al aplicar?
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Correcto el turno siguiente?
+	if team != BLUE_TEAM {
+		t.Error("No se gestionan bien los turnos")
+	}
+
+	// Correcto la muerte del rey
+	switch gameEngine.gameBoard.cells[7][5].(type) {
+		case *BoardPieceKing:
+			t.Error("Partida mal cargada - rey vivo")
+		case *BoardPieceVacant:
+			//Resultado esperado
+		default :
+			t.Error("Partida mal cargada - pieza no esperada")
+
+	}
+
+}

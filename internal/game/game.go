@@ -44,7 +44,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
 	//Estado inicial de la partida
-	g.gameEngine.initEngine(BoardType)
+	g.gameEngine.InitEngine(BoardType)
 
 
 	//Se crean los canales de comunicacón
