@@ -26,6 +26,7 @@ type ChallengeInfo struct {
 	Board            game.Board_T
 	StartingTime     int
 	TimeIncrement    int
+	Log              string
 }
 
 // Fragmento que contiene una porción de los mapas del hub

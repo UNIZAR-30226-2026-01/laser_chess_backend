@@ -137,7 +137,7 @@ func SetupRouter(store *db.Store,
 	}
 
 	// Endpoints de websockets
-	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService)
+	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService, matchService)
 
 	{
 		rtRoute := protected.Group("/rt/")

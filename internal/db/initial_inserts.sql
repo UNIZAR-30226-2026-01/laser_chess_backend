@@ -128,9 +128,22 @@ INSERT INTO public."match" (
     'LASER',
     'RANKED',
     'ACE',
-    'una ruta',
+    '',
     300,
     5
+), (
+    1,
+    2,
+    1500,
+    1600,
+    '2026-02-22T15:04:05Z',
+    'NONE',
+    'UNFINISHED',
+    'RANKED',
+    'CURIOSITY',
+    'Rf1%j1,j4,i4,i5,j5,j9%{300};Tg6:f6%a8,a5,b5,b4,a4,a0%{300};Rb4%j1,j4,i4,i5,j5,j9%{295};Ri5xf6%a8,a5,b5,b4,e4,e5,f5,f6%{290};',
+    300,
+    0
 );
 
 INSERT INTO public."friendship" (

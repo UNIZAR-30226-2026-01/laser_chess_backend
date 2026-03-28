@@ -7,10 +7,12 @@ package private
 // GET  api/rt/challenges       -> devuelve la lista de retos pendientes (HTTP normal)
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
@@ -21,13 +23,15 @@ type PrivateHandler struct {
 	hub            *rt.PrivateHub
 	registry       *rt.MatchRegistry
 	accountService *account.AccountService
+	matchService   *match.MatchService
 }
 
-func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry, accounts *account.AccountService) *PrivateHandler {
+func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry, accounts *account.AccountService, matches *match.MatchService) *PrivateHandler {
 	return &PrivateHandler{
 		hub:            hub,
 		registry:       registry,
 		accountService: accounts,
+		matchService:   matches,
 	}
 }
 
@@ -86,12 +90,55 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	client.InitClient(challengerID, conn)
 
 	// Registrar reto en el hub privado
-	info := &rt.ChallengeInfo{
-		ChallengerClient: client,
-		ChallengedId:     challengedID,
-		Board:            game.Board_T(*dto.Board),
-		StartingTime:     *dto.StartingTime,
-		TimeIncrement:    *dto.TimeIncrement,
+
+	var info *rt.ChallengeInfo
+	if dto.MatchId == nil {
+		// La partida es nueva
+		info = &rt.ChallengeInfo{
+			ChallengerClient: client,
+			ChallengedId:     challengedID,
+			Board:            game.Board_T(*dto.Board),
+			StartingTime:     *dto.StartingTime,
+			TimeIncrement:    *dto.TimeIncrement,
+			Log:              "",
+		}
+	} else {
+		// La partida era pausada
+		match, err := h.matchService.GetByID(c, *dto.MatchId)
+		if err != nil {
+			client.Close()
+			apierror.SendError(c, http.StatusNotFound, apierror.ErrNotFound)
+		}
+		if match.Termination != "UNFINISHED" {
+			client.Close()
+			apierror.SendError(c, http.StatusBadGateway,
+				apierror.ErrMatchAlreadyFinished)
+		}
+
+		var tablero int
+		switch match.Board {
+		case "ACE":
+			tablero = 0
+		case "CURIOSITY":
+			tablero = 1
+		case "SOPHIE":
+			tablero = 2
+		case "GRAIL":
+			tablero = 3
+		case "MERCURY":
+			tablero = 4
+		}
+
+		info = &rt.ChallengeInfo{
+			ChallengerClient: client,
+			ChallengedId:     challengedID,
+			Board:            game.Board_T(tablero),
+			StartingTime:     int(match.TimeBase),
+			TimeIncrement:    int(match.TimeIncrement),
+			Log:              match.MovementHistory,
+		}
+
+		fmt.Println(match.MovementHistory)
 	}
 
 	err = h.hub.CreateChallenge(challengerID, challengedID, info)
@@ -170,7 +217,7 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 
 	// Crear la Room y arrancar la partida
 	room := &rt.Room{}
-	room.InitRoom(info.ChallengerClient, challengedClient, info.Board)
+	room.InitRoom(info.ChallengerClient, challengedClient, info.Board, info.Log)
 
 	// Registrar ambos jugadores en el registry
 	h.registry.RegisterMatch(challengerID, challengedID, room)
