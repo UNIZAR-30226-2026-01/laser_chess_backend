@@ -51,11 +51,9 @@ const (
 
 // Interfaz general, toda pieza de tablero debe tener esto definido
 type BoardPiece interface {
-	canMoveTo(x int, y int, board *Board, team team_T) bool
-	canRotate(d rune, team team_T) bool //temporal
+	canMoveTo(x int, y int, board *Board, team team_T) error
+	canRotate(d rune, team team_T) error
 	processLaser(pointing_T) (pointing_T, laserInteractionResult_T)
-	getTeamTile() team_T
-	setTeamTile(t team_T)
 	//---Depuración---//
 	VisualRep() string
 }

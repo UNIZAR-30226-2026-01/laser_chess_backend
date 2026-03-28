@@ -79,33 +79,27 @@ func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, l
 	return traveledPositions, interactionRes
 }
 
-func (c *BoardPieceLaser) canMoveTo(x int, y int, board *Board, team team_T) bool {
-
-	if team != c.team {
-		return false
-	}
-
-	fmt.Printf("Laser - canMoveTo\n")
-	return false
+func (c *BoardPieceLaser) canMoveTo(x int, y int, board *Board, team team_T) error {
+	return fmt.Errorf("rey laser no puede moverse")
 }
 
-func (c *BoardPieceLaser) canRotate(d rune, team team_T) bool {
-	fmt.Printf("Laser - canRotate\n")
-
-	if team != c.team {
-		return false
+func (c *BoardPieceLaser) canRotate(d rune, team team_T) error {
+	// Es ficha de tu equipo
+	if (team != c.team){
+		return fmt.Errorf("ficha del equipo opuesto")
 	}
 
 	switch d {
 	case 'L': // -1 Counterclockwise
 		c.pointing = (c.pointing + 3) % 4
-		return true
+		return nil
 	case 'R': // +1 Clockwise
 		c.pointing = (c.pointing + 1) % 4
-		return true
+		return nil
+	default :
+		//NO LLEGA NUNCA
+		return fmt.Errorf("dirección mal especificada")
 	}
-
-	return false
 }
 
 func (c *BoardPieceLaser) frontSpaceAfterRotating(x int, y int, rot rune) (int, int) {

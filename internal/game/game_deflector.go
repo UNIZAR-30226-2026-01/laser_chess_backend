@@ -5,50 +5,51 @@ import "fmt"
 // ============== DEFLECTOR ============== //
 
 type BoardPieceDeflector struct {
-	team     team_T     //temporal
-	tile     team_T     //Baldosa sobre la que estoy situado
-	pointing pointing_T //temporal
+	team     team_T     //equipo
+	pointing pointing_T //rotación
 }
 
-func (c *BoardPieceDeflector) getTeamTile() team_T {
-	return c.tile
-}
 
-func (c *BoardPieceDeflector) setTeamTile(t team_T) {
-	c.tile = t
-}
+func (c *BoardPieceDeflector) canMoveTo(x int, y int, board *Board, team team_T) error {
 
-func (c *BoardPieceDeflector) canMoveTo(x int, y int, board *Board, team team_T) bool {
-	fmt.Printf("deflector - canMoveTo\n")
-
+	// Es ficha de tu equipo
 	if (team != c.team){
-		return false
+		return fmt.Errorf("ficha del equipo opuesto")
 	}
 
-	switch cell := board.cells[x][y].(type) {
+	// El movimiento termina en una casilla válida para tu ficha
+	destinyTeamTile := getTeamTile(x, y)
+	if !(destinyTeamTile == c.team || destinyTeamTile == NONE){
+		return fmt.Errorf("casilla destino del equipo opuesto")
+	}
+
+	// Permutación válida (casilla vacía)
+	switch board.cells[x][y].(type) {
 		case *BoardPieceVacant:
-			return c.team == cell.getTeamTile() || NONE == cell.getTeamTile() 
+			return nil
 	}
-	return false
+
+	// Casilla destino ocupada
+	return fmt.Errorf("casilla destino ocupada")
 }
 
-func (c *BoardPieceDeflector) canRotate(d rune, team team_T) bool {
-	fmt.Printf("deflector - canRotate\n")
-
+func (c *BoardPieceDeflector) canRotate(d rune, team team_T) error {
+	// Es ficha de tu equipo
 	if (team != c.team){
-		return false
+		return fmt.Errorf("ficha del equipo opuesto")
 	}
 	
 	switch d {
 	case 'L': // -1 Counterclockwise
 		c.pointing = (c.pointing + 3) % 4
-		return true
+		return nil
 	case 'R': // +1 Clockwise
 		c.pointing = (c.pointing + 1) % 4
-		return true
-	}
-
-	return false
+		return nil
+	default :
+		//NO LLEGA NUNCA
+		return fmt.Errorf("dirección mal especificada")
+	} 
 }
 
 //---Depuración---//

@@ -48,11 +48,8 @@ func InitBoard(csvBoard string) (*Board, error) {
 	//Recorrer el csv todos los "records" grabados para crear el tablero
 	for y, fila := range records {
 		for x, celdaStr := range fila {
-			//Calculamos tipo de baldosa
-			baldosa := getTeamTile(x, y)
-
 			//creamos una pieza y la colocamos en la baldosa correspondiente
-			pieza := constructorPieza(celdaStr, baldosa)
+			pieza := constructorPieza(celdaStr)
 			b.cells[x][y] = pieza
 
 			//NO ES NECESARIA LA PARTE DE CONTAR, PERO AÑADE FIABILIDAD
@@ -93,9 +90,9 @@ func InitBoard(csvBoard string) (*Board, error) {
 
 }
 
-func constructorPieza(codigo string, baldosa team_T) BoardPiece {
+func constructorPieza(codigo string) BoardPiece {
 	if codigo == "" {
-		return &BoardPieceVacant{baldosa}
+		return &BoardPieceVacant{}
 	}
 
 	// Extraemos Equipo
@@ -127,15 +124,15 @@ func constructorPieza(codigo string, baldosa team_T) BoardPiece {
 	// Mapeamos al struct correcto según la primera letra
 	switch codigo[0] {
 	case 'K': // King
-		return &BoardPieceKing{team, baldosa}
+		return &BoardPieceKing{team}
 	case 'L': // Laser
 		return &BoardPieceLaser{team, dir}
 	case 'E': // Escudo (Shield)
-		return &BoardPieceShield{team, baldosa, dir}
+		return &BoardPieceShield{team, dir}
 	case 'S': // Switch
-		return &BoardPieceSwitch{team, baldosa, dir}
+		return &BoardPieceSwitch{team, dir}
 	case 'D': // Deflector
-		return &BoardPieceDeflector{team, baldosa, dir}
+		return &BoardPieceDeflector{team, dir}
 	default:
 		return nil
 	}
@@ -158,17 +155,12 @@ func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_
 	}
 
 	// Check if can move
-	if !b.cells[x_from][y_from].canMoveTo(x_to, y_to, b, team) {
-		return  fmt.Errorf("Error - movimiento ilegal")
+	err := b.cells[x_from][y_from].canMoveTo(x_to, y_to, b, team)
+	if (err != nil) {
+		return  fmt.Errorf("Error - movimiento ilegal %s", err)
 	}
 
 	// Realizamos el movimiento legal
-	destinyTileType := b.cells[x_to][y_to].getTeamTile()
-	originTileType := b.cells[x_from][y_from].getTeamTile()
-
-	b.cells[x_to][y_to].setTeamTile(destinyTileType)
-	b.cells[x_from][y_from].setTeamTile(originTileType)
-
 	destinyPiece := b.cells[x_to][y_to]
 	originPiece := b.cells[x_from][y_from]
 
@@ -199,17 +191,12 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune, team team_T) error {
 	}
 
 	// Check if can rotate
-	if !b.cells[x_at][y_at].canRotate(rot, team) {
-		return fmt.Errorf("Error - rotación ilegal")
-	}
-
-	return nil
+	return b.cells[x_at][y_at].canRotate(rot, team)
 }
 
 func (b *Board) killPiece(x_at int, y_at int) {
 	if b.isInbound(x_at, y_at) {
-		teamTile := b.cells[x_at][y_at].getTeamTile()
-		b.cells[x_at][y_at] = &BoardPieceVacant{teamTile}
+		b.cells[x_at][y_at] = &BoardPieceVacant{}
 	}
 }
 

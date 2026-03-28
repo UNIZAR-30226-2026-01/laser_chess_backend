@@ -8,38 +8,38 @@ import (
 
 type BoardPieceKing struct {
 	team team_T //Equipo al que pertenezco
-	tile team_T //Baldosa sobre la que estoy situado
 }
 
-func (c *BoardPieceKing) getTeamTile() team_T {
-	return c.tile
-}
+func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board, team team_T) error {
 
-func (c *BoardPieceKing) setTeamTile(t team_T) {
-	c.tile = t
-}
-
-func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board, team team_T) bool {
-	fmt.Printf("king - canMoveTo\n")
-
+	// Es ficha de tu equipo
 	if (team != c.team){
-		return false
+		return fmt.Errorf("ficha del equipo opuesto")
 	}
 
-	switch cell := board.cells[x][y].(type) {
+	// El movimiento termina en una casilla válida para tu ficha
+	destinyTeamTile := getTeamTile(x, y)
+	if !(destinyTeamTile == c.team || destinyTeamTile == NONE){
+		return fmt.Errorf("casilla destino del equipo opuesto")
+	}
+
+	// Permutación válida en caso de switch son 3 tipos
+	switch board.cells[x][y].(type) {
 		case *BoardPieceVacant:
-			return c.team == cell.getTeamTile() || NONE == cell.getTeamTile() 
+			return nil
+		case *BoardPieceShield:
+			return  nil
+		case *BoardPieceDeflector:
+			return  nil
+
 	}
-	return false
+
+	// Casilla destino ocupada
+	return fmt.Errorf("casilla destino ocupada")
 }
 
-func (c *BoardPieceKing) canRotate(d rune, team team_T) bool {
-	fmt.Printf("king - canRotate\n")
-	if (team != c.team){
-		return false
-	}
-	
-	return false 
+func (c *BoardPieceKing) canRotate(d rune, team team_T) error {
+	return fmt.Errorf("rey no puede rotar")
 }
 
 // ---Depuración---//
