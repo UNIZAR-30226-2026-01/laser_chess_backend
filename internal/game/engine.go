@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	boardtemplates "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game/boardTemplates"
 )
@@ -48,12 +49,19 @@ type GameEngine struct {
 	boardType Board_T
 }
 
-func (g *GameEngine) initEngine(boardType Board_T) {
-	var err error
-	g.gameBoard, err = InitBoard(boardtemplates.ACE) // TODO: NO poner el nombre del csv, poner un switch case
-	g.boardType = boardType
-	if err != nil {
-		fmt.Println("ey tio hay un error", err)
+// --- Auxiliares --- //
+
+func (g *GameEngine) getInitialState() string {
+	switch g.boardType {
+	case ACE:
+		return boardtemplates.ACE
+	case CURIOSITY:
+		return boardtemplates.CURIOSITY
+	case GRAIL:
+		return boardtemplates.GRAIL
+		// poner el resto
+	default:
+		return ""
 	}
 }
 
@@ -70,17 +78,12 @@ func formatearLaserPath(laserPath []vector2_T) string {
 	return retVal
 }
 
-func (g *GameEngine) getInitialState() string {
-	switch g.boardType {
-	case ACE:
-		return boardtemplates.ACE
-	case CURIOSITY:
-		return boardtemplates.CURIOSITY
-	case GRAIL:
-		return boardtemplates.GRAIL
-		// poner el resto
-	default:
-		return ""
+func (g *GameEngine) initEngine(boardType Board_T) {
+	var err error
+	g.boardType = boardType
+	g.gameBoard, err = InitBoard(g.getInitialState())
+	if err != nil {
+		fmt.Println("error al inicializar el tablero", err)
 	}
 }
 
@@ -96,4 +99,30 @@ func (g *GameEngine) ProcessTurn(instruction string, team team_T) (string, []vec
 
 func (g *GameEngine) GetState() string {
 	return g.gameLog
+}
+
+func (g *GameEngine) ApplyLogToBoard() (team_T, error) {
+	//dividimos el log en cachitos 
+	logPieces := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
+	var team team_T
+
+	//aplicamos cada cachito usando processTurn, process turn ignora lo que no necesita
+	//el movimiento "Ta1:b2(%|x).*" se lee como "Ta1:b2"
+	for i, logPiece := range logPieces {
+
+		if i % 2 == 0 {
+			team = RED_TEAM
+		}else{
+			team = BLUE_TEAM
+		}
+
+		//Vamos aplicando todos los elementos del log
+		_, _, _, err := g.gameBoard.ProcessTurn(logPiece, team)
+
+		if err != nil {
+			return NONE, fmt.Errorf("El log contiene una especificación incorrecta")
+		}
+	}
+
+	return team, nil
 }

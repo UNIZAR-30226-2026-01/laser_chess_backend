@@ -39,13 +39,17 @@ type LaserChessGame struct {
  */
 func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer int64,
 	BoardType Board_T) {
+	//Rellenan los datos relevantes
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
 	g.turn = UidRedPlayer
+	//Estado inicial de la partida
 	g.gameEngine.initEngine(BoardType)
+
+
+	//Se crean los canales de comunicacón
 	g.FromRoom = make(chan RoomMsg)
 	g.ToRoom = make(chan ResponseToRoom)
-
 	go g.Run()
 
 	fmt.Println("Game inicializado")
@@ -80,7 +84,7 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 	if message.PlayerUid == g.turn {
 		// Si es tu turno
 
-		fmt.Println(message.PlayerUid, ": ", message.MsgContent)
+		fmt.Println(message.PlayerUid, ":", message.MsgContent)
 		fmt.Println(message.PlayerUid, ":", turno)
 		resul, laser, _, err := g.gameEngine.ProcessTurn(message.MsgContent, turno)
 		g.gameEngine.gameBoard.printlaser(laser)
