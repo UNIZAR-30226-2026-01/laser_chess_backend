@@ -38,13 +38,35 @@ type LaserChessGame struct {
 * LaserChessGame - Es la nueva instancia del juego inicializada para comenzar a jugar
  */
 func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer int64,
-	BoardType Board_T) {
+	BoardType Board_T, Log string) {
 	//Rellenan los datos relevantes
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
-	g.turn = UidRedPlayer
+
+	g.gameEngine.gameLog = Log
+	
 	//Estado inicial de la partida
 	g.gameEngine.InitEngine(BoardType)
+
+	//si el log no está vacío hay que reconstruir el estado
+	if g.gameEngine.gameLog != "" {
+		team, err := g.gameEngine.ApplyLogToBoard()
+		
+		//No debería sudecer, porque se asume un log correcto
+		if err != nil {
+			fmt.Print(err)
+		}
+		
+		switch team{
+		case RED_TEAM:
+			g.turn = UidRedPlayer
+		case BLUE_TEAM:
+			g.turn = UidBluePlayer
+		}
+
+	}else{
+		g.turn = UidRedPlayer
+	}
 
 
 	//Se crean los canales de comunicacón
