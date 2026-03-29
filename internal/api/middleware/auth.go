@@ -4,6 +4,7 @@ package middleware
 // y solo deja pasar si hay un token valido
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
@@ -17,6 +18,14 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
+		if header == "" {
+			header = c.Query("token")
+			header = "Bearer " + header
+		}
+		fmt.Println()
+		fmt.Println(header)
+		fmt.Println()
+
 		if header == "" || !strings.HasPrefix(header, "Bearer ") {
 			error := apierror.ErrInvalidToken
 			apierror.DetectAndSendError(c, error)
