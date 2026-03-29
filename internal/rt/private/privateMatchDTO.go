@@ -7,8 +7,8 @@ package private
 type CreateChallengeDTO struct {
 	ChallengedUsername *string `form:"username"`
 	Board              *int    `form:"board"`
-	StartingTime       *int    `form:"starting_time"`
-	TimeIncrement      *int    `form:"time_increment"`
+	StartingTime       *int32  `form:"starting_time"`
+	TimeIncrement      *int32  `form:"time_increment"`
 	MatchId            *int64  `form:"match_id"`
 }
 
@@ -17,8 +17,8 @@ type PendingChallengeDTO struct {
 	ChallengerID       int64  `json:"challenger_id"`
 	ChallengerUsername string `json:"challenger_username"`
 	Board              int    `json:"board"`
-	StartingTime       int    `json:"starting_time"`
-	TimeIncrement      int    `json:"time_increment"`
+	StartingTime       int32  `json:"starting_time"`
+	TimeIncrement      int32  `json:"time_increment"`
 }
 
 // Query params del endpoint de aceptar reto

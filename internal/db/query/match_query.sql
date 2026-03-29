@@ -16,3 +16,11 @@ WHERE match_id = $1 LIMIT 1;
 SELECT * FROM match
 WHERE p1_id = $1 OR p2_id = $1
 ORDER BY date DESC;
+
+-- name: UpdateMatch :one
+UPDATE match
+SET p1_id = $1, p2_id = $2, p1_elo = $3, p2_elo = $4, date = $5, winner = $6, 
+    termination = $7, match_type = $8, board = $9, movement_history = $10, 
+    time_base = $11, time_increment = $12
+WHERE match_id = $13
+RETURNING *;

@@ -20,11 +20,12 @@ type ResponseToRoom struct {
 type GameInfo struct {
 	Log           string
 	BoardType     Board_T
-	TimeBase      int
-	TimeIncrement int
+	TimeBase      int32
+	TimeIncrement int32
 	Winner        string
 	Termination   string
 	MatchType     string
+	MatchID       int64
 }
 
 type LaserChessGame struct {

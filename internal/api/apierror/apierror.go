@@ -25,6 +25,7 @@ var (
 	ErrSelfChallenge        = errors.New("you can't challenge yourself")
 	ErrAlreadyInMatch       = errors.New("user already in match")
 	ErrMatchAlreadyFinished = errors.New("match is already finished")
+	ErrNotYourMatch         = errors.New("match is not yours")
 )
 
 // Función que detecta el tipo de error, y manda el código de error

@@ -136,3 +136,63 @@ func (q *Queries) GetUserHistory(ctx context.Context, p1ID int64) ([]Match, erro
 	}
 	return items, nil
 }
+
+const updateMatch = `-- name: UpdateMatch :one
+UPDATE match
+SET p1_id = $1, p2_id = $2, p1_elo = $3, p2_elo = $4, date = $5, winner = $6, 
+    termination = $7, match_type = $8, board = $9, movement_history = $10, 
+    time_base = $11, time_increment = $12
+WHERE match_id = $13
+RETURNING match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, match_type, board, movement_history, time_base, time_increment
+`
+
+type UpdateMatchParams struct {
+	P1ID            int64              `json:"p1_id"`
+	P2ID            int64              `json:"p2_id"`
+	P1Elo           int32              `json:"p1_elo"`
+	P2Elo           int32              `json:"p2_elo"`
+	Date            pgtype.Timestamptz `json:"date"`
+	Winner          Winner             `json:"winner"`
+	Termination     Termination        `json:"termination"`
+	MatchType       MatchType          `json:"match_type"`
+	Board           BoardType          `json:"board"`
+	MovementHistory string             `json:"movement_history"`
+	TimeBase        int32              `json:"time_base"`
+	TimeIncrement   int32              `json:"time_increment"`
+	MatchID         int64              `json:"match_id"`
+}
+
+func (q *Queries) UpdateMatch(ctx context.Context, arg UpdateMatchParams) (Match, error) {
+	row := q.db.QueryRow(ctx, updateMatch,
+		arg.P1ID,
+		arg.P2ID,
+		arg.P1Elo,
+		arg.P2Elo,
+		arg.Date,
+		arg.Winner,
+		arg.Termination,
+		arg.MatchType,
+		arg.Board,
+		arg.MovementHistory,
+		arg.TimeBase,
+		arg.TimeIncrement,
+		arg.MatchID,
+	)
+	var i Match
+	err := row.Scan(
+		&i.MatchID,
+		&i.P1ID,
+		&i.P2ID,
+		&i.P1Elo,
+		&i.P2Elo,
+		&i.Date,
+		&i.Winner,
+		&i.Termination,
+		&i.MatchType,
+		&i.Board,
+		&i.MovementHistory,
+		&i.TimeBase,
+		&i.TimeIncrement,
+	)
+	return i, err
+}

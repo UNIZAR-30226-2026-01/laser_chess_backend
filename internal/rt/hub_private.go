@@ -24,11 +24,12 @@ type ChallengeInfo struct {
 	ChallengerClient *Client
 	ChallengedId     int64
 	Board            game.Board_T
-	StartingTime     int
-	TimeIncrement    int
+	StartingTime     int32
+	TimeIncrement    int32
 	Log              string
 	IsNewMatch       bool
 	MatchType        string
+	MatchID          int64
 }
 
 // Fragmento que contiene una porción de los mapas del hub

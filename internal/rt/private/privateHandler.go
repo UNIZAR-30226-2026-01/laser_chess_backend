@@ -104,6 +104,7 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 			Log:              "",
 			IsNewMatch:       true,
 			MatchType:        "PRIVATE",
+			MatchID:          0,
 		}
 	} else {
 		// La partida era pausada
@@ -112,21 +113,31 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 			client.Close()
 			apierror.SendError(c, http.StatusNotFound, apierror.ErrNotFound)
 		}
+
+		// Comprobar que la partida no estaba terminada
 		if match.Termination != "UNFINISHED" {
 			client.Close()
-			apierror.SendError(c, http.StatusBadGateway,
+			apierror.SendError(c, http.StatusBadRequest,
 				apierror.ErrMatchAlreadyFinished)
+		}
+
+		// Comprobar que los
+		if (match.P1ID != challengerID && match.P2ID != challengedID) &&
+			(match.P1ID != challengedID && match.P2ID != challengerID) {
+			client.Close()
+			apierror.SendError(c, http.StatusBadRequest, apierror.ErrNotYourMatch)
 		}
 
 		info = &rt.ChallengeInfo{
 			ChallengerClient: client,
 			ChallengedId:     challengedID,
 			Board:            db.BoardToInt[match.Board],
-			StartingTime:     int(match.TimeBase),
-			TimeIncrement:    int(match.TimeIncrement),
+			StartingTime:     match.TimeBase,
+			TimeIncrement:    match.TimeIncrement,
 			Log:              match.MovementHistory,
 			IsNewMatch:       false,
 			MatchType:        "PRIVATE",
+			MatchID:          *dto.MatchId,
 		}
 
 		fmt.Println(match.MovementHistory)
@@ -142,10 +153,13 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	// Esperar a que el WS se cierre.
 	// Si el challenger cancela antes de que lo acepten, limpiamos el reto.
 	// Si la partida arranca, la Room cerrará la conn al terminar.
+	fmt.Println("AAAAAAAAAAAAAAAAAAAAAAA")
 	<-client.Done
 
 	fmt.Println("CLIENTE CERRADO")
 	h.hub.RemoveChallenge(challengerID, challengedID)
+
+	h.registry.RemoveMatch(challengerID, challengedID)
 
 }
 
@@ -173,7 +187,7 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 		return
 	}
 
-	// Conseguir id del challenged
+	// Conseguir id del challenger
 	challengerID, err := h.accountService.GetIDByUsername(c.Request.Context(), dto.ChallengerUsername)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
@@ -182,10 +196,12 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 
 	// Comprobar que ninguno de los dos ya está en partida
 	if _, ok := h.registry.GetMatch(challengedID); ok {
+		fmt.Println("PROBLEMA CON EL CHALLENGED")
 		apierror.SendError(c, http.StatusConflict, apierror.ErrAlreadyInMatch)
 		return
 	}
 	if _, ok := h.registry.GetMatch(challengerID); ok {
+		fmt.Println("PROBLEMA CON EL CHALLENGER")
 		apierror.SendError(c, http.StatusConflict, apierror.ErrAlreadyInMatch)
 		return
 	}
@@ -217,10 +233,15 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 			TimeBase:      info.StartingTime,
 			TimeIncrement: info.TimeIncrement,
 			MatchType:     info.MatchType,
+			MatchID:       info.MatchID,
 		})
 
 	// Registrar ambos jugadores en el registry
 	h.registry.RegisterMatch(challengerID, challengedID, room)
+
+	<-challengedClient.Done
+
+	h.registry.RemoveMatch(challengerID, challengedID)
 
 }
 

@@ -55,6 +55,17 @@ func (r *Room) End() {
 	fmt.Println("Cierre de la room")
 
 	// Guardar la partida en BD
+	err := r.SaveMatchInDB()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	r.Player1.Close()
+	r.Player2.Close()
+}
+
+func (r *Room) SaveMatchInDB() error {
 	var err error
 	if r.IsNewMatch {
 		fmt.Println("Cierre de la room con match nueva")
@@ -72,14 +83,24 @@ func (r *Room) End() {
 			TimeBase:        int32(r.GameInfo.TimeBase),
 			TimeIncrement:   int32(r.GameInfo.TimeIncrement),
 		})
+	} else {
+		_, err = r.MatchService.UpdateMatch(context.Background(), &sqlc.UpdateMatchParams{
+			P1ID:            r.Player1.AccountID,
+			P2ID:            r.Player2.AccountID,
+			P1Elo:           0, // cambiar
+			P2Elo:           0, // cambiar
+			Date:            pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			Winner:          sqlc.Winner(r.GameInfo.Winner),
+			Termination:     sqlc.Termination(r.GameInfo.Termination),
+			MatchType:       sqlc.MatchType(r.GameInfo.MatchType),
+			Board:           db.IntToBoard[r.GameInfo.BoardType],
+			MovementHistory: r.GetGameState().Content,
+			TimeBase:        int32(r.GameInfo.TimeBase),
+			TimeIncrement:   int32(r.GameInfo.TimeIncrement),
+			MatchID:         r.GameInfo.MatchID,
+		})
 	}
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	r.Player1.Close()
-	r.Player2.Close()
+	return err
 }
 
 func (r *Room) Run() {
