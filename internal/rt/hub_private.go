@@ -27,6 +27,8 @@ type ChallengeInfo struct {
 	StartingTime     int
 	TimeIncrement    int
 	Log              string
+	IsNewMatch       bool
+	MatchType        string
 }
 
 // Fragmento que contiene una porción de los mapas del hub

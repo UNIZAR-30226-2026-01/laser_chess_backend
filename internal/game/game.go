@@ -17,6 +17,16 @@ type ResponseToRoom struct {
 	Extra   string          `json:"Extra,omitempty"` //campo extra, contiene o el laser, o que jugador eres
 }
 
+type GameInfo struct {
+	Log           string
+	BoardType     Board_T
+	TimeBase      int
+	TimeIncrement int
+	Winner        string
+	Termination   string
+	MatchType     string
+}
+
 type LaserChessGame struct {
 	redPlayer  int64
 	bluePlayer int64
@@ -44,25 +54,24 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	g.bluePlayer = UidBluePlayer
 
 	g.gameEngine.gameLog = Log
-	
+
 	//Estado inicial de la partida
 	g.gameEngine.InitEngine(BoardType)
 
 	//si el log no está vacío hay que reconstruir el estado
 	if g.gameEngine.gameLog != "" {
 		team, _, _ := g.gameEngine.ApplyLogToBoard()
-		
-		switch team{
+
+		switch team {
 		case RED_TEAM:
 			g.turn = UidRedPlayer
 		case BLUE_TEAM:
 			g.turn = UidBluePlayer
 		}
 
-	}else{
+	} else {
 		g.turn = UidRedPlayer
 	}
-
 
 	//Se crean los canales de comunicacón
 	g.FromRoom = make(chan RoomMsg)

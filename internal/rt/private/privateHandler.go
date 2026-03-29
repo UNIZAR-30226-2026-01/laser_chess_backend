@@ -14,6 +14,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/gin-gonic/gin"
@@ -101,6 +102,8 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 			StartingTime:     *dto.StartingTime,
 			TimeIncrement:    *dto.TimeIncrement,
 			Log:              "",
+			IsNewMatch:       true,
+			MatchType:        "PRIVATE",
 		}
 	} else {
 		// La partida era pausada
@@ -115,27 +118,15 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 				apierror.ErrMatchAlreadyFinished)
 		}
 
-		var tablero int
-		switch match.Board {
-		case "ACE":
-			tablero = 0
-		case "CURIOSITY":
-			tablero = 1
-		case "SOPHIE":
-			tablero = 2
-		case "GRAIL":
-			tablero = 3
-		case "MERCURY":
-			tablero = 4
-		}
-
 		info = &rt.ChallengeInfo{
 			ChallengerClient: client,
 			ChallengedId:     challengedID,
-			Board:            game.Board_T(tablero),
+			Board:            db.BoardToInt[match.Board],
 			StartingTime:     int(match.TimeBase),
 			TimeIncrement:    int(match.TimeIncrement),
 			Log:              match.MovementHistory,
+			IsNewMatch:       false,
+			MatchType:        "PRIVATE",
 		}
 
 		fmt.Println(match.MovementHistory)
@@ -152,6 +143,8 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	// Si el challenger cancela antes de que lo acepten, limpiamos el reto.
 	// Si la partida arranca, la Room cerrará la conn al terminar.
 	<-client.Done
+
+	fmt.Println("CLIENTE CERRADO")
 	h.hub.RemoveChallenge(challengerID, challengedID)
 
 }
@@ -217,7 +210,14 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 
 	// Crear la Room y arrancar la partida
 	room := &rt.Room{}
-	room.InitRoom(info.ChallengerClient, challengedClient, info.Board, info.Log)
+	room.InitRoom(info.ChallengerClient, challengedClient, h.matchService, info.IsNewMatch,
+		&game.GameInfo{
+			BoardType:     info.Board,
+			Log:           info.Log,
+			TimeBase:      info.StartingTime,
+			TimeIncrement: info.TimeIncrement,
+			MatchType:     info.MatchType,
+		})
 
 	// Registrar ambos jugadores en el registry
 	h.registry.RegisterMatch(challengerID, challengedID, room)

@@ -1,9 +1,15 @@
 package rt
 
 import (
+	"context"
 	"fmt"
+	"time"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
+	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
+	sqlc "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // fichero que gestiona las rooms
@@ -12,31 +18,66 @@ import (
 // es el intermediario entre el front y el juego
 
 type Room struct {
-	Player1 *Client
-	Player2 *Client
-	Game    *game.LaserChessGame
+	Player1    *Client
+	Player2    *Client
+	IsNewMatch bool
+	GameInfo   *game.GameInfo
+	Game       *game.LaserChessGame
 
 	P1Pause bool
 	P2Pause bool
 
 	Broadcast chan interface{}
+
+	MatchService *match.MatchService
 }
 
-func (r *Room) InitRoom(Player1 *Client, Player2 *Client, BoardType game.Board_T, Log string) {
+func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
+	MatchService *match.MatchService, IsNewMatch bool, GameInfo *game.GameInfo) {
+
 	r.Player1 = Player1
 	r.Player2 = Player2
 	r.P1Pause = false
 	r.P2Pause = false
 	r.Broadcast = make(chan interface{}, 1)
+	r.MatchService = MatchService
+	r.IsNewMatch = IsNewMatch
+	r.GameInfo = GameInfo
 
 	r.Game = &game.LaserChessGame{}
-	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID, BoardType, Log)
+	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID,
+		GameInfo.BoardType, GameInfo.Log)
 
 	go r.Run()
 }
 
 func (r *Room) End() {
 	fmt.Println("Cierre de la room")
+
+	// Guardar la partida en BD
+	var err error
+	if r.IsNewMatch {
+		fmt.Println("Cierre de la room con match nueva")
+		_, err = r.MatchService.Create(context.Background(), &match.MatchDTO{
+			P1ID:            r.Player1.AccountID,
+			P2ID:            r.Player2.AccountID,
+			P1Elo:           0, // cambiar
+			P2Elo:           0, // cambiar
+			Date:            pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			Winner:          sqlc.Winner(r.GameInfo.Winner),
+			Termination:     sqlc.Termination(r.GameInfo.Termination),
+			MatchType:       sqlc.MatchType(r.GameInfo.MatchType),
+			Board:           db.IntToBoard[r.GameInfo.BoardType],
+			MovementHistory: r.GetGameState().Content,
+			TimeBase:        int32(r.GameInfo.TimeBase),
+			TimeIncrement:   int32(r.GameInfo.TimeIncrement),
+		})
+	}
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	r.Player1.Close()
 	r.Player2.Close()
 }
@@ -113,7 +154,8 @@ func (r *Room) ManagePause(player *Client) {
 	if r.P1Pause && r.P2Pause {
 		result := r.PauseGame()
 		r.Broadcast <- result
-		// TODO: Sera necesario guardar la partida en BD
+		r.GameInfo.Winner = "NONE"
+		r.GameInfo.Termination = "UNFINISHED"
 		r.End()
 	}
 }
