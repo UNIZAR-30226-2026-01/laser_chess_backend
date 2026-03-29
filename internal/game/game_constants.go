@@ -34,13 +34,12 @@ type laserInteractionResult_T uint8
 
 const (
 	CONTINUE      laserInteractionResult_T = 0
-	HIT           laserInteractionResult_T = 1
-	STOP          laserInteractionResult_T = 2
-	OUT_OF_BOUNDS laserInteractionResult_T = 3
+	STOP          laserInteractionResult_T = 1
+	OUT_OF_BOUNDS laserInteractionResult_T = 2
+	HIT           laserInteractionResult_T = 3
 	HIT_RED_KING  laserInteractionResult_T = 4
 	HIT_BLUE_KING laserInteractionResult_T = 5
 )
-
 
 var laserMovementVector = [...]vector2_T{{0, 1}, {-1, 0}, {0, -1}, {1, 0}}
 

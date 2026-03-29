@@ -139,12 +139,14 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 				Type:    End,
 				Content: "P2_WINS",
 			}
+			fmt.Println("END:", resul)
 			return
 		case HIT_RED_KING:
 			g.ToRoom <- ResponseToRoom{
 				Type:    End,
 				Content: "P1_WINS",
 			}
+			fmt.Println("END:", resul)
 			return
 		}
 

@@ -64,7 +64,7 @@ func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, l
 			//	si el vector de movimiento que tenemos ahora, va a cambiar en el siguiente movimiento
 			//	esta casilla es una esquina, y la guardamos, mientras no sea un HIT porque en caso de hit la dirección devuelta
 			// 	es irrelevante y la última casilla ya la guardamos al final
-			if laserMovementDirectionVector != laserMovementVector[laserPointingDirection] && interactionRes != HIT {
+			if laserMovementDirectionVector != laserMovementVector[laserPointingDirection] && interactionRes < HIT {
 				traveledPositions = append(traveledPositions, currentPosition)
 			}
 
@@ -85,7 +85,7 @@ func (c *BoardPieceLaser) canMoveTo(x int, y int, board *Board, team team_T) err
 
 func (c *BoardPieceLaser) canRotate(d rune, team team_T) error {
 	// Es ficha de tu equipo
-	if (team != c.team){
+	if team != c.team {
 		return fmt.Errorf("ficha del equipo opuesto")
 	}
 
@@ -96,7 +96,7 @@ func (c *BoardPieceLaser) canRotate(d rune, team team_T) error {
 	case 'R': // +1 Clockwise
 		c.pointing = (c.pointing + 1) % 4
 		return nil
-	default :
+	default:
 		//NO LLEGA NUNCA
 		return fmt.Errorf("dirección mal especificada")
 	}
@@ -117,7 +117,7 @@ func (c *BoardPieceLaser) frontSpaceAfterRotating(x int, y int, rot rune) (int, 
 	return (x + laserMovementDirectionVector.x), (y + laserMovementDirectionVector.y)
 }
 
-//---Depuración---//
+// ---Depuración---//
 func (c *BoardPieceLaser) VisualRep() string {
 	var sprites = [4]string{"▼", "◀", "▲", "▶"}
 	retval := sprites[c.pointing]
@@ -134,7 +134,7 @@ func (c *BoardPieceLaser) processLaser(dir pointing_T) (pointing_T, laserInterac
 	return 0, STOP
 }
 
-//DEBUG
+// DEBUG
 func (c *BoardPieceLaser) printLaserInteractionResult(e laserInteractionResult_T) string {
 	switch e {
 	case 0:
