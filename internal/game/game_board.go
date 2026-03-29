@@ -18,7 +18,7 @@ type Board struct {
 	redTeamLaser  *BoardPieceLaser
 }
 
-func getTeamTile(x int, y int) team_T{
+func getTeamTile(x int, y int) team_T {
 	if x == 0 {
 		return BLUE_TEAM
 	} else if x == 9 {
@@ -145,19 +145,19 @@ func (b *Board) isInbound(x int, y int) bool {
 
 func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_T) error {
 	// Check board bounds
-	if !( b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
-		return  fmt.Errorf("Error - movimiento fuera de límites")
+	if !(b.isInbound(x_from, y_from) && b.isInbound(x_to, y_to)) {
+		return fmt.Errorf("Error - movimiento fuera de límites")
 	}
- 
+
 	// Check reach
-	if (x_from-x_to < -1 || x_from-x_to > 1 || y_from-y_to < -1 || y_from-y_to > 1) {
+	if x_from-x_to < -1 || x_from-x_to > 1 || y_from-y_to < -1 || y_from-y_to > 1 {
 		return fmt.Errorf("Error - movimiento fuera de rango")
 	}
 
 	// Check if can move
 	err := b.cells[x_from][y_from].canMoveTo(x_to, y_to, b, team)
-	if (err != nil) {
-		return  fmt.Errorf("Error - movimiento ilegal %s", err)
+	if err != nil {
+		return fmt.Errorf("Error - movimiento ilegal %s", err)
 	}
 
 	// Realizamos el movimiento legal
@@ -172,13 +172,13 @@ func (b *Board) movePiece(x_from int, y_from int, x_to int, y_to int, team team_
 
 func (b *Board) rotatePiece(x_at int, y_at int, rot rune, team team_T) error {
 	// Check board bounds
-	if !b.isInbound(x_at, y_at){
-		return  fmt.Errorf("Error - rotación fuera de límites")
+	if !b.isInbound(x_at, y_at) {
+		return fmt.Errorf("Error - rotación fuera de límites")
 	}
 
 	// Check syntax
-	if !(rot == 'R' || rot == 'L'){
-		return  fmt.Errorf("Error - rotación mal especificada")
+	if !(rot == 'R' || rot == 'L') {
+		return fmt.Errorf("Error - rotación mal especificada")
 	}
 
 	// Check laser legal rotations dependent on x/y
@@ -192,23 +192,6 @@ func (b *Board) rotatePiece(x_at int, y_at int, rot rune, team team_T) error {
 
 	// Check if can rotate
 	return b.cells[x_at][y_at].canRotate(rot, team)
-}
-
-func (b *Board) killPiece(x_at int, y_at int) laserInteractionResult_T {
-	var hitType laserInteractionResult_T
-	switch k := b.cells[x_at][y_at].(type) {
-		case *BoardPieceKing:
-			switch k.team{
-			case BLUE_TEAM:
-				hitType = HIT_BLUE_KING
-			case RED_TEAM:
-				hitType = HIT_RED_KING
-		}
-	}
-	if b.isInbound(x_at, y_at) {
-		b.cells[x_at][y_at] = &BoardPieceVacant{}
-	}
-	return hitType
 }
 
 // ---Depuración---//
@@ -253,11 +236,24 @@ func (b *Board) print() {
 
 // --- INTERFAZ DE COMUNICACIÓN CON EL MÓDULO --- //
 
+// Función auxiliar de cálculo de valores de retorno
+func (b *Board) calculateReturnValues(instruction string, laserPath []vector2_T, result laserInteractionResult_T) (string, []vector2_T, laserInteractionResult_T, error) {
+	retVal := instruction
+	// Si el resultado de la interacción del laser es algún tipo de HIT
+	if result > 2 && result < 6 {
+		point := laserPath[len(laserPath)-1]
+		retVal += "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
+		if b.isInbound(point.x, point.y) {
+			b.cells[point.x][point.y] = &BoardPieceVacant{}
+		}
+	}
+	return retVal, laserPath, result, nil
+}
+
 func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_T, laserInteractionResult_T, error) {
 
 	//La versión de golang del string stream
 	reader := strings.NewReader(instruction)
-	retVal := instruction
 
 	var inst rune //Instrucción
 	_, err := fmt.Fscanf(reader, "%c", &inst)
@@ -284,24 +280,14 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 			return "", nil, 0, legalMove
 		}
 
-		//PROCESAR EL MOVIMIENTO DEPENDIENDO DEL EQUIPO
+		//PROCESAR EL MOVIMIENTO DEL LASER DEPENDIENDO DEL EQUIPO
 		switch team {
 		case BLUE_TEAM:
 			laserPath, result := b.blueTeamLaser.shootLaser(0, 0, b)
-			if result == HIT {
-				point := laserPath[len(laserPath)-1]
-				result = b.killPiece(point.x, point.y)
-				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
-			}
-			return retVal, laserPath, result, nil
+			return b.calculateReturnValues(instruction, laserPath, result)
 		case RED_TEAM:
 			laserPath, result := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
-			if result == HIT {
-				point := laserPath[len(laserPath)-1]
-				result = b.killPiece(point.x, point.y)
-				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
-			}
-			return retVal, laserPath, result, nil
+			return b.calculateReturnValues(instruction, laserPath, result)
 		}
 
 	case 'R', 'L':
@@ -326,20 +312,10 @@ func (b *Board) ProcessTurn(instruction string, team team_T) (string, []vector2_
 		switch team {
 		case BLUE_TEAM:
 			laserPath, result := b.blueTeamLaser.shootLaser(0, 0, b)
-			if result == HIT {
-				point := laserPath[len(laserPath)-1]
-				result = b.killPiece(point.x, point.y)
-				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
-			}
-			return retVal, laserPath, result, nil
+			return b.calculateReturnValues(instruction, laserPath, result)
 		case RED_TEAM:
 			laserPath, result := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
-			if result == HIT {
-				point := laserPath[len(laserPath)-1]
-				result = b.killPiece(point.x, point.y)
-				retVal = instruction + "x" + string(rune(point.x+'a')) + strconv.Itoa(8-point.y) // y
-			}
-			return retVal, laserPath, result, nil
+			return b.calculateReturnValues(instruction, laserPath, result)
 		}
 	}
 

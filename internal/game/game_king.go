@@ -13,24 +13,24 @@ type BoardPieceKing struct {
 func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board, team team_T) error {
 
 	// Es ficha de tu equipo
-	if (team != c.team){
+	if team != c.team {
 		return fmt.Errorf("ficha del equipo opuesto")
 	}
 
 	// El movimiento termina en una casilla válida para tu ficha
 	destinyTeamTile := getTeamTile(x, y)
-	if !(destinyTeamTile == c.team || destinyTeamTile == NONE){
+	if !(destinyTeamTile == c.team || destinyTeamTile == NONE) {
 		return fmt.Errorf("casilla destino del equipo opuesto")
 	}
 
 	// Permutación válida en caso de switch son 3 tipos
 	switch board.cells[x][y].(type) {
-		case *BoardPieceVacant:
-			return nil
-		case *BoardPieceShield:
-			return  nil
-		case *BoardPieceDeflector:
-			return  nil
+	case *BoardPieceVacant:
+		return nil
+	case *BoardPieceShield:
+		return nil
+	case *BoardPieceDeflector:
+		return nil
 
 	}
 
@@ -54,6 +54,14 @@ func (c *BoardPieceKing) VisualRep() string {
 	return retval
 }
 
-func (c *BoardPieceKing)processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T){
-	return 0, HIT
+func (c *BoardPieceKing) processLaser(dir pointing_T) (pointing_T, laserInteractionResult_T) {
+	switch c.team {
+	case RED_TEAM:
+		return 0, HIT_RED_KING
+	case BLUE_TEAM:
+		return 0, HIT_BLUE_KING
+	default:
+		// Imposible
+		return 0, HIT
+	}
 }
