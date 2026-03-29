@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -101,30 +102,36 @@ func (g *GameEngine) GetState() string {
 	return g.gameLog
 }
 
-func (g *GameEngine) ApplyLogToBoard() (team_T, error) {
+
+// SE PRESUPONE UN LOG QUE NO CAUSA ERRORES
+func (g *GameEngine) ApplyLogToBoard() (nextTeam team_T, redTimeLeft int, blueTimeLeft int) {
 	//dividimos el log en cachitos 
-	logPieces := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
-	team := RED_TEAM //empieza
+	logChunks := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
+	nextTeam = RED_TEAM //Equipo que empieza
+	re := regexp.MustCompile(`^([^%]+)%(?:[^%]+)%\{(\d+)\}$`) //regla expresión regular
+	redTimeLeft = 1500 //Tiempo base ROJO (TODO: ponerlo bien)
+	blueTimeLeft = 1500 //Tiempo base AZUL (TODO: ponerlo bien)
 
-	//aplicamos cada cachito usando processTurn, process turn ignora lo que no necesita
-	//el movimiento "Ta1:b2(%|x).*" se lee como "Ta1:b2"
-	for i, logPiece := range logPieces {
+	//aplicamos cada cachito usando processTurn y los procesamos.
+	for _ , logChunk := range logChunks {
+		//Tokenizamos usando la expresión regular
+		tokens := re.FindStringSubmatch(logChunk)
+		move := tokens[1]
+		time, _ := strconv.Atoi(tokens[2])
 
-		//Vamos aplicando todos los elementos del log
-		_, _, _, err := g.gameBoard.ProcessTurn(logPiece, team)
-
-		if err != nil {
-			return NONE, fmt.Errorf("El log contiene una especificación incorrecta")
-		}
-
-		if i % 2 == 0 {
-			team = BLUE_TEAM
-		}else{
-			team = RED_TEAM
+		//Aplicamos el movimiento
+		g.gameBoard.ProcessTurn(move, nextTeam)
+		
+		// Permutamos entre los equipos y actualizamos el tiempo restante
+		switch nextTeam {
+		case BLUE_TEAM :
+			blueTimeLeft = time 
+			nextTeam = RED_TEAM
+		case RED_TEAM :
+			redTimeLeft = time 
+		nextTeam = BLUE_TEAM
 		}
 	}
 
-	
-
-	return team, nil
+	return nextTeam, redTimeLeft, blueTimeLeft
 }

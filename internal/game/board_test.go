@@ -189,19 +189,24 @@ func TestApplyLogToBoard(t *testing.T){
 
 	// Cargamos una partida "estado inicial" y "log"//
 	gameEngine.InitEngine(CURIOSITY)
-	gameEngine.gameLog = `Rf1%j1,j4,i4,i5,j5,j9%{300};Tg6:f6%a8,a5,b5,b4,a4,a0%{300};Rb4%j1,j4,i4,i5,j5,j9%{300};Ri5xf6%a8,a5,b5,b4,e4,e5,f5,f6%{300};Re4xf8%j1,j4,i4,i5,f5,f4,e4,e5,f5,f8%{300};`
+	gameEngine.gameLog = `Rf1%j1,j4,i4,i5,j5,j9%{300};Tg6:f6%a8,a5,b5,b4,a4,a0%{250};Rb4%j1,j4,i4,i5,j5,j9%{200};Ri5xf6%a8,a5,b5,b4,e4,e5,f5,f6%{150};Re4xf8%j1,j4,i4,i5,f5,f4,e4,e5,f5,f8%{100};`
 
 	// Aplicamos el log al estado inicial
-	team, err := gameEngine.ApplyLogToBoard()
-
-	// Errores al aplicar?
-	if err != nil {
-		t.Error(err)
-	}
+	team, redTimeLeft, blueTimeLeft := gameEngine.ApplyLogToBoard()
 
 	// Correcto el turno siguiente?
 	if team != BLUE_TEAM {
 		t.Error("No se gestionan bien los turnos")
+	}
+
+	if (redTimeLeft != 100) {
+		t.Log(redTimeLeft)
+		t.Error("No se recuperan bien los tiempos del rojo")
+	}
+
+	if (blueTimeLeft != 150) {
+		t.Log(blueTimeLeft)
+		t.Error("No se recuperan bien los tiempos del azul")
 	}
 
 	// Correcto la muerte del rey

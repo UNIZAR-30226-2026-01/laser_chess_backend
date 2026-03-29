@@ -50,12 +50,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 
 	//si el log no está vacío hay que reconstruir el estado
 	if g.gameEngine.gameLog != "" {
-		team, err := g.gameEngine.ApplyLogToBoard()
-		
-		//No debería sudecer, porque se asume un log correcto
-		if err != nil {
-			fmt.Print(err)
-		}
+		team, _, _ := g.gameEngine.ApplyLogToBoard()
 		
 		switch team{
 		case RED_TEAM:
