@@ -82,7 +82,8 @@ func SetupRouter(store *db.Store,
 	// Account routes
 	{
 		accountRoute := protected.Group("/account")
-		accountRoute.GET("/:id", accountHandler.GetByID)
+		accountRoute.GET("/", accountHandler.GetOwnAccount)
+		accountRoute.GET("/:id", accountHandler.GetOtherByID)
 		accountRoute.POST("/update", accountHandler.Update)
 		accountRoute.DELETE("/delete/", accountHandler.Delete)
 	}

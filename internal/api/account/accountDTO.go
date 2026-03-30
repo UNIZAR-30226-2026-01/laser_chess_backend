@@ -13,13 +13,13 @@ type CreateAccountDTO struct {
 // Solo es obligatorio el userID, el resto es opcional
 type AccountDTO struct {
 	AccountID    *int64  `json:"account_id"`
-	Mail         *string `json:"mail"`
-	Username     *string `json:"username"`
-	Level        *int32  `json:"level"`
-	Xp           *int32  `json:"xp"`
-	Money        *int32  `json:"money"`
-	BoardSkin    *int32  `json:"board_skin"`
-	PieceSkin    *int32  `json:"piece_skin"`
-	WinAnimation *int32  `json:"win_animation"`
-	Avatar       *int32  `json:"avatar"`
+	Mail         *string `json:"mail,omitempty"`
+	Username     *string `json:"username,omitempty"`
+	Level        *int32  `json:"level,omitempty"`
+	Xp           *int32  `json:"xp,omitempty"`
+	Money        *int32  `json:"money,omitempty"`
+	BoardSkin    *int32  `json:"board_skin,omitempty"`
+	PieceSkin    *int32  `json:"piece_skin,omitempty"`
+	WinAnimation *int32  `json:"win_animation,omitempty"`
+	Avatar       *int32  `json:"avatar,omitempty"`
 }

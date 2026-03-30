@@ -49,8 +49,26 @@ func (h *AccountHandler) Create(c *gin.Context) {
 }
 
 // Devuelve un AccountDTO lleno con toda la info
-// de una cuenta. El id de cuenta se pasa en la url
-func (h *AccountHandler) GetByID(c *gin.Context) {
+// de tu propia cuenta.
+func (h *AccountHandler) GetOwnAccount(c *gin.Context) {
+	accountID, err := middleware.ExtractAccountID(c)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	res, err := h.accountService.GetByID(c.Request.Context(), int64(accountID))
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+// Devuelve un AccountDTO con la info publica
+// de una cuenta.
+func (h *AccountHandler) GetOtherByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
@@ -62,6 +80,9 @@ func (h *AccountHandler) GetByID(c *gin.Context) {
 		apierror.DetectAndSendError(c, err)
 		return
 	}
+
+	res.Mail = nil
+	res.Money = nil
 
 	c.JSON(http.StatusOK, res)
 }
