@@ -38,10 +38,7 @@ func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
 
 // lee mensajes del socket y los manda a la Room
 func (c *Client) ReadPump() error {
-	// defer func() {
-	// 	close(c.Done)
-	// 	c.Conn.Close()
-	// }()
+	defer c.Close()
 
 	for {
 		var message ClientSocketMessage
@@ -58,7 +55,10 @@ func (c *Client) ReadPump() error {
 
 // saca mensajes del canal c.Send y los escribe en el navegador
 func (c *Client) WritePump() error {
-	// defer c.Conn.Close()
+	defer func() {
+		close(c.Done)
+		c.Close()
+	}()
 
 	for message := range c.Send {
 		err := c.Conn.WriteJSON(message)
@@ -72,7 +72,6 @@ func (c *Client) WritePump() error {
 
 // Cierra la conexion de un cliente
 func (c *Client) Close() error {
-	defer close(c.Done)
 	deadline := time.Now().Add(time.Minute)
 	err := c.Conn.WriteControl(
 		websocket.CloseMessage,

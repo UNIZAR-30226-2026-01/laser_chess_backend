@@ -28,7 +28,6 @@ type ChallengeInfo struct {
 	TimeIncrement    int32
 	Log              string
 	IsNewMatch       bool
-	MatchType        string
 	MatchID          int64
 }
 

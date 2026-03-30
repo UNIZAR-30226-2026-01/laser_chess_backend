@@ -103,7 +103,6 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 			TimeIncrement:    *dto.TimeIncrement,
 			Log:              "",
 			IsNewMatch:       true,
-			MatchType:        "PRIVATE",
 			MatchID:          0,
 		}
 	} else {
@@ -136,7 +135,6 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 			TimeIncrement:    match.TimeIncrement,
 			Log:              match.MovementHistory,
 			IsNewMatch:       false,
-			MatchType:        "PRIVATE",
 			MatchID:          *dto.MatchId,
 		}
 
@@ -232,13 +230,14 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 			Log:           info.Log,
 			TimeBase:      info.StartingTime,
 			TimeIncrement: info.TimeIncrement,
-			MatchType:     info.MatchType,
+			MatchType:     "PRIVATE",
 			MatchID:       info.MatchID,
 		})
 
 	// Registrar ambos jugadores en el registry
-	h.registry.RegisterMatch(challengerID, challengedID, room)
 
+	h.registry.RegisterMatch(challengerID, challengedID, room)
+	h.hub.RemoveChallenge(challengerID, challengedID)
 	<-challengedClient.Done
 
 	h.registry.RemoveMatch(challengerID, challengedID)
