@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 type RoomMsg struct {
@@ -34,6 +35,9 @@ type LaserChessGame struct {
 
 	turn int64
 
+	timerRed  *GameTimer
+	timerBlue *GameTimer
+
 	FromRoom   chan RoomMsg
 	ToRoom     chan ResponseToRoom
 	gameEngine GameEngine
@@ -49,7 +53,7 @@ type LaserChessGame struct {
 * LaserChessGame - Es la nueva instancia del juego inicializada para comenzar a jugar
  */
 func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer int64,
-	BoardType Board_T, Log string) {
+	BoardType Board_T, Log string, timeBase int32, timeInc int32) {
 	//Rellenan los datos relevantes
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
@@ -77,6 +81,17 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	//Se crean los canales de comunicacón
 	g.FromRoom = make(chan RoomMsg)
 	g.ToRoom = make(chan ResponseToRoom)
+
+	// Inicializar timers
+	g.timerRed = NewGameTimer(time.Duration(timeBase)*time.Second, time.Duration(timeInc)*time.Second)
+	g.timerBlue = NewGameTimer(time.Duration(timeBase)*time.Second, time.Duration(timeInc)*time.Second)
+
+	// Si la partida empieza de cero, arranca el timer del que tiene el turno
+	if g.turn == g.redPlayer {
+		g.timerRed.Start()
+	} else {
+		g.timerBlue.Start()
+	}
 	go g.Run()
 
 	fmt.Println("Game inicializado")
@@ -98,13 +113,20 @@ func (g *LaserChessGame) getTurn() team_T {
 func (g *LaserChessGame) changeTurn() {
 	switch g.turn {
 	case g.bluePlayer:
+		g.timerBlue.Stop()
+		g.timerRed.Start()
+
 		g.turn = g.redPlayer
 	case g.redPlayer:
+		g.timerRed.Stop()
+		g.timerBlue.Start()
+
 		g.turn = g.bluePlayer
 	}
 }
 
-func (g *LaserChessGame) processMove(message RoomMsg) {
+// Devuelve true si ha acabado la partida
+func (g *LaserChessGame) processMove(message RoomMsg) bool {
 
 	turno := g.getTurn()
 
@@ -123,7 +145,7 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 				Type:    Error,
 				Content: err.Error(),
 			}
-			return
+			return false
 		}
 
 		g.ToRoom <- ResponseToRoom{
@@ -140,14 +162,15 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 				Content: "P2_WINS",
 			}
 			fmt.Println("END:", resul)
-			return
+
+			return true
 		case HIT_RED_KING:
 			g.ToRoom <- ResponseToRoom{
 				Type:    End,
 				Content: "P1_WINS",
 			}
 			fmt.Println("END:", resul)
-			return
+			return true
 		}
 
 		g.changeTurn()
@@ -159,33 +182,68 @@ func (g *LaserChessGame) processMove(message RoomMsg) {
 			Content: "no es tu turno",
 		}
 	}
+
+	return false
+}
+
+// Devuelve true si ha acabado o pausa la partida
+func (g *LaserChessGame) HandleRoomMsg(message RoomMsg) bool {
+	switch message.MsgType {
+	case Move:
+		return g.processMove(message)
+	case GetState:
+		g.ToRoom <- ResponseToRoom{
+			Type:    State,
+			Content: g.gameEngine.GetState(),
+			Extra:   "",
+		}
+	case GetInitialState:
+		initialState := g.gameEngine.getInitialState()
+		g.ToRoom <- ResponseToRoom{
+			Type:    InitialState,
+			Content: initialState,
+			Extra:   strconv.FormatInt(g.redPlayer, 10),
+		}
+	case Pause:
+		//gestionar pausa del juego
+		g.ToRoom <- ResponseToRoom{
+			Type:    Paused,
+			Content: "", // quizas manda algo aqui
+			Extra:   "",
+		}
+
+		return true
+	}
+
+	return false
 }
 
 func (g *LaserChessGame) Run() {
-	for message := range g.FromRoom {
-		switch message.MsgType {
-		case Move:
-			g.processMove(message)
-		case GetState:
-			g.ToRoom <- ResponseToRoom{
-				Type:    State,
-				Content: g.gameEngine.GetState(),
-				Extra:   "",
+	defer func() {
+		g.timerRed.Stop()
+		g.timerBlue.Stop()
+	}()
+
+	for {
+		select {
+		case message := <-g.FromRoom:
+			if g.HandleRoomMsg(message) {
+
+				return
 			}
-		case GetInitialState:
-			initialState := g.gameEngine.getInitialState()
+		case <-g.timerRed.Expired:
 			g.ToRoom <- ResponseToRoom{
-				Type:    InitialState,
-				Content: initialState,
-				Extra:   strconv.FormatInt(g.redPlayer, 10),
+				Type:    End,
+				Content: "P2_WINS_TIMEOUT",
 			}
-		case Pause:
-			//gestionar pausa del juego
+			return
+
+		case <-g.timerBlue.Expired:
 			g.ToRoom <- ResponseToRoom{
-				Type:    Paused,
-				Content: "", // quizas manda algo aqui
-				Extra:   "",
+				Type:    End,
+				Content: "P1_WINS_TIMEOUT",
 			}
+			return
 		}
 	}
 }

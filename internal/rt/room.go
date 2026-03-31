@@ -46,7 +46,7 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 
 	r.Game = &game.LaserChessGame{}
 	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID,
-		GameInfo.BoardType, GameInfo.Log)
+		GameInfo.BoardType, GameInfo.Log, GameInfo.TimeBase, GameInfo.TimeIncrement)
 
 	go r.Run()
 }
@@ -138,6 +138,7 @@ func (r *Room) FilterMessage(player *Client, message ClientSocketMessage) {
 			r.Broadcast <- result
 		case game.End:
 			r.Broadcast <- result
+			// TODO: completar la info del juego antes de escribir en bdd
 			r.End()
 		case game.Error:
 			player.Send <- result
