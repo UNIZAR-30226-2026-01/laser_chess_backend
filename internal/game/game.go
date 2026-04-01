@@ -133,7 +133,14 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 
 		fmt.Println(message.PlayerUid, ":", message.MsgContent)
 		fmt.Println(message.PlayerUid, ":", turno)
-		resul, laser, laserInteractionRes, err := g.gameEngine.ProcessTurn(message.MsgContent, turno)
+		var timestamp time.Duration
+		switch g.turn {
+		case g.bluePlayer:
+			timestamp = g.timerBlue.Remaining
+		case g.redPlayer:
+			timestamp = g.timerRed.Remaining
+		}
+		resul, laser, laserInteractionRes, err := g.gameEngine.ProcessTurn(message.MsgContent, turno, time.Duration(timestamp.Abs().Seconds()))
 		g.gameEngine.gameBoard.printlaser(laser)
 		fmt.Println("ANSWER:", resul)
 

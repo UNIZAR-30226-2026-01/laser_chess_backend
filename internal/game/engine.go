@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	boardtemplates "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game/boardTemplates"
 )
@@ -88,13 +89,13 @@ func (g *GameEngine) InitEngine(boardType Board_T) {
 	}
 }
 
-func (g *GameEngine) ProcessTurn(instruction string, team team_T) (string, []vector2_T, laserInteractionResult_T, error) {
+func (g *GameEngine) ProcessTurn(instruction string, team team_T, timestamp time.Duration) (string, []vector2_T, laserInteractionResult_T, error) {
 	resul, laser, laserEnd, err := g.gameBoard.ProcessTurn(instruction, team)
 	if err != nil {
 		return resul, laser, laserEnd, err
 	}
 	//TODO -- Crear el log en cada turno
-	g.gameLog += resul + "%" + formatearLaserPath(laser) + "%{300}" + ";"
+	g.gameLog += resul + "%" + formatearLaserPath(laser) + "%{" + timestamp.String() + "}" + ";"
 	return resul, laser, laserEnd, err
 }
 
@@ -102,18 +103,17 @@ func (g *GameEngine) GetState() string {
 	return g.gameLog
 }
 
-
 // SE PRESUPONE UN LOG QUE NO CAUSA ERRORES
 func (g *GameEngine) ApplyLogToBoard() (nextTeam team_T, redTimeLeft int, blueTimeLeft int) {
-	//dividimos el log en cachitos 
+	//dividimos el log en cachitos
 	logChunks := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
-	nextTeam = RED_TEAM //Equipo que empieza
+	nextTeam = RED_TEAM                                       //Equipo que empieza
 	re := regexp.MustCompile(`^([^%]+)%(?:[^%]+)%\{(\d+)\}$`) //regla expresión regular
-	redTimeLeft = 1500 //Tiempo base ROJO (TODO: ponerlo bien)
-	blueTimeLeft = 1500 //Tiempo base AZUL (TODO: ponerlo bien)
+	redTimeLeft = 1500                                        //Tiempo base ROJO (TODO: ponerlo bien)
+	blueTimeLeft = 1500                                       //Tiempo base AZUL (TODO: ponerlo bien)
 
 	//aplicamos cada cachito usando processTurn y los procesamos.
-	for _ , logChunk := range logChunks {
+	for _, logChunk := range logChunks {
 		//Tokenizamos usando la expresión regular
 		tokens := re.FindStringSubmatch(logChunk)
 		move := tokens[1]
@@ -121,15 +121,15 @@ func (g *GameEngine) ApplyLogToBoard() (nextTeam team_T, redTimeLeft int, blueTi
 
 		//Aplicamos el movimiento
 		g.gameBoard.ProcessTurn(move, nextTeam)
-		
+
 		// Permutamos entre los equipos y actualizamos el tiempo restante
 		switch nextTeam {
-		case BLUE_TEAM :
-			blueTimeLeft = time 
+		case BLUE_TEAM:
+			blueTimeLeft = time
 			nextTeam = RED_TEAM
-		case RED_TEAM :
-			redTimeLeft = time 
-		nextTeam = BLUE_TEAM
+		case RED_TEAM:
+			redTimeLeft = time
+			nextTeam = BLUE_TEAM
 		}
 	}
 
