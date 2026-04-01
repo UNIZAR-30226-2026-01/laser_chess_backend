@@ -79,19 +79,14 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 	}
 
 	//Se crean los canales de comunicacón
-	g.FromRoom = make(chan RoomMsg)
-	g.ToRoom = make(chan ResponseToRoom)
+	g.FromRoom = make(chan RoomMsg, 2)
+	g.ToRoom = make(chan ResponseToRoom, 2)
 
 	// Inicializar timers
 	g.timerRed = NewGameTimer(time.Duration(timeBase)*time.Second, time.Duration(timeInc)*time.Second)
 	g.timerBlue = NewGameTimer(time.Duration(timeBase)*time.Second, time.Duration(timeInc)*time.Second)
+	// El timer no empieza hasta el primer movimiento
 
-	// Si la partida empieza de cero, arranca el timer del que tiene el turno
-	if g.turn == g.redPlayer {
-		g.timerRed.Start()
-	} else {
-		g.timerBlue.Start()
-	}
 	go g.Run()
 
 	fmt.Println("Game inicializado")
@@ -115,14 +110,17 @@ func (g *LaserChessGame) changeTurn() {
 	case g.bluePlayer:
 		g.timerBlue.Stop()
 		g.timerRed.Start()
+		fmt.Println(g.timerBlue.Remaining)
 
 		g.turn = g.redPlayer
 	case g.redPlayer:
 		g.timerRed.Stop()
 		g.timerBlue.Start()
+		fmt.Println(g.timerRed.Remaining)
 
 		g.turn = g.bluePlayer
 	}
+	fmt.Println(g.turn)
 }
 
 // Devuelve true si ha acabado la partida
@@ -144,6 +142,7 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 			g.ToRoom <- ResponseToRoom{
 				Type:    Error,
 				Content: err.Error(),
+				Extra:   strconv.FormatInt(message.PlayerUid, 10),
 			}
 			return false
 		}
@@ -159,15 +158,16 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 		case HIT_BLUE_KING:
 			g.ToRoom <- ResponseToRoom{
 				Type:    End,
-				Content: "P2_WINS",
+				Content: "P1_WINS",
+				Extra:   "LASER",
 			}
 			fmt.Println("END:", resul)
-
 			return true
 		case HIT_RED_KING:
 			g.ToRoom <- ResponseToRoom{
 				Type:    End,
-				Content: "P1_WINS",
+				Content: "P2_WINS",
+				Extra:   "LASER",
 			}
 			fmt.Println("END:", resul)
 			return true
@@ -195,7 +195,7 @@ func (g *LaserChessGame) HandleRoomMsg(message RoomMsg) bool {
 		g.ToRoom <- ResponseToRoom{
 			Type:    State,
 			Content: g.gameEngine.GetState(),
-			Extra:   "",
+			Extra:   strconv.FormatInt(message.PlayerUid, 10),
 		}
 	case GetInitialState:
 		initialState := g.gameEngine.getInitialState()
@@ -218,6 +218,10 @@ func (g *LaserChessGame) HandleRoomMsg(message RoomMsg) bool {
 	return false
 }
 
+func (g *LaserChessGame) GetCurrentState() string {
+	return g.gameEngine.GetState()
+}
+
 func (g *LaserChessGame) Run() {
 	defer func() {
 		g.timerRed.Stop()
@@ -231,17 +235,19 @@ func (g *LaserChessGame) Run() {
 
 				return
 			}
+
 		case <-g.timerRed.Expired:
 			g.ToRoom <- ResponseToRoom{
 				Type:    End,
-				Content: "P2_WINS_TIMEOUT",
+				Content: "P2_WINS",
+				Extra:   "OUT_OF_TIME",
 			}
 			return
-
 		case <-g.timerBlue.Expired:
 			g.ToRoom <- ResponseToRoom{
 				Type:    End,
-				Content: "P1_WINS_TIMEOUT",
+				Content: "P1_WINS",
+				Extra:   "OUT_OF_TIME",
 			}
 			return
 		}

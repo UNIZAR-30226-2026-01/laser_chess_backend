@@ -6,6 +6,7 @@ package rt
 import (
 	"time"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/gorilla/websocket"
 )
 
@@ -17,7 +18,7 @@ type ClientSocketMessage struct {
 type Client struct {
 	AccountID int64
 	Conn      *websocket.Conn
-	Send      chan interface{}
+	Send      chan game.ResponseToRoom
 	ToRoom    chan ClientSocketMessage
 
 	// Canal para avisar de fin
@@ -27,7 +28,7 @@ type Client struct {
 func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
 	c.AccountID = AccountID
 	c.Conn = Conn
-	c.Send = make(chan interface{})
+	c.Send = make(chan game.ResponseToRoom)
 	c.ToRoom = make(chan ClientSocketMessage)
 
 	c.Done = make(chan struct{})
@@ -65,41 +66,22 @@ func (c *Client) WritePump() error {
 		if err != nil {
 			return err
 		}
+
+		if message.Type == game.End || message.Type == game.Paused {
+
+			return nil
+		}
 	}
 
 	return nil
 }
 
-// Cierra la conexion de un cliente
-func (c *Client) Close() error {
-	deadline := time.Now().Add(time.Minute)
-	err := c.Conn.WriteControl(
+func (c *Client) Close() {
+	deadline := time.Now().Add(time.Second)
+	c.Conn.WriteControl(
 		websocket.CloseMessage,
 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
 		deadline,
 	)
-	if err != nil {
-		return err
-	}
-
-	err = c.Conn.SetReadDeadline(time.Now().Add(5 * time.Second))
-	if err != nil {
-		return err
-	}
-
-	for {
-		_, _, err = c.Conn.NextReader()
-		if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-			break
-		}
-		if err != nil {
-			break
-		}
-	}
-
-	err = c.Conn.Close()
-	if err != nil {
-		return err
-	}
-	return nil
+	c.Conn.Close()
 }

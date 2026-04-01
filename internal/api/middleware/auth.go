@@ -22,7 +22,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			header = "Bearer " + header
 		}
 
-		if header == "" || !strings.HasPrefix(header, "Bearer ") {
+		if header == "Bearer " || !strings.HasPrefix(header, "Bearer ") {
 			error := apierror.ErrInvalidToken
 			apierror.DetectAndSendError(c, error)
 			return

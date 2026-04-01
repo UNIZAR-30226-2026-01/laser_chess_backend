@@ -3,6 +3,7 @@ package rt
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
@@ -27,7 +28,7 @@ type Room struct {
 	P1Pause bool
 	P2Pause bool
 
-	Broadcast chan interface{}
+	Broadcast chan game.ResponseToRoom
 
 	MatchService *match.MatchService
 }
@@ -39,7 +40,7 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	r.Player2 = Player2
 	r.P1Pause = false
 	r.P2Pause = false
-	r.Broadcast = make(chan interface{}, 1)
+	r.Broadcast = make(chan game.ResponseToRoom, 1)
 	r.MatchService = MatchService
 	r.IsNewMatch = IsNewMatch
 	r.GameInfo = GameInfo
@@ -61,8 +62,6 @@ func (r *Room) End() {
 		fmt.Println(err)
 	}
 
-	r.Player1.Close()
-	r.Player2.Close()
 }
 
 func (r *Room) SaveMatchInDB() error {
@@ -79,7 +78,7 @@ func (r *Room) SaveMatchInDB() error {
 			Termination:     sqlc.Termination(r.GameInfo.Termination),
 			MatchType:       sqlc.MatchType(r.GameInfo.MatchType),
 			Board:           db.IntToBoard[r.GameInfo.BoardType],
-			MovementHistory: r.GetGameState().Content,
+			MovementHistory: r.Game.GetCurrentState(),
 			TimeBase:        int32(r.GameInfo.TimeBase),
 			TimeIncrement:   int32(r.GameInfo.TimeIncrement),
 		})
@@ -94,7 +93,7 @@ func (r *Room) SaveMatchInDB() error {
 			Termination:     sqlc.Termination(r.GameInfo.Termination),
 			MatchType:       sqlc.MatchType(r.GameInfo.MatchType),
 			Board:           db.IntToBoard[r.GameInfo.BoardType],
-			MovementHistory: r.GetGameState().Content,
+			MovementHistory: r.Game.GetCurrentState(),
 			TimeBase:        int32(r.GameInfo.TimeBase),
 			TimeIncrement:   int32(r.GameInfo.TimeIncrement),
 			MatchID:         r.GameInfo.MatchID,
@@ -107,8 +106,8 @@ func (r *Room) Run() {
 
 	fmt.Println("La partida ha iniciado :)")
 
-	// Mandar estado inicial
-	r.Broadcast <- r.GetInitialGameState()
+	// Pedir estado inicial
+	r.Game.FromRoom <- game.RoomMsg{MsgType: game.GetInitialState}
 
 	for {
 		select {
@@ -121,6 +120,12 @@ func (r *Room) Run() {
 			r.FilterMessage(r.Player1, message)
 		case message := <-r.Player2.ToRoom:
 			r.FilterMessage(r.Player2, message)
+
+		case gameMsg := <-r.Game.ToRoom:
+			if r.HandleGameMessage(gameMsg) {
+				// Cerrar la room si acaba la partida
+				return
+			}
 		}
 	}
 }
@@ -132,23 +137,57 @@ func (r *Room) FilterMessage(player *Client, message ClientSocketMessage) {
 
 	switch game.GameMessageType(message.Type) {
 	case game.Move:
-		result := r.SendMoveToGame(player.AccountID, message.Content)
-		switch result.Type {
-		case game.Move:
-			r.Broadcast <- result
-		case game.End:
-			r.Broadcast <- result
-			// TODO: completar la info del juego antes de escribir en bdd
-			r.End()
-		case game.Error:
-			player.Send <- result
+		r.Game.FromRoom <- game.RoomMsg{
+			PlayerUid:  player.AccountID,
+			MsgType:    game.Move,
+			MsgContent: message.Content,
 		}
 	case game.GetState:
-		state := r.GetGameState()
-		player.Send <- state
+		r.Game.FromRoom <- game.RoomMsg{
+			PlayerUid: player.AccountID,
+			MsgType:   game.GetState,
+		}
 	case game.Pause:
 		r.ManagePause(player)
 	}
+}
+
+// El valor que devuelve indica si hay que cerrar la room
+func (r *Room) HandleGameMessage(response game.ResponseToRoom) bool {
+	switch response.Type {
+	case game.Move, game.InitialState:
+		r.Broadcast <- response
+
+	case game.State, game.Error:
+		// Mandar exclusivamente al jugador correspondiente usando el Extra
+		if strconv.FormatInt(r.Player1.AccountID, 10) == response.Extra {
+			r.Player1.Send <- response
+		} else if strconv.FormatInt(r.Player2.AccountID, 10) == response.Extra {
+			r.Player2.Send <- response
+		}
+
+	case game.End:
+		r.Player2.Send <- response
+		r.Player1.Send <- response
+
+		r.GameInfo.Winner = response.Content
+		r.GameInfo.Termination = response.Extra
+
+		r.End()
+		return true
+
+	case game.Paused:
+		r.Player2.Send <- response
+		r.Player1.Send <- response
+
+		r.GameInfo.Winner = "NONE"
+		r.GameInfo.Termination = "UNFINISHED"
+
+		r.End()
+		return true
+	}
+
+	return false
 }
 
 func (r *Room) ManagePause(player *Client) {
@@ -156,68 +195,20 @@ func (r *Room) ManagePause(player *Client) {
 	case r.Player1.AccountID:
 		r.P1Pause = true
 		if !r.P2Pause {
-			r.Player2.Send <- game.ResponseToRoom{
-				Type:    game.PauseRequest,
-				Content: "",
-			}
+			r.Player2.Send <- game.ResponseToRoom{Type: game.PauseRequest, Content: ""}
 		}
 	case r.Player2.AccountID:
 		r.P2Pause = true
 		if !r.P1Pause {
-			r.Player1.Send <- game.ResponseToRoom{
-				Type:    game.PauseRequest,
-				Content: "",
-			}
+			r.Player1.Send <- game.ResponseToRoom{Type: game.PauseRequest, Content: ""}
 		}
 	}
 
 	if r.P1Pause && r.P2Pause {
-		result := r.PauseGame()
-		r.Broadcast <- result
-		r.GameInfo.Winner = "NONE"
-		r.GameInfo.Termination = "UNFINISHED"
-		r.End()
+		r.Game.FromRoom <- game.RoomMsg{
+			PlayerUid:  0,
+			MsgType:    game.Pause,
+			MsgContent: "",
+		}
 	}
-}
-
-// FUNCIONES DE COMUNICACIÓN CON EL JUEGO
-
-func (r *Room) SendMoveToGame(accountID int64, move string) game.ResponseToRoom {
-	r.Game.FromRoom <- game.RoomMsg{
-		PlayerUid:  accountID,
-		MsgType:    game.Move,
-		MsgContent: move,
-	}
-	response := <-r.Game.ToRoom
-	return response
-}
-
-func (r *Room) GetGameState() game.ResponseToRoom {
-	r.Game.FromRoom <- game.RoomMsg{
-		PlayerUid:  0,
-		MsgType:    game.GetState,
-		MsgContent: "",
-	}
-	response := <-r.Game.ToRoom
-	return response
-}
-
-func (r *Room) GetInitialGameState() game.ResponseToRoom {
-	r.Game.FromRoom <- game.RoomMsg{
-		PlayerUid:  0,
-		MsgType:    game.GetInitialState,
-		MsgContent: "",
-	}
-	response := <-r.Game.ToRoom
-	return response
-}
-
-func (r *Room) PauseGame() game.ResponseToRoom {
-	r.Game.FromRoom <- game.RoomMsg{
-		PlayerUid:  0,
-		MsgType:    game.Pause,
-		MsgContent: "",
-	}
-	response := <-r.Game.ToRoom
-	return response
 }
