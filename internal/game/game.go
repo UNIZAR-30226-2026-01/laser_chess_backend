@@ -65,7 +65,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 
 	//si el log no está vacío hay que reconstruir el estado
 	if g.gameEngine.gameLog != "" {
-		team, _, _ := g.gameEngine.ApplyLogToBoard()
+		team, timeLeftRed, timeLeftBlue := g.gameEngine.ApplyLogToBoard(timeBase)
 
 		switch team {
 		case RED_TEAM:
@@ -74,18 +74,26 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 			g.turn = UidBluePlayer
 		}
 
+		g.timerRed = NewGameTimer(time.Duration(timeLeftRed)*time.Second, time.Duration(timeInc)*time.Second)
+		g.timerBlue = NewGameTimer(time.Duration(timeLeftBlue)*time.Second, time.Duration(timeInc)*time.Second)
+
 	} else {
 		g.turn = UidRedPlayer
+		g.timerRed = NewGameTimer(time.Duration(timeBase)*time.Second, time.Duration(timeInc)*time.Second)
+		g.timerBlue = NewGameTimer(time.Duration(timeBase)*time.Second, time.Duration(timeInc)*time.Second)
 	}
 
 	//Se crean los canales de comunicacón
 	g.FromRoom = make(chan RoomMsg, 2)
 	g.ToRoom = make(chan ResponseToRoom, 2)
 
-	// Inicializar timers
-	g.timerRed = NewGameTimer(time.Duration(timeBase)*time.Second, time.Duration(timeInc)*time.Second)
-	g.timerBlue = NewGameTimer(time.Duration(timeBase)*time.Second, time.Duration(timeInc)*time.Second)
-	// El timer no empieza hasta el primer movimiento
+	if g.turn == UidRedPlayer {
+		g.timerRed.Start()
+		g.timerBlue.Stop()
+	} else if g.turn == UidBluePlayer {
+		g.timerBlue.Start()
+		g.timerRed.Stop()
+	}
 
 	go g.Run()
 
@@ -100,7 +108,6 @@ func (g *LaserChessGame) getTurn() team_T {
 		return RED_TEAM
 	default:
 		// Imposible
-		fmt.Println("Error al calcular el turno")
 		return RED_TEAM
 	}
 }
@@ -110,17 +117,40 @@ func (g *LaserChessGame) changeTurn() {
 	case g.bluePlayer:
 		g.timerBlue.Stop()
 		g.timerRed.Start()
-		fmt.Println(g.timerBlue.Remaining)
 
 		g.turn = g.redPlayer
 	case g.redPlayer:
 		g.timerRed.Stop()
 		g.timerBlue.Start()
-		fmt.Println(g.timerRed.Remaining)
 
 		g.turn = g.bluePlayer
 	}
-	fmt.Println(g.turn)
+}
+
+func (g *LaserChessGame) getCurrentTimeLeft() time.Duration {
+	switch g.turn {
+	case g.redPlayer:
+		return g.timerRed.Remaining
+	case g.bluePlayer:
+		return g.timerBlue.Remaining
+	default:
+		// Imposible
+		return g.timerRed.Remaining
+	}
+}
+
+func (g *LaserChessGame) changeTimers() {
+	switch g.turn {
+	case g.bluePlayer:
+		g.timerBlue.Stop()
+		g.timerRed.Start()
+
+	case g.redPlayer:
+		g.timerRed.Stop()
+		g.timerBlue.Start()
+	}
+	fmt.Println("Timer red:" + g.timerRed.Remaining.String())
+	fmt.Println("Timer blue:" + g.timerBlue.Remaining.String())
 }
 
 // Devuelve true si ha acabado la partida
@@ -130,19 +160,17 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 
 	if message.PlayerUid == g.turn {
 		// Si es tu turno
+		g.changeTimers()
 
 		fmt.Println(message.PlayerUid, ":", message.MsgContent)
 		fmt.Println(message.PlayerUid, ":", turno)
-		var timestamp time.Duration
-		switch g.turn {
-		case g.bluePlayer:
-			timestamp = g.timerBlue.Remaining
-		case g.redPlayer:
-			timestamp = g.timerRed.Remaining
-		}
-		resul, laser, laserInteractionRes, err := g.gameEngine.ProcessTurn(message.MsgContent, turno, time.Duration(timestamp.Abs().Seconds()))
+
+		timeLeft := g.getCurrentTimeLeft()
+		result, laser, laserInteractionRes, err :=
+			g.gameEngine.ProcessTurn(message.MsgContent, turno, timeLeft)
+
 		g.gameEngine.gameBoard.printlaser(laser)
-		fmt.Println("ANSWER:", resul)
+		fmt.Println("ANSWER:", result)
 
 		// Si hay un error, se notifica de este
 		if err != nil {
@@ -156,8 +184,8 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 
 		g.ToRoom <- ResponseToRoom{
 			Type:    Move,
-			Content: resul,
-			Extra:   fmt.Sprint(formatearLaserPath(laser)),
+			Content: result,
+			Extra:   fmt.Sprint(formatLaserPath(laser)),
 		}
 
 		// Si se ha terminado la partida se notifica de esto
@@ -168,7 +196,7 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 				Content: "P1_WINS",
 				Extra:   "LASER",
 			}
-			fmt.Println("END:", resul)
+			fmt.Println("END:", result)
 			return true
 		case HIT_RED_KING:
 			g.ToRoom <- ResponseToRoom{
@@ -176,7 +204,7 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 				Content: "P2_WINS",
 				Extra:   "LASER",
 			}
-			fmt.Println("END:", resul)
+			fmt.Println("END:", result)
 			return true
 		}
 
@@ -233,6 +261,8 @@ func (g *LaserChessGame) Run() {
 	defer func() {
 		g.timerRed.Stop()
 		g.timerBlue.Stop()
+		fmt.Println("Timer red:" + g.timerRed.Remaining.String())
+		fmt.Println("Timer blue:" + g.timerBlue.Remaining.String())
 	}()
 
 	for {

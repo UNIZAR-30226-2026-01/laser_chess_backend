@@ -67,7 +67,7 @@ func (g *GameEngine) getInitialState() string {
 	}
 }
 
-func formatearLaserPath(laserPath []vector2_T) string {
+func formatLaserPath(laserPath []vector2_T) string {
 
 	retVal := ""
 	for i, point := range laserPath {
@@ -80,6 +80,11 @@ func formatearLaserPath(laserPath []vector2_T) string {
 	return retVal
 }
 
+func formatTimeLeft(timeLeft time.Duration) string {
+	timeStr := fmt.Sprintf("%.2f", timeLeft.Seconds())
+	return "%{" + timeStr + "}" + ";"
+}
+
 func (g *GameEngine) InitEngine(boardType Board_T) {
 	var err error
 	g.boardType = boardType
@@ -89,14 +94,17 @@ func (g *GameEngine) InitEngine(boardType Board_T) {
 	}
 }
 
-func (g *GameEngine) ProcessTurn(instruction string, team team_T, timestamp time.Duration) (string, []vector2_T, laserInteractionResult_T, error) {
-	resul, laser, laserEnd, err := g.gameBoard.ProcessTurn(instruction, team)
+func (g *GameEngine) ProcessTurn(instruction string, team team_T, timeLeft time.Duration) (string, []vector2_T, laserInteractionResult_T, error) {
+	result, laser, laserEnd, err := g.gameBoard.ProcessTurn(instruction, team)
 	if err != nil {
-		return resul, laser, laserEnd, err
+		return result, laser, laserEnd, err
 	}
-	//TODO -- Crear el log en cada turno
-	g.gameLog += resul + "%" + formatearLaserPath(laser) + "%{" + timestamp.String() + "}" + ";"
-	return resul, laser, laserEnd, err
+
+	timeLeftStr := formatTimeLeft(timeLeft)
+	g.gameLog += result + "%" + formatLaserPath(laser) + timeLeftStr
+
+	result += timeLeftStr
+	return result, laser, laserEnd, err
 }
 
 func (g *GameEngine) GetState() string {
@@ -104,20 +112,21 @@ func (g *GameEngine) GetState() string {
 }
 
 // SE PRESUPONE UN LOG QUE NO CAUSA ERRORES
-func (g *GameEngine) ApplyLogToBoard() (nextTeam team_T, redTimeLeft int, blueTimeLeft int) {
+func (g *GameEngine) ApplyLogToBoard(timeBase int32) (nextTeam team_T, redTimeLeft float64, blueTimeLeft float64) {
 	//dividimos el log en cachitos
 	logChunks := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
-	nextTeam = RED_TEAM                                       //Equipo que empieza
-	re := regexp.MustCompile(`^([^%]+)%(?:[^%]+)%\{(\d+)\}$`) //regla expresión regular
-	redTimeLeft = 1500                                        //Tiempo base ROJO (TODO: ponerlo bien)
-	blueTimeLeft = 1500                                       //Tiempo base AZUL (TODO: ponerlo bien)
+	nextTeam = RED_TEAM                                           //Equipo que empieza
+	re := regexp.MustCompile(`^([^%]+)%(?:[^%]+)%\{([0-9.]+)\}$`) //regla expresión regular
+	redTimeLeft = float64(timeBase)
+	blueTimeLeft = float64(timeBase)
 
 	//aplicamos cada cachito usando processTurn y los procesamos.
 	for _, logChunk := range logChunks {
 		//Tokenizamos usando la expresión regular
 		tokens := re.FindStringSubmatch(logChunk)
 		move := tokens[1]
-		time, _ := strconv.Atoi(tokens[2])
+
+		time, _ := strconv.ParseFloat(tokens[2], 64)
 
 		//Aplicamos el movimiento
 		g.gameBoard.ProcessTurn(move, nextTeam)
