@@ -29,6 +29,7 @@ type ChallengeInfo struct {
 	Log              string
 	IsNewMatch       bool
 	MatchID          int64
+	IsChallengerP1   bool
 }
 
 // Fragmento que contiene una porción de los mapas del hub

@@ -104,6 +104,7 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 			Log:              "",
 			IsNewMatch:       true,
 			MatchID:          0,
+			IsChallengerP1:   true,
 		}
 	} else {
 		// La partida era pausada
@@ -136,6 +137,7 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 			Log:              match.MovementHistory,
 			IsNewMatch:       false,
 			MatchID:          *dto.MatchId,
+			IsChallengerP1:   challengerID == match.P1ID,
 		}
 
 		fmt.Println(match.MovementHistory)
@@ -224,7 +226,16 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 
 	// Crear la Room y arrancar la partida
 	room := &rt.Room{}
-	room.InitRoom(info.ChallengerClient, challengedClient, h.matchService, info.IsNewMatch,
+	var P1Client *rt.Client
+	var P2Client *rt.Client
+	if info.IsChallengerP1 {
+		P1Client = info.ChallengerClient
+		P2Client = challengedClient
+	} else {
+		P1Client = challengedClient
+		P2Client = info.ChallengerClient
+	}
+	room.InitRoom(P1Client, P2Client, h.matchService, info.IsNewMatch,
 		&game.GameInfo{
 			BoardType:     info.Board,
 			Log:           info.Log,
