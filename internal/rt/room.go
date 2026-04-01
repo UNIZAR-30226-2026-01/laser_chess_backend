@@ -161,8 +161,10 @@ func (r *Room) HandleGameMessage(response game.ResponseToRoom) bool {
 	case game.State, game.Error:
 		// Mandar exclusivamente al jugador correspondiente usando el Extra
 		if strconv.FormatInt(r.Player1.AccountID, 10) == response.Extra {
+			response.Extra = ""
 			r.Player1.Send <- response
 		} else if strconv.FormatInt(r.Player2.AccountID, 10) == response.Extra {
+			response.Extra = ""
 			r.Player2.Send <- response
 		}
 
@@ -195,12 +197,12 @@ func (r *Room) ManagePause(player *Client) {
 	case r.Player1.AccountID:
 		r.P1Pause = true
 		if !r.P2Pause {
-			r.Player2.Send <- game.ResponseToRoom{Type: game.PauseRequest, Content: ""}
+			r.Player2.Send <- game.ResponseToRoom{Type: game.PauseRequest}
 		}
 	case r.Player2.AccountID:
 		r.P2Pause = true
 		if !r.P1Pause {
-			r.Player1.Send <- game.ResponseToRoom{Type: game.PauseRequest, Content: ""}
+			r.Player1.Send <- game.ResponseToRoom{Type: game.PauseRequest}
 		}
 	}
 

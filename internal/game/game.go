@@ -14,8 +14,8 @@ type RoomMsg struct {
 
 type ResponseToRoom struct {
 	Type    GameMessageType `json:"Type"`
-	Content string          `json:"Content"`
-	Extra   string          `json:"Extra,omitempty"` //campo extra, contiene o el laser, o que jugador eres
+	Content string          `json:"Content,omitempty"` // a veces tampoco se usa
+	Extra   string          `json:"Extra,omitempty"`   //campo extra, contiene o el laser, o que jugador eres
 }
 
 type GameInfo struct {
@@ -242,9 +242,7 @@ func (g *LaserChessGame) HandleRoomMsg(message RoomMsg) bool {
 	case Pause:
 		//gestionar pausa del juego
 		g.ToRoom <- ResponseToRoom{
-			Type:    Paused,
-			Content: "", // quizas manda algo aqui
-			Extra:   "",
+			Type: Paused,
 		}
 
 		return true
