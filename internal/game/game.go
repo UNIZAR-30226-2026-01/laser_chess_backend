@@ -215,6 +215,7 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 		g.ToRoom <- ResponseToRoom{
 			Type:    Error,
 			Content: "no es tu turno",
+			Extra:   strconv.FormatInt(message.PlayerUid, 10),
 		}
 	}
 
