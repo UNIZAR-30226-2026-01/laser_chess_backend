@@ -61,6 +61,13 @@ CREATE TABLE IF NOT EXISTS "account" (
 	PRIMARY KEY("account_id")
 );
 
+CREATE TABLE IF NOT EXISTS "device" (
+	"user_id" BIGSERIAL NOT NULL UNIQUE,
+	"token" VARCHAR(255) NOT NULL UNIQUE,
+	PRIMARY KEY("user_id"),
+	FOREIGN KEY("user_id") REFERENCES "account"("account_id")
+);
+
 CREATE TABLE IF NOT EXISTS "shop_item" (
 	"item_id" SERIAL NOT NULL UNIQUE,
 	"price" INTEGER NOT NULL,

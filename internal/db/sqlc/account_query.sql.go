@@ -145,6 +145,24 @@ func (q *Queries) GetUsernameByID(ctx context.Context, accountID int64) (string,
 	return username, err
 }
 
+const registerDevice = `-- name: RegisterDevice :one
+INSERT INTO device (user_id, token)
+VALUES ($1, $2)
+RETURNING user_id
+`
+
+type RegisterDeviceParams struct {
+	UserID int64  `json:"user_id"`
+	Token  string `json:"token"`
+}
+
+func (q *Queries) RegisterDevice(ctx context.Context, arg RegisterDeviceParams) (int64, error) {
+	row := q.db.QueryRow(ctx, registerDevice, arg.UserID, arg.Token)
+	var user_id int64
+	err := row.Scan(&user_id)
+	return user_id, err
+}
+
 const updateAccount = `-- name: UpdateAccount :one
 UPDATE account
 SET 

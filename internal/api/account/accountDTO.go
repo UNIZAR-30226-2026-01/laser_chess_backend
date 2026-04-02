@@ -23,3 +23,7 @@ type AccountDTO struct {
 	WinAnimation *int32  `json:"win_animation,omitempty"`
 	Avatar       *int32  `json:"avatar,omitempty"`
 }
+
+type RegisterDeviceDTO struct {
+	token string `json:"token"`
+}

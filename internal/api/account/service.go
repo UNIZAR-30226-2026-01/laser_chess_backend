@@ -141,3 +141,14 @@ func (s *AccountService) Update(
 func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
 	return s.store.DeleteAccount(ctx, accountID)
 }
+
+// Registra un nuevo dispositivo al usuario con id == accountID
+func (s *AccountService) RegisterDevice(ctx context.Context,
+	token RegisterDeviceDTO, accountID int64) (int64, error) {
+
+	return s.store.RegisterDevice(ctx, db.RegisterDeviceParams{
+		UserID: accountID,
+		Token:  token.token,
+	})
+
+}

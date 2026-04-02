@@ -290,6 +290,11 @@ type Account struct {
 	Avatar       int32  `json:"avatar"`
 }
 
+type Device struct {
+	UserID int64  `json:"user_id"`
+	Token  string `json:"token"`
+}
+
 type Friendship struct {
 	User1ID   int64 `json:"user1_id"`
 	User2ID   int64 `json:"user2_id"`

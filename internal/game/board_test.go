@@ -74,7 +74,7 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Camino del laser:", formatLaserPath(path))
 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
@@ -94,7 +94,7 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Camino del laser:", formatLaserPath(path))
 		fmt.Println("Terminación del laser:", tablero.redTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
@@ -114,7 +114,7 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Camino del laser:", formatLaserPath(path))
 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
@@ -134,7 +134,7 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Camino del laser:", formatLaserPath(path))
 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
@@ -154,12 +154,11 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Camino del laser:", formatLaserPath(path))
 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
 	}
-
 
 	//Ejemplo de procesamiento
 	movimiento_front = "Rf4"
@@ -175,7 +174,7 @@ func TestMovements(t *testing.T) {
 	} else {
 		//Camino del laser
 		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatearLaserPath(path))
+		fmt.Println("Camino del laser:", formatLaserPath(path))
 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
 		fmt.Print("RESP:\t" + logPiece + "\n")
 		log = log + logPiece + ";"
@@ -184,7 +183,7 @@ func TestMovements(t *testing.T) {
 }
 
 // Test que comprueba el correcto funcionamiento del cargado de un log
-func TestApplyLogToBoard(t *testing.T){
+func TestApplyLogToBoard(t *testing.T) {
 	var gameEngine GameEngine
 
 	// Cargamos una partida "estado inicial" y "log"//
@@ -199,24 +198,24 @@ func TestApplyLogToBoard(t *testing.T){
 		t.Error("No se gestionan bien los turnos")
 	}
 
-	if (redTimeLeft != 100) {
+	if redTimeLeft != 100 {
 		t.Log(redTimeLeft)
 		t.Error("No se recuperan bien los tiempos del rojo")
 	}
 
-	if (blueTimeLeft != 150) {
+	if blueTimeLeft != 150 {
 		t.Log(blueTimeLeft)
 		t.Error("No se recuperan bien los tiempos del azul")
 	}
 
 	// Correcto la muerte del rey
 	switch gameEngine.gameBoard.cells[7][5].(type) {
-		case *BoardPieceKing:
-			t.Error("Partida mal cargada - rey vivo")
-		case *BoardPieceVacant:
-			//Resultado esperado
-		default :
-			t.Error("Partida mal cargada - pieza no esperada")
+	case *BoardPieceKing:
+		t.Error("Partida mal cargada - rey vivo")
+	case *BoardPieceVacant:
+		//Resultado esperado
+	default:
+		t.Error("Partida mal cargada - pieza no esperada")
 
 	}
 

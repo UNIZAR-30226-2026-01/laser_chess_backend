@@ -75,3 +75,8 @@ SET
     money = $4
 WHERE account_id = $1 AND is_deleted = FALSE
 RETURNING *;
+
+-- name: RegisterDevice :one
+INSERT INTO device (user_id, token)
+VALUES ($1, $2)
+RETURNING user_id;
