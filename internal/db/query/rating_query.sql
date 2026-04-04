@@ -23,19 +23,19 @@ WHERE user_id = $1;
 
 -- name: GetBlitzElo :one
 SELECT * FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.blitz;
+WHERE user_id = $1 AND elo_type = 'blitz'::elo_type;
 
 -- name: GetExtendedElo :one
 SELECT * FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.extended;
+WHERE user_id = $1 AND elo_type = 'extended'::elo_type;
 
 -- name: GetRapidElo :one
 SELECT * FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.rapid;
+WHERE user_id = $1 AND elo_type = 'rapid'::elo_type;
 
 -- name: GetClassicElo :one
 SELECT * FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.classic;
+WHERE user_id = $1 AND elo_type = 'classic'::elo_type;
 
 -- name: UpdateRating :one
 UPDATE rating

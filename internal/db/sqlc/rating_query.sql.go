@@ -90,7 +90,7 @@ func (q *Queries) GetAllElos(ctx context.Context, userID int64) ([]Rating, error
 
 const getBlitzElo = `-- name: GetBlitzElo :one
 SELECT user_id, elo_type, value FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.blitz
+WHERE user_id = $1 AND elo_type = 'blitz'::elo_type
 `
 
 func (q *Queries) GetBlitzElo(ctx context.Context, userID int64) (Rating, error) {
@@ -102,7 +102,7 @@ func (q *Queries) GetBlitzElo(ctx context.Context, userID int64) (Rating, error)
 
 const getClassicElo = `-- name: GetClassicElo :one
 SELECT user_id, elo_type, value FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.classic
+WHERE user_id = $1 AND elo_type = 'classic'::elo_type
 `
 
 func (q *Queries) GetClassicElo(ctx context.Context, userID int64) (Rating, error) {
@@ -114,7 +114,7 @@ func (q *Queries) GetClassicElo(ctx context.Context, userID int64) (Rating, erro
 
 const getExtendedElo = `-- name: GetExtendedElo :one
 SELECT user_id, elo_type, value FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.extended
+WHERE user_id = $1 AND elo_type = 'extended'::elo_type
 `
 
 func (q *Queries) GetExtendedElo(ctx context.Context, userID int64) (Rating, error) {
@@ -126,7 +126,7 @@ func (q *Queries) GetExtendedElo(ctx context.Context, userID int64) (Rating, err
 
 const getRapidElo = `-- name: GetRapidElo :one
 SELECT user_id, elo_type, value FROM rating
-WHERE user_id = $1 AND elo_type = elo_type.rapid
+WHERE user_id = $1 AND elo_type = 'rapid'::elo_type
 `
 
 func (q *Queries) GetRapidElo(ctx context.Context, userID int64) (Rating, error) {

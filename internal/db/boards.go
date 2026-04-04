@@ -5,6 +5,8 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 )
 
+const BOARD_NUM = 5
+
 var IntToBoard = map[game.Board_T]db.BoardType{
 	0: "ACE",
 	1: "CURIOSITY",

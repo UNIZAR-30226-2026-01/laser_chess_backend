@@ -10,27 +10,19 @@ package rt
 
 import (
 	"container/list"
+	"fmt"
 	"sync"
 	"time"
-
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 )
 
 // Info inicial de la partida que se creará
-type NewMatchInfo struct {
-	ChallengerClient *Client
-	ChallengedId     int64
-	Board            game.Board_T
-	StartingTime     int32
-	TimeIncrement    int32
-}
 
 type MatchRequest struct {
-	PlayerID     int64
+	PlayerClient *Client
 	PlayerELO    int64
 	ELOBracket   int64 // Asigando aqui
 	GameMode     int
-	ResponseChan chan int64
+	ResponseChan *chan *Client
 	FoundChan    chan bool // Creado aqui
 	CancelChan   chan bool
 	ListElement  *list.Element // Asignado aqui
@@ -82,6 +74,8 @@ func (ph *PublicHub) AddPlayerToMatchmaking(request *MatchRequest) {
 		ph.NotifyMatch(request, opponent)
 	}
 
+	fmt.Println("Player1 dentro con elo: ", request.PlayerELO)
+
 	go ph.Search(request)
 }
 
@@ -119,8 +113,13 @@ func (ph *PublicHub) FindOpponentInRange(request *MatchRequest, radius int) {
 		ph.gameModeQueues[request.GameMode].mu.Lock()
 		if ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff].players.Len() != 0 {
 			opponent := ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.Front().Value.(*MatchRequest)
-			ph.NotifyMatch(request, opponent)
-			ph.gameModeQueues[request.GameMode].mu.Unlock()
+			if opponent.PlayerClient.AccountID == request.PlayerClient.AccountID {
+				ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.PushFront(opponent)
+			} else {
+				ph.NotifyMatch(request, opponent)
+				ph.gameModeQueues[request.GameMode].mu.Unlock()
+				return
+			}
 		}
 		ph.gameModeQueues[request.GameMode].mu.Unlock()
 
@@ -129,8 +128,13 @@ func (ph *PublicHub) FindOpponentInRange(request *MatchRequest, radius int) {
 		ph.gameModeQueues[request.GameMode].mu.Lock()
 		if ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket-eloDiff].players.Len() != 0 {
 			opponent := ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.Front().Value.(*MatchRequest)
-			ph.NotifyMatch(request, opponent)
-			ph.gameModeQueues[request.GameMode].mu.Unlock()
+			if opponent.PlayerClient.AccountID == request.PlayerClient.AccountID {
+				ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.PushFront(opponent)
+			} else {
+				ph.NotifyMatch(request, opponent)
+				ph.gameModeQueues[request.GameMode].mu.Unlock()
+				return
+			}
 		}
 		ph.gameModeQueues[request.GameMode].mu.Unlock()
 	}
@@ -144,13 +148,22 @@ func (ph *PublicHub) CheckCreatedQueue(request *MatchRequest, eloDiff_optional .
 	}
 
 	// Comprobar si existe el mapa del modo de juego
-	if ph.gameModeQueues[request.GameMode].matchmakingQueues == nil {
-		ph.gameModeQueues[request.GameMode].matchmakingQueues =
-			make(map[int64]*MatchmakingQueue)
+	if ph.gameModeQueues[request.GameMode] == nil {
+		ph.gameModeQueues[request.GameMode] = &GameModeQueue{
+			matchmakingQueues: make(map[int64]*MatchmakingQueue),
+		}
 	}
 
 	ph.gameModeQueues[request.GameMode].mu.Lock()
 	defer ph.gameModeQueues[request.GameMode].mu.Unlock()
+
+	// Comprobar si existe el mapa del rando de ELO especifico
+	if ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff] == nil {
+		ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff] =
+			&MatchmakingQueue{
+				players: list.New(),
+			}
+	}
 
 	// Comprobar si existe la lista para este rango de ELO específico
 	if ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff].players == nil {
@@ -159,9 +172,11 @@ func (ph *PublicHub) CheckCreatedQueue(request *MatchRequest, eloDiff_optional .
 }
 
 func (ph *PublicHub) NotifyMatch(request *MatchRequest, opponent *MatchRequest) {
-	request.ResponseChan <- opponent.PlayerID
-	opponent.ResponseChan <- request.PlayerID
+	*request.ResponseChan <- opponent.PlayerClient
+	*opponent.ResponseChan <- request.PlayerClient
 	opponent.FoundChan <- true
+
+	//ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.Remove(request.ListElement)
 }
 
 func (ph *PublicHub) RemoveFromMatchmaking(request *MatchRequest) {

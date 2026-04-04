@@ -47,10 +47,13 @@ func main() {
 	// Inicializar el hub privado
 	privateHub := rt.NewPrivateHub(matchRegistry)
 
+	// Inicializar el hub publico
+	publicHub := rt.NewPublicHub(matchRegistry)
+
 	// == INICIALIZAR ROUTER =============================================
 
 	// Inicializar router de gin
-	router := api.SetupRouter(store, matchRegistry, privateHub)
+	router := api.SetupRouter(store, matchRegistry, privateHub, publicHub)
 
 	// Ejecutar el router en el puerto que se le diga (8080 por defecto)
 	port := os.Getenv("PORT")

@@ -16,6 +16,7 @@ import (
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/private"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/public"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +27,7 @@ import (
 func SetupRouter(store *db.Store,
 	registry *rt.MatchRegistry,
 	privateHub *rt.PrivateHub,
+	publicHub *rt.PublicHub,
 ) *gin.Engine {
 
 	router := gin.Default()
@@ -139,12 +141,25 @@ func SetupRouter(store *db.Store,
 
 	// Endpoints de websockets
 	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService, matchService)
+	publicHandler := public.NewPublicHandler(publicHub, registry, accountService, matchService, ratingService)
 
 	{
 		rtRoute := protected.Group("/rt/")
+
+		// Partidas privadas
 		rtRoute.GET("/challenge", privateHandler.Challenge)
 		rtRoute.GET("/challenge/accept", privateHandler.AcceptChallenge)
 		rtRoute.GET("/challenges", privateHandler.GetChallenges)
+
+		// Partidas publicas
+		rtRoute.GET("/blitz2", publicHandler.Blitz2Matchmaking)
+		rtRoute.GET("/blitz5", publicHandler.Blitz5Matchmaking)
+		rtRoute.GET("/rapid5", publicHandler.Rapid5Matchmaking)
+		rtRoute.GET("/rapid10", publicHandler.Rapid10Matchmaking)
+		rtRoute.GET("/classic10", publicHandler.Classic10Matchmaking)
+		rtRoute.GET("/classic15", publicHandler.Classic15Matchmaking)
+		rtRoute.GET("/extended15", publicHandler.Extended15Matchmaking)
+		rtRoute.GET("/extended20", publicHandler.Extended20Matchmaking)
 	}
 
 	return router
