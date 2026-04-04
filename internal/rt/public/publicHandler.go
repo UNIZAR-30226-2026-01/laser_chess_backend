@@ -196,13 +196,13 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context, request *MatchmakingIn
 
 	// Iniciar el matchmaking
 
-	ResponseChan := make(chan *rt.Client)
+	ResponseChan := make(chan *rt.Client, 1)
 
 	go h.hub.AddPlayerToMatchmaking(&rt.MatchRequest{ // TODO: anadir canal de cancel
 		PlayerClient: client,
 		PlayerELO:    request.PlayerELO,
 		GameMode:     request.GameMode,
-		ResponseChan: &ResponseChan,
+		ResponseChan: ResponseChan,
 	})
 	fmt.Println("Antes del canal. Soy ", request.PlayerID)
 	opponentClient := <-ResponseChan
