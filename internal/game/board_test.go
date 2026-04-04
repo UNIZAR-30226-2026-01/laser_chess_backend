@@ -191,7 +191,7 @@ func TestApplyLogToBoard(t *testing.T) {
 	gameEngine.gameLog = `Rf1%j1,j4,i4,i5,j5,j9%{300};Tg6:f6%a8,a5,b5,b4,a4,a0%{250};Rb4%j1,j4,i4,i5,j5,j9%{200};Ri5xf6%a8,a5,b5,b4,e4,e5,f5,f6%{150};Re4xf8%j1,j4,i4,i5,f5,f4,e4,e5,f5,f8%{100};`
 
 	// Aplicamos el log al estado inicial
-	team, redTimeLeft, blueTimeLeft := gameEngine.ApplyLogToBoard()
+	team, redTimeLeft, blueTimeLeft := gameEngine.ApplyLogToBoard(400)
 
 	// Correcto el turno siguiente?
 	if team != BLUE_TEAM {
