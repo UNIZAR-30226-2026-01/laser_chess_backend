@@ -148,7 +148,7 @@ func (s *AccountService) RegisterDevice(ctx context.Context,
 
 	return s.store.RegisterDevice(ctx, db.RegisterDeviceParams{
 		UserID: accountID,
-		Token:  token.token,
+		Token:  token.Token,
 	})
 
 }

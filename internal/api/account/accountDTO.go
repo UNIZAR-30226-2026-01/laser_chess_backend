@@ -25,5 +25,5 @@ type AccountDTO struct {
 }
 
 type RegisterDeviceDTO struct {
-	token string `json:"token"`
+	Token string `json:"token" binding:"required"`
 }
