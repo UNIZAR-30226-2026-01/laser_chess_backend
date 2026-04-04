@@ -28,21 +28,24 @@ type NewMatchInfo struct {
 type MatchRequest struct {
 	PlayerID     int64
 	PlayerELO    int64
+	ELOBracket   int64 // Asigando aqui
 	GameMode     int
 	ResponseChan chan int64
-	FoundChan    chan int64
+	FoundChan    chan bool // Creado aqui
 	CancelChan   chan bool
-	ListElement  *list.Element
+	ListElement  *list.Element // Asignado aqui
 }
 
 type MatchmakingQueue struct {
-	mu      sync.RWMutex
 	players *list.List
 }
 
 type GameModeQueue struct {
 	// Mapa para dividir en bloques de ratings
 	matchmakingQueues map[int64]*MatchmakingQueue
+
+	// Mutex para sincronizar la concurrencia
+	mu sync.RWMutex
 }
 
 type PublicHub struct {
@@ -64,56 +67,38 @@ func NewPublicHub(r *MatchRegistry) *PublicHub {
 func (ph *PublicHub) AddPlayerToMatchmaking(request *MatchRequest) {
 
 	// Buscar en el rango de ELO del jugador
+	request.ELOBracket = request.PlayerELO / 100
+	ph.CheckCreatedQueue(request)
 
-	// Comprobar si existe el mapa del modo de juego
-	if ph.gameModeQueues[request.GameMode].matchmakingQueues == nil {
-		ph.gameModeQueues[request.GameMode].matchmakingQueues =
-			make(map[int64]*MatchmakingQueue)
-	}
+	ph.gameModeQueues[request.GameMode].mu.Lock()
+	defer ph.gameModeQueues[request.GameMode].mu.Unlock()
 
-	bracket := request.PlayerELO / 100
-
-	ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].mu.Lock()
-	defer ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].mu.Unlock()
-	// Comprobar si existe la lista para este rango de ELO específico
-	if ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].players == nil {
-		ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].players = list.New()
-	}
-
-	if ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].players.Len() == 0 {
-		request.ListElement = ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].players.PushBack(request)
+	if ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.Len() == 0 {
+		request.FoundChan = make(chan bool)
+		request.ListElement = ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.PushBack(request)
 	} else {
 		// Oponente encontrado
-		opponent := ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].players.Front().Value.(*MatchRequest)
+		opponent := ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.Front().Value.(*MatchRequest)
 		ph.NotifyMatch(request, opponent)
 	}
 
 	go ph.Search(request)
 }
 
-// Elimina un reto, borra la info del challenger y lo quita de la lista del challenged
-func (ph *PublicHub) RemoveFromMatchmaking(request *MatchRequest) {
-	bracket := request.PlayerELO / 100
-	ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].mu.Lock()
-	defer ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].mu.Unlock()
-
-	ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].players.Remove(request.ListElement)
-}
-
 // Busqueda de oponente por elo
 func (ph *PublicHub) Search(request *MatchRequest) {
-	radius := 0
+	radius := 1
+	// Cada 3 segundos aumentamos el radio hasta 3 niveles de diferencia
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
-			if radius < 3 {
+			if radius <= 3 {
 				radius++
 			}
-		case opponentID := <-request.FoundChan:
-			request.ResponseChan <- opponentID
+		case <-request.FoundChan:
 			return
 		case <-request.CancelChan:
 			ph.RemoveFromMatchmaking(request)
@@ -126,21 +111,62 @@ func (ph *PublicHub) Search(request *MatchRequest) {
 }
 
 func (ph *PublicHub) FindOpponentInRange(request *MatchRequest, radius int) {
-	bracket := request.PlayerELO / 100
 	for i := range radius {
 		eloDiff := int64(i) * 100
-		if ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket+eloDiff].players != nil {
-			opponent := ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].players.Front().Value.(*MatchRequest)
+
+		// Comprobamos el rango superior
+		ph.CheckCreatedQueue(request, eloDiff)
+		ph.gameModeQueues[request.GameMode].mu.Lock()
+		if ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff].players.Len() != 0 {
+			opponent := ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.Front().Value.(*MatchRequest)
 			ph.NotifyMatch(request, opponent)
+			ph.gameModeQueues[request.GameMode].mu.Unlock()
 		}
-		if ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket-eloDiff].players != nil {
-			opponent := ph.gameModeQueues[request.GameMode].matchmakingQueues[bracket].players.Front().Value.(*MatchRequest)
+		ph.gameModeQueues[request.GameMode].mu.Unlock()
+
+		// Comprobamos el rango inferior
+		ph.CheckCreatedQueue(request, -eloDiff)
+		ph.gameModeQueues[request.GameMode].mu.Lock()
+		if ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket-eloDiff].players.Len() != 0 {
+			opponent := ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.Front().Value.(*MatchRequest)
 			ph.NotifyMatch(request, opponent)
+			ph.gameModeQueues[request.GameMode].mu.Unlock()
 		}
+		ph.gameModeQueues[request.GameMode].mu.Unlock()
 	}
 }
 
-func (ph *PublicHub) NotifyMatch(player1 *MatchRequest, player2 *MatchRequest) {
-	player1.ResponseChan <- player2.PlayerID
-	player2.ResponseChan <- player1.PlayerID
+func (ph *PublicHub) CheckCreatedQueue(request *MatchRequest, eloDiff_optional ...int64) {
+
+	var eloDiff int64 = 0
+	if len(eloDiff_optional) > 0 {
+		eloDiff = eloDiff_optional[0]
+	}
+
+	// Comprobar si existe el mapa del modo de juego
+	if ph.gameModeQueues[request.GameMode].matchmakingQueues == nil {
+		ph.gameModeQueues[request.GameMode].matchmakingQueues =
+			make(map[int64]*MatchmakingQueue)
+	}
+
+	ph.gameModeQueues[request.GameMode].mu.Lock()
+	defer ph.gameModeQueues[request.GameMode].mu.Unlock()
+
+	// Comprobar si existe la lista para este rango de ELO específico
+	if ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff].players == nil {
+		ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff].players = list.New()
+	}
+}
+
+func (ph *PublicHub) NotifyMatch(request *MatchRequest, opponent *MatchRequest) {
+	request.ResponseChan <- opponent.PlayerID
+	opponent.ResponseChan <- request.PlayerID
+	opponent.FoundChan <- true
+}
+
+func (ph *PublicHub) RemoveFromMatchmaking(request *MatchRequest) {
+	ph.gameModeQueues[request.GameMode].mu.Lock()
+	defer ph.gameModeQueues[request.GameMode].mu.Unlock()
+
+	ph.gameModeQueues[request.GameMode].matchmakingQueues[request.ELOBracket].players.Remove(request.ListElement)
 }
