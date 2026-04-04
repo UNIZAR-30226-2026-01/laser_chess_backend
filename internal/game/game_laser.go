@@ -40,7 +40,9 @@ func (c *BoardPieceLaser) shootLaser(x int, y int, board *Board) ([]vector2_T, l
 
 	// laserPointingDirection: direccion a la que apunta el laser,
 	// se utiliza para procesar la direccion de la siguiente iteracion e indexar el vector de movimientos
-	laserPointingDirection := c.pointing
+	var laserPointingDirection pointing_T
+
+	laserPointingDirection = c.pointing
 
 	// laserMovementDirectionVector: Vector de dirección del laser,
 	// este vector permite al laser avanzar en cada iteracion a la casilla que le corresponde

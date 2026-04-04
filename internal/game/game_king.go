@@ -27,11 +27,6 @@ func (c *BoardPieceKing) canMoveTo(x int, y int, board *Board, team team_T) erro
 	switch board.cells[x][y].(type) {
 	case *BoardPieceVacant:
 		return nil
-	case *BoardPieceShield:
-		return nil
-	case *BoardPieceDeflector:
-		return nil
-
 	}
 
 	// Casilla destino ocupada
