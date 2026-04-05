@@ -196,6 +196,7 @@ func (r *Room) ManagePause(player *Client) {
 	if r.GameInfo.MatchType != "PRIVATE" {
 		player.Send <- game.ResponseToRoom{Type: game.Error,
 			Content: "You can't pause a public game"}
+		return
 	}
 
 	switch player.AccountID {
