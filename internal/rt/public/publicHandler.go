@@ -7,7 +7,6 @@ package public
 // GET  api/rt/challenges       -> devuelve la lista de retos pendientes (HTTP normal)
 
 import (
-	"fmt"
 	"math/rand"
 	"net/http"
 
@@ -54,7 +53,7 @@ func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *a
 		matchService:   matches,
 		ratingService:  ratings,
 		gameModes: []GameMode{
-			{300, 2},
+			{10, 2},
 			{300, 5},
 			{900, 5},
 			{900, 10},
@@ -101,6 +100,11 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		return
 	}
 
+	if dto.Ranked != 0 && dto.Ranked != 1 {
+		apierror.SendError(c, http.StatusBadRequest, apierror.ErrNotAValidGameMode)
+		return
+	}
+
 	var validGameMode bool = false
 	var i int
 	var gameMode GameMode
@@ -120,16 +124,8 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 
 	playerID, playerELO := h.GetIDAndElo(c)
 
-	request := &MatchmakingInfo{
-		PlayerID:      playerID,
-		PlayerELO:     playerELO,
-		GameMode:      i,
-		StartingTime:  dto.StartingTime,
-		TimeIncrement: dto.TimeIncrement,
-	}
-
 	// Comprobar que el challenger no tiene ya una partida activa
-	if _, ok := h.registry.GetMatch(request.PlayerID); ok {
+	if _, ok := h.registry.GetMatch(playerID); ok {
 		apierror.SendError(c, http.StatusConflict, apierror.ErrAlreadyInMatch)
 		return
 	}
@@ -143,7 +139,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 
 	// Construir Client
 	client := &rt.Client{}
-	client.InitClient(request.PlayerID, conn)
+	client.InitClient(playerID, conn)
 
 	// Iniciar el matchmaking
 
@@ -151,15 +147,15 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 
 	go h.hub.AddPlayerToMatchmaking(&rt.MatchRequest{ // TODO: anadir canal de cancel
 		PlayerClient: client,
-		PlayerELO:    request.PlayerELO,
-		GameMode:     request.GameMode,
+		PlayerELO:    playerELO,
+		GameMode:     i,
 		ResponseChan: ResponseChan,
+		Ranked:       dto.Ranked,
 	})
-	fmt.Println("Antes del canal. Soy ", request.PlayerID)
-	opponentClient := <-ResponseChan
-	fmt.Println("Despues del canal. Soy ", request.PlayerID, " contra ", opponentClient.AccountID)
 
-	if request.PlayerID > opponentClient.AccountID {
+	opponentClient := <-ResponseChan
+
+	if playerID > opponentClient.AccountID {
 		// Creamos la partida
 		room := &rt.Room{}
 		RedPlayer := rand.Intn(2)
@@ -172,28 +168,37 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 			P1Client = opponentClient
 			P2Client = client
 		}
+
+		var matchType string
+		switch dto.Ranked {
+		case 0:
+			matchType = "FRIENDLY"
+		case 1:
+			matchType = "RANKED"
+		}
+
 		room.InitRoom(P1Client, P2Client, h.matchService, true,
 			&game.GameInfo{
 				BoardType:     game.Board_T(rand.Intn(db.BOARD_NUM)),
 				Log:           "",
-				TimeBase:      request.StartingTime,
-				TimeIncrement: request.TimeIncrement,
-				MatchType:     "RANKED",
+				TimeBase:      dto.StartingTime,
+				TimeIncrement: dto.TimeIncrement,
+				MatchType:     matchType,
 			})
 
 		// Registramos la partida
-		h.registry.RegisterMatch(request.PlayerID, opponentClient.AccountID, room)
+		h.registry.RegisterMatch(playerID, opponentClient.AccountID, room)
 
 		// Esperamos
 		<-client.Done
 
-		h.registry.RemoveMatch(request.PlayerID, opponentClient.AccountID)
+		h.registry.RemoveMatch(playerID, opponentClient.AccountID)
 
 	} else {
 		// Esperamos
 		<-opponentClient.Done
 
-		h.registry.RemoveMatch(request.PlayerID, opponentClient.AccountID)
+		h.registry.RemoveMatch(playerID, opponentClient.AccountID)
 	}
 
 }
