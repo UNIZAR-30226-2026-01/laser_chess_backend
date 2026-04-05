@@ -14,4 +14,5 @@ const (
 	Paused       GameMessageType = "Paused"
 	End          GameMessageType = "End"
 	Error        GameMessageType = "Error"
+	EOC          GameMessageType = "EOC"
 )

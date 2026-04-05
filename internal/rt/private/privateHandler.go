@@ -79,6 +79,56 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 		return
 	}
 
+	// Coger info de la partida (y comprobar validez antes de hacer el upgrade)
+	var info *rt.ChallengeInfo
+	if dto.MatchId == nil {
+		// La partida es nueva
+		info = &rt.ChallengeInfo{
+			ChallengedId:   challengedID,
+			Board:          game.Board_T(*dto.Board),
+			StartingTime:   *dto.StartingTime,
+			TimeIncrement:  *dto.TimeIncrement,
+			Log:            "",
+			IsNewMatch:     true,
+			MatchID:        0,
+			IsChallengerP1: true,
+		}
+	} else {
+		// La partida era pausada
+		match, err := h.matchService.GetByID(c, *dto.MatchId)
+		if err != nil {
+			apierror.SendError(c, http.StatusNotFound, apierror.ErrNotFound)
+			return
+		}
+
+		// Comprobar que la partida no estaba terminada
+		if match.Termination != "UNFINISHED" {
+			apierror.SendError(c, http.StatusBadRequest,
+				apierror.ErrMatchAlreadyFinished)
+			return
+		}
+
+		// Comprobar que los ids coinciden
+		if (match.P1ID != challengerID && match.P2ID != challengedID) &&
+			(match.P1ID != challengedID && match.P2ID != challengerID) {
+			apierror.SendError(c, http.StatusBadRequest, apierror.ErrNotYourMatch)
+			return
+		}
+
+		info = &rt.ChallengeInfo{
+			ChallengedId:   challengedID,
+			Board:          db.BoardToInt[match.Board],
+			StartingTime:   match.TimeBase,
+			TimeIncrement:  match.TimeIncrement,
+			Log:            match.MovementHistory,
+			IsNewMatch:     false,
+			MatchID:        *dto.MatchId,
+			IsChallengerP1: challengerID == match.P1ID,
+		}
+
+		fmt.Println(match.MovementHistory)
+	}
+
 	// Hacer el upgrade a websocket
 	conn, err := rt.UpgradeConn(c.Writer, c.Request)
 	if err != nil {
@@ -90,59 +140,9 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	client := &rt.Client{}
 	client.InitClient(challengerID, conn)
 
+	info.ChallengerClient = client
+
 	// Registrar reto en el hub privado
-
-	var info *rt.ChallengeInfo
-	if dto.MatchId == nil {
-		// La partida es nueva
-		info = &rt.ChallengeInfo{
-			ChallengerClient: client,
-			ChallengedId:     challengedID,
-			Board:            game.Board_T(*dto.Board),
-			StartingTime:     *dto.StartingTime,
-			TimeIncrement:    *dto.TimeIncrement,
-			Log:              "",
-			IsNewMatch:       true,
-			MatchID:          0,
-			IsChallengerP1:   true,
-		}
-	} else {
-		// La partida era pausada
-		match, err := h.matchService.GetByID(c, *dto.MatchId)
-		if err != nil {
-			client.Close()
-			apierror.SendError(c, http.StatusNotFound, apierror.ErrNotFound)
-		}
-
-		// Comprobar que la partida no estaba terminada
-		if match.Termination != "UNFINISHED" {
-			client.Close()
-			apierror.SendError(c, http.StatusBadRequest,
-				apierror.ErrMatchAlreadyFinished)
-		}
-
-		// Comprobar que los
-		if (match.P1ID != challengerID && match.P2ID != challengedID) &&
-			(match.P1ID != challengedID && match.P2ID != challengerID) {
-			client.Close()
-			apierror.SendError(c, http.StatusBadRequest, apierror.ErrNotYourMatch)
-		}
-
-		info = &rt.ChallengeInfo{
-			ChallengerClient: client,
-			ChallengedId:     challengedID,
-			Board:            db.BoardToInt[match.Board],
-			StartingTime:     match.TimeBase,
-			TimeIncrement:    match.TimeIncrement,
-			Log:              match.MovementHistory,
-			IsNewMatch:       false,
-			MatchID:          *dto.MatchId,
-			IsChallengerP1:   challengerID == match.P1ID,
-		}
-
-		fmt.Println(match.MovementHistory)
-	}
-
 	err = h.hub.CreateChallenge(challengerID, challengedID, info)
 	if err != nil {
 		client.Close()
@@ -153,10 +153,10 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	// Esperar a que el WS se cierre.
 	// Si el challenger cancela antes de que lo acepten, limpiamos el reto.
 	// Si la partida arranca, la Room cerrará la conn al terminar.
-	fmt.Println("AAAAAAAAAAAAAAAAAAAAAAA")
 	<-client.Done
 
 	fmt.Println("CLIENTE CERRADO")
+	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
 
 	h.registry.RemoveMatch(challengerID, challengedID)
@@ -212,17 +212,21 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 		return
 	}
 
+	// Construir el Client del challenged
+	challengedClient := &rt.Client{}
+
+	challengedClient.InitClient(challengedID, conn)
+
 	// Aceptar el reto en el hub
 	info, err := h.hub.AcceptChallenge(challengerID, challengedID)
 	if err != nil {
+		challengedClient.Send <- game.ResponseToRoom{
+			Type:    "Error",
+			Content: "Error al aceptar reto",
+		}
 		conn.Close()
-		apierror.SendError(c, http.StatusNotFound, err)
 		return
 	}
-
-	// Construir el Client del challenged
-	challengedClient := &rt.Client{}
-	challengedClient.InitClient(challengedID, conn)
 
 	// Crear la Room y arrancar la partida
 	room := &rt.Room{}
@@ -248,6 +252,7 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 	// Registrar ambos jugadores en el registry
 
 	h.registry.RegisterMatch(challengerID, challengedID, room)
+	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
 	<-challengedClient.Done
 

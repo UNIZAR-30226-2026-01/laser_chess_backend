@@ -29,7 +29,7 @@ func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
 	c.AccountID = AccountID
 	c.Conn = Conn
 	c.Send = make(chan game.ResponseToRoom)
-	c.ToRoom = make(chan ClientSocketMessage)
+	c.ToRoom = make(chan ClientSocketMessage, 1)
 
 	c.Done = make(chan struct{})
 
@@ -39,41 +39,55 @@ func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
 
 // lee mensajes del socket y los manda a la Room
 func (c *Client) ReadPump() error {
-	defer c.Close()
+	defer func() {
+		select {
+		case <-c.Done:
+		default:
+			close(c.Done)
+		}
+		c.Conn.Close()
+	}()
 
 	for {
 		var message ClientSocketMessage
 		err := c.Conn.ReadJSON(&message)
-
 		if err != nil {
 			return err
 		}
 
 		c.ToRoom <- message
 	}
-
 }
 
 // saca mensajes del canal c.Send y los escribe en el navegador
 func (c *Client) WritePump() error {
 	defer func() {
-		close(c.Done)
-		c.Close()
+		select {
+		case <-c.Done:
+		default:
+			close(c.Done)
+		}
+		c.Conn.Close()
 	}()
 
-	for message := range c.Send {
-		err := c.Conn.WriteJSON(message)
-		if err != nil {
-			return err
-		}
-
-		if message.Type == game.End || message.Type == game.Paused {
-
+	for {
+		select {
+		case message, ok := <-c.Send:
+			if !ok {
+				return nil
+			}
+			err := c.Conn.WriteJSON(message)
+			if err != nil {
+				return err
+			}
+			if message.Type == game.EOC {
+				return nil
+			}
+		case <-c.Done:
+			// Si ReadPump detecta un error salimos
 			return nil
 		}
 	}
-
-	return nil
 }
 
 func (c *Client) Close() {

@@ -40,7 +40,7 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	r.Player2 = Player2
 	r.P1Pause = false
 	r.P2Pause = false
-	r.Broadcast = make(chan game.ResponseToRoom, 1)
+	r.Broadcast = make(chan game.ResponseToRoom, 2)
 	r.MatchService = MatchService
 	r.IsNewMatch = IsNewMatch
 	r.GameInfo = GameInfo
@@ -54,6 +54,23 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 
 func (r *Room) End() {
 	fmt.Println("Cierre de la room")
+
+	// Vaciar Broadcast
+VaciarBroadcast:
+	for {
+		select {
+		case message := <-r.Broadcast:
+			fmt.Println("Broadcast: ", message)
+			r.Player1.Send <- message
+			r.Player2.Send <- message
+		default:
+			break VaciarBroadcast
+		}
+	}
+
+	// Avisar y cerrar los clientes
+	r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
+	r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
 
 	// Guardar la partida en BD
 	err := r.SaveMatchInDB()
@@ -169,8 +186,7 @@ func (r *Room) HandleGameMessage(response game.ResponseToRoom) bool {
 		}
 
 	case game.End:
-		r.Player2.Send <- response
-		r.Player1.Send <- response
+		r.Broadcast <- response
 
 		r.GameInfo.Winner = response.Content
 		r.GameInfo.Termination = response.Extra
@@ -179,8 +195,7 @@ func (r *Room) HandleGameMessage(response game.ResponseToRoom) bool {
 		return true
 
 	case game.Paused:
-		r.Player2.Send <- response
-		r.Player1.Send <- response
+		r.Broadcast <- response
 
 		r.GameInfo.Winner = "NONE"
 		r.GameInfo.Termination = "UNFINISHED"
