@@ -31,12 +31,18 @@ type MatchmakingInfo struct {
 	TimeIncrement int32
 }
 
+type GameMode struct {
+	StartingTime  int32
+	TimeIncrement int32
+}
+
 type PublicHandler struct {
 	hub            *rt.PublicHub
 	registry       *rt.MatchRegistry
 	accountService *account.AccountService
 	matchService   *match.MatchService
 	ratingService  *rating.RatingService
+	gameModes      []GameMode
 }
 
 func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *account.AccountService,
@@ -47,6 +53,16 @@ func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *a
 		accountService: accounts,
 		matchService:   matches,
 		ratingService:  ratings,
+		gameModes: []GameMode{
+			{300, 2},
+			{300, 5},
+			{900, 5},
+			{900, 10},
+			{1800, 10},
+			{1800, 15},
+			{3600, 15},
+			{3600, 20},
+		},
 	}
 }
 
@@ -67,104 +83,6 @@ func (h *PublicHandler) GetIDAndElo(c *gin.Context) (int64, int64) {
 	return playerID, int64(playerELO.Value)
 }
 
-// Una funcion por modo de juego
-
-func (h *PublicHandler) Blitz2Matchmaking(c *gin.Context) {
-	playerID, playerELO := h.GetIDAndElo(c)
-
-	h.GoIntoMatchmaking(c, &MatchmakingInfo{
-		PlayerID:      playerID,
-		PlayerELO:     playerELO,
-		GameMode:      0,
-		StartingTime:  300,
-		TimeIncrement: 2,
-	})
-}
-
-func (h *PublicHandler) Blitz5Matchmaking(c *gin.Context) {
-	playerID, playerELO := h.GetIDAndElo(c)
-
-	h.GoIntoMatchmaking(c, &MatchmakingInfo{
-		PlayerID:      playerID,
-		PlayerELO:     playerELO,
-		GameMode:      1,
-		StartingTime:  300,
-		TimeIncrement: 5,
-	})
-}
-
-func (h *PublicHandler) Rapid5Matchmaking(c *gin.Context) {
-	playerID, playerELO := h.GetIDAndElo(c)
-
-	h.GoIntoMatchmaking(c, &MatchmakingInfo{
-		PlayerID:      playerID,
-		PlayerELO:     playerELO,
-		GameMode:      2,
-		StartingTime:  900,
-		TimeIncrement: 5,
-	})
-}
-
-func (h *PublicHandler) Rapid10Matchmaking(c *gin.Context) {
-	playerID, playerELO := h.GetIDAndElo(c)
-
-	h.GoIntoMatchmaking(c, &MatchmakingInfo{
-		PlayerID:      playerID,
-		PlayerELO:     playerELO,
-		GameMode:      3,
-		StartingTime:  900,
-		TimeIncrement: 10,
-	})
-}
-
-func (h *PublicHandler) Classic10Matchmaking(c *gin.Context) {
-	playerID, playerELO := h.GetIDAndElo(c)
-
-	h.GoIntoMatchmaking(c, &MatchmakingInfo{
-		PlayerID:      playerID,
-		PlayerELO:     playerELO,
-		GameMode:      4,
-		StartingTime:  1800,
-		TimeIncrement: 10,
-	})
-}
-
-func (h *PublicHandler) Classic15Matchmaking(c *gin.Context) {
-	playerID, playerELO := h.GetIDAndElo(c)
-
-	h.GoIntoMatchmaking(c, &MatchmakingInfo{
-		PlayerID:      playerID,
-		PlayerELO:     playerELO,
-		GameMode:      5,
-		StartingTime:  1800,
-		TimeIncrement: 15,
-	})
-}
-
-func (h *PublicHandler) Extended15Matchmaking(c *gin.Context) {
-	playerID, playerELO := h.GetIDAndElo(c)
-
-	h.GoIntoMatchmaking(c, &MatchmakingInfo{
-		PlayerID:      playerID,
-		PlayerELO:     playerELO,
-		GameMode:      6,
-		StartingTime:  3600,
-		TimeIncrement: 15,
-	})
-}
-
-func (h *PublicHandler) Extended20Matchmaking(c *gin.Context) {
-	playerID, playerELO := h.GetIDAndElo(c)
-
-	h.GoIntoMatchmaking(c, &MatchmakingInfo{
-		PlayerID:      playerID,
-		PlayerELO:     playerELO,
-		GameMode:      7,
-		StartingTime:  3600,
-		TimeIncrement: 20,
-	})
-}
-
 // Challenge — el challenger upgradea a WS y queda a la espera de que lo acepten.
 //
 // Query params: username, board, starting_time, time_increment
@@ -175,7 +93,40 @@ func (h *PublicHandler) Extended20Matchmaking(c *gin.Context) {
 //	Registra el reto en el PrivateHub.
 //	Bloquea leyendo del canal Send del cliente (mensajes de la Room
 //	   cuando la partida arranque) o hasta que el WS se cierre.
-func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context, request *MatchmakingInfo) {
+func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
+
+	var dto MatchmakingRequestDTO
+	if err := c.ShouldBindQuery(&dto); err != nil {
+		apierror.SendError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	var validGameMode bool = false
+	var i int
+	var gameMode GameMode
+	for i, gameMode = range h.gameModes {
+		validGameMode = dto.StartingTime == gameMode.StartingTime &&
+			dto.TimeIncrement == gameMode.TimeIncrement
+
+		if validGameMode {
+			break
+		}
+	}
+
+	if !validGameMode {
+		apierror.SendError(c, http.StatusBadRequest, apierror.ErrNotAValidGameMode)
+		return
+	}
+
+	playerID, playerELO := h.GetIDAndElo(c)
+
+	request := &MatchmakingInfo{
+		PlayerID:      playerID,
+		PlayerELO:     playerELO,
+		GameMode:      i,
+		StartingTime:  dto.StartingTime,
+		TimeIncrement: dto.TimeIncrement,
+	}
 
 	// Comprobar que el challenger no tiene ya una partida activa
 	if _, ok := h.registry.GetMatch(request.PlayerID); ok {

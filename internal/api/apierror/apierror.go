@@ -26,6 +26,7 @@ var (
 	ErrAlreadyInMatch       = errors.New("user already in match")
 	ErrMatchAlreadyFinished = errors.New("match is already finished")
 	ErrNotYourMatch         = errors.New("match is not yours")
+	ErrNotAValidGameMode    = errors.New("time base and/or increment invalid")
 )
 
 // Función que detecta el tipo de error, y manda el código de error

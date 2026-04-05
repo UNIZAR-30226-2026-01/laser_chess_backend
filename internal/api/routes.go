@@ -152,14 +152,7 @@ func SetupRouter(store *db.Store,
 		rtRoute.GET("/challenges", privateHandler.GetChallenges)
 
 		// Partidas publicas
-		rtRoute.GET("/blitz2", publicHandler.Blitz2Matchmaking)
-		rtRoute.GET("/blitz5", publicHandler.Blitz5Matchmaking)
-		rtRoute.GET("/rapid5", publicHandler.Rapid5Matchmaking)
-		rtRoute.GET("/rapid10", publicHandler.Rapid10Matchmaking)
-		rtRoute.GET("/classic10", publicHandler.Classic10Matchmaking)
-		rtRoute.GET("/classic15", publicHandler.Classic15Matchmaking)
-		rtRoute.GET("/extended15", publicHandler.Extended15Matchmaking)
-		rtRoute.GET("/extended20", publicHandler.Extended20Matchmaking)
+		rtRoute.GET("matchmaking", publicHandler.GoIntoMatchmaking)
 	}
 
 	return router
