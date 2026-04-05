@@ -145,7 +145,11 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	// Registrar reto en el hub privado
 	err = h.hub.CreateChallenge(challengerID, challengedID, info)
 	if err != nil {
-		client.Close()
+		client.Send <- game.ResponseToRoom{
+			Type:    game.Error,
+			Content: "Error al aceptar reto",
+		}
+		client.Send <- game.ResponseToRoom{Type: game.EOC}
 		apierror.SendError(c, http.StatusConflict, err)
 		return
 	}
@@ -221,10 +225,10 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 	info, err := h.hub.AcceptChallenge(challengerID, challengedID)
 	if err != nil {
 		challengedClient.Send <- game.ResponseToRoom{
-			Type:    "Error",
+			Type:    game.Error,
 			Content: "Error al aceptar reto",
 		}
-		conn.Close()
+		challengedClient.Send <- game.ResponseToRoom{Type: game.EOC}
 		return
 	}
 
