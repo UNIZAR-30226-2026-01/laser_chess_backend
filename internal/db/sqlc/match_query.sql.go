@@ -97,6 +97,46 @@ func (q *Queries) GetMatch(ctx context.Context, matchID int64) (Match, error) {
 	return i, err
 }
 
+const getPausedMatches = `-- name: GetPausedMatches :many
+SELECT match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, match_type, board, movement_history, time_base, time_increment FROM match
+WHERE (p1_id = $1 OR p2_id = $1) AND termination = 'UNFINISHED'::termination
+ORDER BY date DESC
+`
+
+func (q *Queries) GetPausedMatches(ctx context.Context, p1ID int64) ([]Match, error) {
+	rows, err := q.db.Query(ctx, getPausedMatches, p1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Match
+	for rows.Next() {
+		var i Match
+		if err := rows.Scan(
+			&i.MatchID,
+			&i.P1ID,
+			&i.P2ID,
+			&i.P1Elo,
+			&i.P2Elo,
+			&i.Date,
+			&i.Winner,
+			&i.Termination,
+			&i.MatchType,
+			&i.Board,
+			&i.MovementHistory,
+			&i.TimeBase,
+			&i.TimeIncrement,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserHistory = `-- name: GetUserHistory :many
 SELECT match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, match_type, board, movement_history, time_base, time_increment FROM match
 WHERE p1_id = $1 OR p2_id = $1

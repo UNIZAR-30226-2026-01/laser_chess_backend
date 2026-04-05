@@ -98,6 +98,7 @@ func SetupRouter(store *db.Store,
 		matchRoute.POST("", matchHandler.CreateMatch)
 		matchRoute.GET("/:matchID", matchHandler.GetMatch)
 		matchRoute.GET("/history/:userID", matchHandler.GetUserHistory)
+		matchRoute.GET("/history/:userID/paused", matchHandler.GetPausedMatches)
 	}
 
 	// Item routes

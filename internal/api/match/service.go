@@ -110,6 +110,16 @@ func (s *MatchService) GetUserHistory(ctx context.Context, userID int64) ([]Matc
 	return parseMatches(res), nil
 }
 
+func (s *MatchService) GetPausedMatches(ctx context.Context, userID int64) ([]MatchDTO, error) {
+	res, err := s.store.GetPausedMatches(ctx, userID)
+	println(len(res))
+	if err != nil {
+		return nil, err
+	}
+
+	return parseMatches(res), nil
+}
+
 /*
 *
 * Desc: Esta funcion llama a una query generada por sqlc que busca el historial

@@ -17,6 +17,11 @@ SELECT * FROM match
 WHERE p1_id = $1 OR p2_id = $1
 ORDER BY date DESC;
 
+-- name: GetPausedMatches :many
+SELECT * FROM match
+WHERE (p1_id = $1 OR p2_id = $1) AND termination = 'UNFINISHED'::termination
+ORDER BY date DESC;
+
 -- name: UpdateMatch :one
 UPDATE match
 SET p1_id = $1, p2_id = $2, p1_elo = $3, p2_elo = $4, date = $5, winner = $6, 
