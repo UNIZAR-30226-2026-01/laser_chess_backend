@@ -20,9 +20,9 @@ type Board_T uint8
 const (
 	ACE       Board_T = 0
 	CURIOSITY Board_T = 1
-	SOPHIE    Board_T = 2
-	GRAIL     Board_T = 3
-	MERCURY   Board_T = 4
+	GRAIL     Board_T = 2
+	MERCURY   Board_T = 3
+	SOPHIE    Board_T = 4
 )
 
 type vector2_T struct {

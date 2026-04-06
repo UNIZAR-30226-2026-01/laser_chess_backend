@@ -1,22 +1,20 @@
 CREATE TYPE "winner" AS ENUM (
 	'P1_WINS',
 	'P2_WINS',
-	'DRAW',
 	'NONE'
 );
 
 CREATE TYPE "board_type" AS ENUM (
 	'ACE',
 	'CURIOSITY',
-	'SOPHIE',
 	'GRAIL',
 	'MERCURY'
+	'SOPHIE',
 );
 
 CREATE TYPE "match_type" AS ENUM (
-	'RANKED',
-	'FRIENDLY',
 	'PRIVATE',
+	'RANKED',
 	'BOTS'
 );
 
@@ -125,7 +123,11 @@ CREATE TABLE IF NOT EXISTS "friendship" (
 CREATE TABLE IF NOT EXISTS "rating" (
 	"user_id" BIGINT NOT NULL,
 	"elo_type" ELO_TYPE NOT NULL,
-	"value" INT NOT NULL,
+	"value" INT NOT NULL DEFAULT 1500,
+    "deviation" INT NOT NULL DEFAULT 350,
+    "volatility" FLOAT NOT NULL DEFAULT 0.06,
+    "last_updated_at" TIMESTAMP NOT NULL DEFAULT NOW(),
+
 	PRIMARY KEY("user_id", "elo_type"),
 	FOREIGN KEY("user_id") REFERENCES "account"("account_id"),
 	CHECK ("value" >= 0)
