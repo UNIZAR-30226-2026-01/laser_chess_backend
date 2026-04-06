@@ -8,8 +8,8 @@ CREATE TYPE "board_type" AS ENUM (
 	'ACE',
 	'CURIOSITY',
 	'GRAIL',
-	'MERCURY'
-	'SOPHIE',
+	'MERCURY',
+	'SOPHIE'
 );
 
 CREATE TYPE "match_type" AS ENUM (
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS "rating" (
 	"value" INT NOT NULL DEFAULT 1500,
     "deviation" INT NOT NULL DEFAULT 350,
     "volatility" FLOAT NOT NULL DEFAULT 0.06,
-    "last_updated_at" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "last_updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
 	PRIMARY KEY("user_id", "elo_type"),
 	FOREIGN KEY("user_id") REFERENCES "account"("account_id"),
