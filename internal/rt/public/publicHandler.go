@@ -169,7 +169,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 			P2Client = client
 		}
 
-		var matchType string
+		var matchType string = "RANKED"
 		switch dto.Ranked {
 		case 0:
 			matchType = "RANKED"
