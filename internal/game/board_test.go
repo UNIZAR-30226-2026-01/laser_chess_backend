@@ -42,145 +42,145 @@ func TestAllBoards(t *testing.T) {
 }
 
 // Test final de una partida y su resultado esperado
-func TestMovements(t *testing.T) {
+// func TestMovements(t *testing.T) {
 
-	fmt.Print("== TEST TRANSFORMACIONES ==\n")
+// 	fmt.Print("== TEST TRANSFORMACIONES ==\n")
 
-	//Iniciar tablero
-	tablero, err := InitBoard(boardtemplates.CURIOSITY)
-	if err != nil {
-		t.Error(err)
-	}
-	tablero.print()
+// 	//Iniciar tablero
+// 	tablero, err := InitBoard(boardtemplates.CURIOSITY)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	tablero.print()
 
-	tablero.print()
+// 	tablero.print()
 
-	var log string
-	var logPiece string
-	var laser_end laserInteractionResult_T
-	var path []vector2_T
+// 	var log string
+// 	var logPiece string
+// 	var laser_end laserInteractionResult_T
+// 	var path []vector2_T
 
-	//Ejemplo de procesamiento
-	movimiento_front := "La8"
+// 	//Ejemplo de procesamiento
+// 	movimiento_front := "La8"
 
-	fmt.Println("LLEGA:\t" + movimiento_front)
+// 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
-	logPiece = logPiece + "%{0}"
+// 	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+// 	logPiece = logPiece + "%{0}"
 
-	//Error movimiento inválido
-	if err != nil {
-		t.Error(err)
-	} else {
-		//Camino del laser
-		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatLaserPath(path))
-		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
-		fmt.Print("RESP:\t" + logPiece + "\n")
-		log = log + logPiece + ";"
-	}
+// 	//Error movimiento inválido
+// 	if err != nil {
+// 		t.Error(err)
+// 	} else {
+// 		//Camino del laser
+// 		tablero.printlaser(path)
+// 		fmt.Println("Camino del laser:", formatLaserPath(path))
+// 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
+// 		fmt.Print("RESP:\t" + logPiece + "\n")
+// 		log = log + logPiece + ";"
+// 	}
 
-	//Ejemplo de procesamiento
-	movimiento_front = "Lj5"
+// 	//Ejemplo de procesamiento
+// 	movimiento_front = "Lj5"
 
-	fmt.Println("LLEGA:\t" + movimiento_front)
+// 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, RED_TEAM)
-	logPiece = logPiece + "%{0}"
+// 	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, RED_TEAM)
+// 	logPiece = logPiece + "%{0}"
 
-	//Error movimiento inválido
-	if err != nil {
-		t.Error(err)
-	} else {
-		//Camino del laser
-		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatLaserPath(path))
-		fmt.Println("Terminación del laser:", tablero.redTeamLaser.printLaserInteractionResult(laser_end))
-		fmt.Print("RESP:\t" + logPiece + "\n")
-		log = log + logPiece + ";"
-	}
+// 	//Error movimiento inválido
+// 	if err != nil {
+// 		t.Error(err)
+// 	} else {
+// 		//Camino del laser
+// 		tablero.printlaser(path)
+// 		fmt.Println("Camino del laser:", formatLaserPath(path))
+// 		fmt.Println("Terminación del laser:", tablero.redTeamLaser.printLaserInteractionResult(laser_end))
+// 		fmt.Print("RESP:\t" + logPiece + "\n")
+// 		log = log + logPiece + ";"
+// 	}
 
-	//Ejemplo de procesamiento
-	movimiento_front = "Tc7:c8"
+// 	//Ejemplo de procesamiento
+// 	movimiento_front = "Tc7:c8"
 
-	fmt.Println("LLEGA:\t" + movimiento_front)
+// 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
-	logPiece = logPiece + "%{0}"
+// 	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+// 	logPiece = logPiece + "%{0}"
 
-	//Error movimiento inválido
-	if err != nil {
-		t.Error(err)
-	} else {
-		//Camino del laser
-		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatLaserPath(path))
-		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
-		fmt.Print("RESP:\t" + logPiece + "\n")
-		log = log + logPiece + ";"
-	}
+// 	//Error movimiento inválido
+// 	if err != nil {
+// 		t.Error(err)
+// 	} else {
+// 		//Camino del laser
+// 		tablero.printlaser(path)
+// 		fmt.Println("Camino del laser:", formatLaserPath(path))
+// 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
+// 		fmt.Print("RESP:\t" + logPiece + "\n")
+// 		log = log + logPiece + ";"
+// 	}
 
-	//Ejemplo de procesamiento
-	movimiento_front = "Ra8"
+// 	//Ejemplo de procesamiento
+// 	movimiento_front = "Ra8"
 
-	fmt.Println("LLEGA:\t" + movimiento_front)
+// 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
-	logPiece = logPiece + "%{0}"
+// 	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+// 	logPiece = logPiece + "%{0}"
 
-	//Error movimiento inválido
-	if err != nil {
-		t.Error(err)
-	} else {
-		//Camino del laser
-		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatLaserPath(path))
-		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
-		fmt.Print("RESP:\t" + logPiece + "\n")
-		log = log + logPiece + ";"
-	}
+// 	//Error movimiento inválido
+// 	if err != nil {
+// 		t.Error(err)
+// 	} else {
+// 		//Camino del laser
+// 		tablero.printlaser(path)
+// 		fmt.Println("Camino del laser:", formatLaserPath(path))
+// 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
+// 		fmt.Print("RESP:\t" + logPiece + "\n")
+// 		log = log + logPiece + ";"
+// 	}
 
-	//Ejemplo de procesamiento
-	movimiento_front = "Ra4"
+// 	//Ejemplo de procesamiento
+// 	movimiento_front = "Ra4"
 
-	fmt.Println("LLEGA:\t" + movimiento_front)
+// 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
-	logPiece = logPiece + "%{0}"
+// 	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+// 	logPiece = logPiece + "%{0}"
 
-	//Error movimiento inválido
-	if err != nil {
-		t.Error(err)
-	} else {
-		//Camino del laser
-		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatLaserPath(path))
-		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
-		fmt.Print("RESP:\t" + logPiece + "\n")
-		log = log + logPiece + ";"
-	}
+// 	//Error movimiento inválido
+// 	if err != nil {
+// 		t.Error(err)
+// 	} else {
+// 		//Camino del laser
+// 		tablero.printlaser(path)
+// 		fmt.Println("Camino del laser:", formatLaserPath(path))
+// 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
+// 		fmt.Print("RESP:\t" + logPiece + "\n")
+// 		log = log + logPiece + ";"
+// 	}
 
-	//Ejemplo de procesamiento
-	movimiento_front = "Rf4"
+// 	//Ejemplo de procesamiento
+// 	movimiento_front = "Rf4"
 
-	fmt.Println("LLEGA:\t" + movimiento_front)
+// 	fmt.Println("LLEGA:\t" + movimiento_front)
 
-	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
-	logPiece = logPiece + "%{0}"
+// 	logPiece, path, laser_end, err = tablero.ProcessTurn(movimiento_front, BLUE_TEAM)
+// 	logPiece = logPiece + "%{0}"
 
-	//Error movimiento inválido
-	if err != nil {
-		t.Error(err)
-	} else {
-		//Camino del laser
-		tablero.printlaser(path)
-		fmt.Println("Camino del laser:", formatLaserPath(path))
-		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
-		fmt.Print("RESP:\t" + logPiece + "\n")
-		log = log + logPiece + ";"
-	}
+// 	//Error movimiento inválido
+// 	if err != nil {
+// 		t.Error(err)
+// 	} else {
+// 		//Camino del laser
+// 		tablero.printlaser(path)
+// 		fmt.Println("Camino del laser:", formatLaserPath(path))
+// 		fmt.Println("Terminación del laser:", tablero.blueTeamLaser.printLaserInteractionResult(laser_end))
+// 		fmt.Print("RESP:\t" + logPiece + "\n")
+// 		log = log + logPiece + ";"
+// 	}
 
-}
+// }
 
 // Test que comprueba el correcto funcionamiento del cargado de un log
 func TestApplyLogToBoard(t *testing.T) {

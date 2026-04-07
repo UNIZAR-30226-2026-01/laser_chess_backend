@@ -172,9 +172,9 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		var matchType string
 		switch dto.Ranked {
 		case 0:
-			matchType = "FRIENDLY"
-		case 1:
 			matchType = "RANKED"
+		case 1:
+			matchType = "FRIENDLY"
 		}
 
 		room.InitRoom(P1Client, P2Client, h.matchService, true,
