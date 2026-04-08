@@ -1,4 +1,4 @@
-package rt
+package sse
 
 import (
 	"context"
