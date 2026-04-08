@@ -144,7 +144,11 @@ func SetupRouter(store *db.Store,
 	}
 
 	// Endpoints de eventos
-	eventSystem := sse.InitSSE()
+	fcm, err := sse.InitFirebase()
+	if err != nil {
+
+	}
+	eventSystem := sse.InitSSE(fcm)
 
 	{
 		eventRoute := protected.Group("/events")

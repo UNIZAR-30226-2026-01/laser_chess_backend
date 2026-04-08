@@ -17,57 +17,56 @@ type FirebaseManager struct {
 	Messaging *messaging.Client
 }
 
-func (f *FirebaseManager) InitFirebase() error {
+func InitFirebase() (*FirebaseManager, error) {
 	ctx := context.Background()
 
 	firebasePath := os.Getenv("FIREBASE_CONFIG_PATH")
 	opt := option.WithCredentialsFile(firebasePath)
 
 	var err error
+	var f *FirebaseManager = &FirebaseManager{}
 	f.App, err = firebase.NewApp(ctx, nil, opt)
 	if err != nil {
-		return fmt.Errorf("error initializing app: %v", err)
+		return nil, fmt.Errorf("error initializing app: %v", err)
 	}
 
 	f.Messaging, err = f.App.Messaging(ctx)
 	if err != nil {
-		return fmt.Errorf("error initializing messaging service: %v", err)
+		return nil, fmt.Errorf("error initializing messaging service: %v", err)
+	}
+
+	return f, nil
+}
+
+func (f *FirebaseManager) SendNotification(tokens []string,
+	event *Event) error {
+
+	ctx := context.Background()
+	client, err := f.App.Messaging(ctx)
+	if err != nil {
+		//
+	}
+
+	message := &messaging.MulticastMessage{
+		Tokens: tokens,
+		Notification: &messaging.Notification{
+			Title: event.EventType,
+			Body:  "",
+		},
+		Data: map[string]string{
+			"click_action": "FLUTTER_NOTIFICATION_CLICK",
+			"extra_info":   "valor_personalizado",
+		},
+	}
+
+	responses, err := client.SendEachForMulticast(ctx, message)
+	if err != nil {
+		//
+	}
+
+	if responses.FailureCount > 0 {
+		// TODO: borrar los dispositivos que fallen
 	}
 
 	return nil
-}
-
-func (f *FirebaseManager) SendNotification(app *firebase.App, token string,
-	message *messaging.Message) (string, error) {
-
-	ctx := context.Background()
-	client, err := app.Messaging(ctx)
-	if err != nil {
-		//
-	}
-
-	response, err := client.Send(ctx, message)
-	if err != nil {
-		//
-	}
-	return response, nil
-}
-
-// Creacion del servicio y su interfaz
-
-var F *FirebaseManager
-
-func InitFirebase() error {
-	return F.InitFirebase()
-}
-
-func SendChallenge(app *firebase.App, token string) (string, error) {
-	message := &messaging.Message{
-		Token: token, // El token que guardaste del usuario
-		Notification: &messaging.Notification{
-			Title: "¡Hola!",
-			Body:  "Tienes un nuevo mensaje.",
-		},
-	}
-	return F.SendNotification(app, token, message)
 }

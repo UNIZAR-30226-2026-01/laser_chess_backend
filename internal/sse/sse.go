@@ -9,13 +9,15 @@ type Event struct {
 
 type EventSystem struct {
 	clientChannels map[int64][]chan Event
+	fcm            *FirebaseManager
 	mu             sync.RWMutex
 }
 
-func InitSSE() *EventSystem {
-	var eventSystem EventSystem
-	eventSystem.clientChannels = make(map[int64][]chan Event)
-	return &eventSystem
+func InitSSE(fcm *FirebaseManager) *EventSystem {
+	return &EventSystem{
+		clientChannels: make(map[int64][]chan Event),
+		fcm:            fcm,
+	}
 }
 
 func (es *EventSystem) SendEvent(userID int64, event *Event) {
@@ -24,6 +26,7 @@ func (es *EventSystem) SendEvent(userID int64, event *Event) {
 	es.mu.RUnlock()
 
 	if !exists {
+		es.fcm.SendNotification([]string{""}, event) // TODO: coger el token de dispositivo
 		return
 	}
 
