@@ -124,6 +124,29 @@ func (q *Queries) GetExtendedElo(ctx context.Context, userID int64) (Rating, err
 	return i, err
 }
 
+const getRankById = `-- name: GetRankById :one
+SELECT rank 
+FROM (
+    SELECT user_id, 
+    ROW_NUMBER() OVER (ORDER BY value DESC) as rank
+    FROM rating
+    WHERE elo_type = $1 
+) as rankings
+WHERE user_id = $2
+`
+
+type GetRankByIdParams struct {
+	EloType EloType `json:"elo_type"`
+	UserID  int64   `json:"user_id"`
+}
+
+func (q *Queries) GetRankById(ctx context.Context, arg GetRankByIdParams) (int64, error) {
+	row := q.db.QueryRow(ctx, getRankById, arg.EloType, arg.UserID)
+	var rank int64
+	err := row.Scan(&rank)
+	return rank, err
+}
+
 const getRapidElo = `-- name: GetRapidElo :one
 SELECT user_id, elo_type, value FROM rating
 WHERE user_id = $1 AND elo_type = 'rapid'::elo_type
@@ -134,6 +157,48 @@ func (q *Queries) GetRapidElo(ctx context.Context, userID int64) (Rating, error)
 	var i Rating
 	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
 	return i, err
+}
+
+const getTopRankUsers = `-- name: GetTopRankUsers :many
+SELECT r.value, a.account_id, a.username, a.level, a.avatar
+FROM rating r 
+JOIN account a ON a.account_id = r.user_id
+WHERE r.elo_type = $1
+ORDER BY r.value DESC LIMIT 100
+`
+
+type GetTopRankUsersRow struct {
+	Value     int32  `json:"value"`
+	AccountID int64  `json:"account_id"`
+	Username  string `json:"username"`
+	Level     int32  `json:"level"`
+	Avatar    int32  `json:"avatar"`
+}
+
+func (q *Queries) GetTopRankUsers(ctx context.Context, eloType EloType) ([]GetTopRankUsersRow, error) {
+	rows, err := q.db.Query(ctx, getTopRankUsers, eloType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopRankUsersRow
+	for rows.Next() {
+		var i GetTopRankUsersRow
+		if err := rows.Scan(
+			&i.Value,
+			&i.AccountID,
+			&i.Username,
+			&i.Level,
+			&i.Avatar,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateRating = `-- name: UpdateRating :one

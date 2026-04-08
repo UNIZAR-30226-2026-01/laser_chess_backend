@@ -118,6 +118,8 @@ func SetupRouter(store *db.Store,
 		ratingRoute.GET("/:userID/extended", ratingHandler.GetExtendedElo)
 		ratingRoute.GET("/:userID/rapid", ratingHandler.GetRapidElo)
 		ratingRoute.GET("/:userID/classic", ratingHandler.GetClassicElo)
+		ratingRoute.GET("/:userID/ranking", ratingHandler.GetRankById)		
+		ratingRoute.GET("/top", ratingHandler.GetTopRankUsers)
 	}
 
 	// Friendship routes

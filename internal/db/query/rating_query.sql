@@ -43,3 +43,20 @@ SET
     value = $3
 WHERE user_id = $1 AND elo_type = $2
 RETURNING *;
+
+-- name: GetTopRankUsers :many
+SELECT r.value, a.account_id, a.username, a.level, a.avatar
+FROM rating r 
+JOIN account a ON a.account_id = r.user_id
+WHERE r.elo_type = $1
+ORDER BY r.value DESC LIMIT 100;
+
+-- name: GetRankById :one
+SELECT rank 
+FROM (
+    SELECT user_id, 
+    ROW_NUMBER() OVER (ORDER BY value DESC) as rank
+    FROM rating
+    WHERE elo_type = $1 
+) as rankings
+WHERE user_id = $2;
