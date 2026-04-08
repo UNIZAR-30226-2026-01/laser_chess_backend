@@ -17,6 +17,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/gin-gonic/gin"
@@ -42,10 +43,11 @@ type PublicHandler struct {
 	matchService   *match.MatchService
 	ratingService  *rating.RatingService
 	gameModes      []GameMode
+	eventSystem    *sse.EventSystem
 }
 
 func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *account.AccountService,
-	matches *match.MatchService, ratings *rating.RatingService) *PublicHandler {
+	matches *match.MatchService, ratings *rating.RatingService, events *sse.EventSystem) *PublicHandler {
 	return &PublicHandler{
 		hub:            hub,
 		registry:       registry,
@@ -62,6 +64,7 @@ func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *a
 			{3600, 15},
 			{3600, 20},
 		},
+		eventSystem: events,
 	}
 }
 

@@ -17,6 +17,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,14 +26,17 @@ type PrivateHandler struct {
 	registry       *rt.MatchRegistry
 	accountService *account.AccountService
 	matchService   *match.MatchService
+	eventSystem    *sse.EventSystem
 }
 
-func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry, accounts *account.AccountService, matches *match.MatchService) *PrivateHandler {
+func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry, accounts *account.AccountService,
+	matches *match.MatchService, events *sse.EventSystem) *PrivateHandler {
 	return &PrivateHandler{
 		hub:            hub,
 		registry:       registry,
 		accountService: accounts,
 		matchService:   matches,
+		eventSystem:    events,
 	}
 }
 
@@ -153,6 +157,11 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 		apierror.SendError(c, http.StatusConflict, err)
 		return
 	}
+
+	h.eventSystem.SendEvent(challengedID, &sse.Event{
+		EventType: "Challenge",
+		Data:      challengerID,
+	})
 
 	// Esperar a que el WS se cierre.
 	// Si el challenger cancela antes de que lo acepten, limpiamos el reto.

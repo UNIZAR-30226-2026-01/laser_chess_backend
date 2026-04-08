@@ -17,6 +17,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/private"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/public"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -118,7 +119,7 @@ func SetupRouter(store *db.Store,
 		ratingRoute.GET("/:userID/extended", ratingHandler.GetExtendedElo)
 		ratingRoute.GET("/:userID/rapid", ratingHandler.GetRapidElo)
 		ratingRoute.GET("/:userID/classic", ratingHandler.GetClassicElo)
-		ratingRoute.GET("/:userID/ranking", ratingHandler.GetRankById)		
+		ratingRoute.GET("/:userID/ranking", ratingHandler.GetRankById)
 		ratingRoute.GET("/top", ratingHandler.GetTopRankUsers)
 	}
 
@@ -142,9 +143,20 @@ func SetupRouter(store *db.Store,
 		friendshipRoute.DELETE("/:user2Username", friendshipHandler.DeleteFriendship)
 	}
 
+	// Endpoints de eventos
+	eventSystem := sse.InitSSE()
+
+	{
+		eventRoute := protected.Group("/events")
+		eventRoute.GET("", eventSystem.EventHandler)
+	}
+
 	// Endpoints de websockets
-	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService, matchService)
-	publicHandler := public.NewPublicHandler(publicHub, registry, accountService, matchService, ratingService)
+	privateHandler := private.NewPrivateHandler(privateHub, registry,
+		accountService, matchService, eventSystem)
+
+	publicHandler := public.NewPublicHandler(publicHub, registry,
+		accountService, matchService, ratingService, eventSystem)
 
 	{
 		rtRoute := protected.Group("/rt/")

@@ -18,7 +18,7 @@ func InitSSE() *EventSystem {
 	return &eventSystem
 }
 
-func (es *EventSystem) SendEvent(userID int64, event Event) {
+func (es *EventSystem) SendEvent(userID int64, event *Event) {
 	es.mu.RLock()
 	chSlice, exists := es.clientChannels[userID]
 	es.mu.RUnlock()
@@ -28,7 +28,7 @@ func (es *EventSystem) SendEvent(userID int64, event Event) {
 	}
 
 	for _, ch := range chSlice {
-		ch <- event
+		ch <- *event
 	}
 }
 
