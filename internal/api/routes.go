@@ -144,7 +144,7 @@ func SetupRouter(store *db.Store,
 	}
 
 	// Endpoints de eventos
-	fcm, err := sse.InitFirebase()
+	fcm, err := sse.InitFirebase(accountService)
 	if err != nil {
 
 	}

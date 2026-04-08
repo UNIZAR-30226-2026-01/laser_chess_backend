@@ -1,6 +1,8 @@
 package sse
 
-import "sync"
+import (
+	"sync"
+)
 
 type Event struct {
 	EventType string      `json:"event_type"`
@@ -26,7 +28,10 @@ func (es *EventSystem) SendEvent(userID int64, event *Event) {
 	es.mu.RUnlock()
 
 	if !exists {
-		es.fcm.SendNotification([]string{""}, event) // TODO: coger el token de dispositivo
+		err := es.fcm.SendNotification(userID, event)
+		if err != nil {
+			//
+		}
 		return
 	}
 

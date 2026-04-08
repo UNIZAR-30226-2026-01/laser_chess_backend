@@ -155,3 +155,15 @@ func (s *AccountService) RegisterDevice(ctx context.Context,
 	})
 
 }
+
+func (s *AccountService) GetDevicesById(ctx context.Context,
+	accountID int64) ([]string, error) {
+
+	return s.store.GetDevicesById(ctx, accountID)
+
+}
+
+func (s *AccountService) DeleteDevice(ctx context.Context,
+	token string) (string, error) {
+	return s.store.DeleteDevice(ctx, token)
+}
