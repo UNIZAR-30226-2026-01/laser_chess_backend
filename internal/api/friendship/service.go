@@ -4,15 +4,17 @@ import (
 	"context"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 )
 
 type FriendshipService struct {
-	store *db.Store
+	store 		   *db.Store
+	eventSystem    *sse.EventSystem
 }
 
-func NewService(s *db.Store) *FriendshipService {
-	return &FriendshipService{store: s}
+func NewService(s *db.Store, events *sse.EventSystem) *FriendshipService {
+	return &FriendshipService{store: s, eventSystem: events}
 }
 
 /*

@@ -161,7 +161,7 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	h.eventSystem.SendEvent(challengedID, &sse.Event{
 		EventType: "Challenge",
 		Data:      challengerID,
-	})
+	}, true)
 
 	// Esperar a que el WS se cierre.
 	// Si el challenger cancela antes de que lo acepten, limpiamos el reto.

@@ -7,7 +7,7 @@ import (
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
-	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
+	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/device"
 	"google.golang.org/api/option"
 )
 
@@ -16,10 +16,10 @@ import (
 type FirebaseManager struct {
 	App            *firebase.App
 	Messaging      *messaging.Client
-	accountService *db.AccountService
+	deviceService  *db.DeviceService
 }
 
-func InitFirebase(accounts *db.AccountService) (*FirebaseManager, error) {
+func InitFirebase(devices *db.DeviceService) (*FirebaseManager, error) {
 	ctx := context.Background()
 
 	firebasePath := os.Getenv("FIREBASE_CONFIG_PATH")
@@ -37,6 +37,7 @@ func InitFirebase(accounts *db.AccountService) (*FirebaseManager, error) {
 		return nil, fmt.Errorf("error initializing messaging service: %v", err)
 	}
 
+	f.deviceService = devices
 	return f, nil
 }
 
@@ -51,7 +52,7 @@ func (f *FirebaseManager) SendNotification(userID int64,
 	}
 
 	// Obtenemos los tokens de los dispositivos del cliente
-	tokens, err := f.accountService.GetDevicesById(ctx, userID)
+	tokens, err := f.deviceService.GetDevicesById(ctx, userID)
 
 	// Enviamos a todos los dispositivos la notificacion
 	message := &messaging.MulticastMessage{
@@ -76,7 +77,7 @@ func (f *FirebaseManager) SendNotification(userID int64,
 		for i, response := range responses.Responses {
 			if !response.Success {
 				if messaging.IsUnregistered(response.Error) {
-					f.accountService.DeleteDevice(ctx, tokens[i])
+					f.deviceService.DeleteDevice(ctx, tokens[i])
 				}
 			}
 		}

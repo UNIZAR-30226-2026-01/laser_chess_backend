@@ -22,12 +22,12 @@ func InitSSE(fcm *FirebaseManager) *EventSystem {
 	}
 }
 
-func (es *EventSystem) SendEvent(userID int64, event *Event) {
+func (es *EventSystem) SendEvent(userID int64, event *Event, sendsFCM bool) {
 	es.mu.RLock()
 	chSlice, exists := es.clientChannels[userID]
 	es.mu.RUnlock()
 
-	if !exists {
+	if !exists && sendsFCM {
 		err := es.fcm.SendNotification(userID, event)
 		if err != nil {
 			//
