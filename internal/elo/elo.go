@@ -10,6 +10,7 @@ package elo
 
 import (
 	"math"
+	"time"
 )
 
 const (
@@ -32,7 +33,9 @@ type Rating struct {
 }
 
 // Paso 1 - Aumenta la Deviation de un player si ha pasado tiempo sin jugar
-func ApplyInactivity(playerRating Rating, inactiveDays float64) Rating {
+func ApplyInactivity(playerRating Rating, lastUpdatedAt time.Time) Rating {
+	inactiveDays := time.Since(lastUpdatedAt).Hours() / 24
+
 	if inactiveDays <= 0 {
 		return playerRating
 	}
