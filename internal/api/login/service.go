@@ -11,7 +11,6 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/auth"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type LoginService struct {
@@ -84,7 +83,7 @@ func (s *LoginService) saveNewSession(ctx context.Context, accountID int64, refr
 	return s.store.CreateRefreshSession(ctx, db.CreateRefreshSessionParams{
 		AccountID: accountID,
 		TokenHash: auth.HashToken(refreshToken),
-		ExpiresAt: pgtype.Timestamptz{Time: expiresAt, Valid: true},
+		ExpiresAt: expiresAt,
 	})
 }
 
@@ -135,7 +134,7 @@ func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*Login
 
 	// Si el refresh ha expirado no se hace nada
 	// El user tendra que hacer login de nuevo
-	if time.Now().After(session.ExpiresAt.Time) {
+	if time.Now().After(session.ExpiresAt) {
 		s.store.DeleteRefreshSession(ctx, tokenHash)
 		return nil, apierror.ErrUnauthorized
 	}
@@ -152,7 +151,7 @@ func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*Login
 	err = s.store.CreateRefreshSession(ctx, db.CreateRefreshSessionParams{
 		AccountID: session.AccountID,
 		TokenHash: auth.HashToken(newRefreshToken),
-		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(auth.RefreshTokenTTL), Valid: true},
+		ExpiresAt: time.Now().Add(auth.RefreshTokenTTL),
 	})
 
 	return &LoginResult{

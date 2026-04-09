@@ -1,13 +1,11 @@
 package account
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,11 +13,10 @@ import (
 
 type AccountHandler struct {
 	accountService *AccountService
-	ratingService  *rating.RatingService
 }
 
-func NewHandler(s *AccountService, r *rating.RatingService) *AccountHandler {
-	return &AccountHandler{accountService: s, ratingService: r}
+func NewHandler(s *AccountService) *AccountHandler {
+	return &AccountHandler{accountService: s}
 }
 
 // Crea un nuevo usuario a partir de un CreateAccountDTO
@@ -35,13 +32,6 @@ func (h *AccountHandler) Create(c *gin.Context) {
 	res, err := h.accountService.Create(c.Request.Context(), &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
-		return
-	}
-
-	_, err = h.ratingService.CreateRating(c, *res.AccountID)
-	if err != nil {
-		apierror.DetectAndSendError(c, err)
-		fmt.Println(err)
 		return
 	}
 

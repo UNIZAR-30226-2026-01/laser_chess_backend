@@ -18,7 +18,10 @@ func NewService(s *db.Store) *AccountService {
 	return &AccountService{store: s}
 }
 
-// Crea una cuenta
+// Crea una cuenta, haciendo las inicializaciones pertinentes:
+//   - Crear tablas de rating
+//   - Hacer que tenga los items por defecto
+//
 // Primero hashea la contraseña
 // Por ahora se inventa los items equipados por defecto,
 // pero habrá que hacer que los ownee y los tenga equipados.
@@ -32,7 +35,6 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 	var res int64
 
 	// Ejecutar en transaccion
-	// Ahora no tiene sentido, pero lo tendra cuando hagamos lo de los items
 	err = s.store.ExecTx(ctx, func(q *db.Queries) error {
 		var errTx error
 
@@ -49,7 +51,12 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 			WinAnimation: 3,
 			Avatar:       1,
 		})
+		if errTx != nil {
+			return errTx
+		}
 
+		// Inicializar ratings
+		errTx = q.CreateRatings(ctx, res)
 		if errTx != nil {
 			return errTx
 		}

@@ -51,7 +51,7 @@ func SetupRouter(store *db.Store,
 	ratingHandler := rating.NewHandler(ratingService)
 
 	accountService := account.NewService(store)
-	accountHandler := account.NewHandler(accountService, ratingService)
+	accountHandler := account.NewHandler(accountService)
 
 	matchService := match.NewService(store)
 	matchHandler := match.NewHandler(matchService)
@@ -93,9 +93,6 @@ func SetupRouter(store *db.Store,
 	// Match routes
 	{
 		matchRoute := protected.Group("/match")
-		// Probablemente las partidas las acabe creando la app, a si
-		// que creo que no se usara el POST (la funcion del service si)
-		matchRoute.POST("", matchHandler.CreateMatch)
 		matchRoute.GET("/:matchID", matchHandler.GetMatch)
 		matchRoute.GET("/history/:userID", matchHandler.GetUserHistory)
 	}
@@ -140,7 +137,7 @@ func SetupRouter(store *db.Store,
 	}
 
 	// Endpoints de websockets
-	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService, matchService)
+	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService, matchService, ratingService)
 	publicHandler := public.NewPublicHandler(publicHub, registry, accountService, matchService, ratingService)
 
 	{

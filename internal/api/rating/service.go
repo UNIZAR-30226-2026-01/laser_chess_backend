@@ -2,11 +2,11 @@ package rating
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 )
-
-const INITIAL_RATING = 1500
 
 type RatingService struct {
 	store *db.Store
@@ -16,34 +16,19 @@ func NewService(s *db.Store) *RatingService {
 	return &RatingService{store: s}
 }
 
-/*
-*
-* Desc: Esta funcion llama a una query generada por sqlc que
-* crea todos los ratings de un jugador
-* --- Parametros ---
-* ctx, context.Context - Es el contexto de gin.
-* userID, int64 - Es el id del jugador del que se van a crear los ratings.
-* --- Resultados ---
-* AllRatingsDTO - Contiene el id del jugador y los nuevos valores
-* de rating que se le han asignado.
-* error - Es el error que se haya provocado en la consulta, o nil en caso
-* contrario.
-*
- */
-func (s *RatingService) CreateRating(ctx context.Context, userID int64) (*AllRatingsDTO, error) {
-	newRating := db.CreateRatingsParams{
-		UserID:  userID,
-		Value:   INITIAL_RATING,
-		Value_2: INITIAL_RATING,
-		Value_3: INITIAL_RATING,
-		Value_4: INITIAL_RATING,
+func GetEloTypeFromBaseTime(baseTime int32) (db.EloType, error) {
+	switch baseTime {
+	case 5:
+		return db.EloTypeBLITZ, nil
+	case 15:
+		return db.EloTypeRAPID, nil
+	case 30:
+		return db.EloTypeCLASSIC, nil
+	case 60:
+		return db.EloTypeEXTENDED, nil
+	default:
+		return db.EloTypeBLITZ, errors.New("El tiempo base no corresponde a una ranked")
 	}
-
-	res, err := s.store.CreateRatings(ctx, newRating)
-	if err != nil {
-		return nil, err
-	}
-	return s.SqlcParamToDTO(res), err
 }
 
 /*
@@ -57,7 +42,7 @@ func (s *RatingService) CreateRating(ctx context.Context, userID int64) (*AllRat
 * de rating que se le han asignado.
 *
  */
-func (s RatingService) SqlcParamToDTO(res []db.Rating) *AllRatingsDTO {
+func (s RatingService) sqlcParamToDTO(res []db.Rating) *AllRatingsDTO {
 	if len(res) == 0 {
 		return &AllRatingsDTO{}
 	}
@@ -67,14 +52,14 @@ func (s RatingService) SqlcParamToDTO(res []db.Rating) *AllRatingsDTO {
 	var classic int32
 
 	for _, r := range res {
-		switch r.EloType {
-		case "blitz":
+		switch strings.ToUpper(string(r.EloType)) {
+		case "BLITZ":
 			blitz = r.Value
-		case "rapid":
+		case "RAPID":
 			rapid = r.Value
-		case "extended":
+		case "EXTENDED":
 			extended = r.Value
-		case "classic":
+		case "CLASSIC":
 			classic = r.Value
 		}
 	}
@@ -107,7 +92,27 @@ func (s *RatingService) GetAllElosByID(ctx context.Context, userID int64) (*AllR
 	if err != nil {
 		return nil, err
 	}
-	return s.SqlcParamToDTO(res), nil
+	return s.sqlcParamToDTO(res), nil
+}
+
+func (s *RatingService) GetEloByID(ctx context.Context, userID int64, baseTime int32) (*RatingDTO, error) {
+	eloType, err := GetEloTypeFromBaseTime(baseTime)
+	if err != nil {
+		return nil, err
+	}
+
+	switch eloType {
+	case db.EloTypeBLITZ:
+		return s.GetBlitzEloByID(ctx, userID)
+	case db.EloTypeRAPID:
+		return s.GetRapidEloByID(ctx, userID)
+	case db.EloTypeCLASSIC:
+		return s.GetClassicEloByID(ctx, userID)
+	case db.EloTypeEXTENDED:
+		return s.GetExtendedEloByID(ctx, userID)
+	default:
+		return nil, errors.New("tipo de elo inexistente")
+	}
 }
 
 /*
@@ -131,9 +136,12 @@ func (s *RatingService) GetBlitzEloByID(ctx context.Context, userID int64) (*Rat
 		return nil, err
 	}
 	return &RatingDTO{
-		UserID:  res.UserID,
-		EloType: res.EloType,
-		Value:   res.Value,
+		UserID:        res.UserID,
+		EloType:       res.EloType,
+		Value:         res.Value,
+		Deviation:     res.Deviation,
+		Volatility:    res.Volatility,
+		LastUpdatedAt: res.LastUpdatedAt,
 	}, nil
 }
 
@@ -143,9 +151,12 @@ func (s *RatingService) GetExtendedEloByID(ctx context.Context, userID int64) (*
 		return nil, err
 	}
 	return &RatingDTO{
-		UserID:  res.UserID,
-		EloType: res.EloType,
-		Value:   res.Value,
+		UserID:        res.UserID,
+		EloType:       res.EloType,
+		Value:         res.Value,
+		Deviation:     res.Deviation,
+		Volatility:    res.Volatility,
+		LastUpdatedAt: res.LastUpdatedAt,
 	}, nil
 }
 
@@ -155,9 +166,12 @@ func (s *RatingService) GetRapidEloByID(ctx context.Context, userID int64) (*Rat
 		return nil, err
 	}
 	return &RatingDTO{
-		UserID:  res.UserID,
-		EloType: res.EloType,
-		Value:   res.Value,
+		UserID:        res.UserID,
+		EloType:       res.EloType,
+		Value:         res.Value,
+		Deviation:     res.Deviation,
+		Volatility:    res.Volatility,
+		LastUpdatedAt: res.LastUpdatedAt,
 	}, nil
 }
 
@@ -167,9 +181,12 @@ func (s *RatingService) GetClassicEloByID(ctx context.Context, userID int64) (*R
 		return nil, err
 	}
 	return &RatingDTO{
-		UserID:  res.UserID,
-		EloType: res.EloType,
-		Value:   res.Value,
+		UserID:        res.UserID,
+		EloType:       res.EloType,
+		Value:         res.Value,
+		Deviation:     res.Deviation,
+		Volatility:    res.Volatility,
+		LastUpdatedAt: res.LastUpdatedAt,
 	}, nil
 }
 
@@ -180,26 +197,23 @@ func (s *RatingService) GetClassicEloByID(ctx context.Context, userID int64) (*R
 * --- Parametros ---
 * ctx, context.Context - Es el contexto de gin.
 * rating, RatingDTO - Contiene los datos del jugador, de la categoría,
-* y del nuevo valor que tiene el rating del jugador en esa categoría.
+* y los nuevos valores que tiene el rating del jugador en esa categoría.
 * --- Resultados ---
-* RatingDTO - Contiene el id del jugador, la categoría del rating,
-* y el valor que tiene el jugador en esa categoría
 * error - Es el error que se haya provocado en la consulta, o nil en caso
 * contrario.
 *
  */
-func (s *RatingService) UpdateEloByID(ctx context.Context, rating *RatingDTO) (*RatingDTO, error) {
-	res, err := s.store.UpdateRating(ctx, db.UpdateRatingParams{
-		UserID:  rating.UserID,
-		EloType: rating.EloType,
-		Value:   rating.Value,
+func (s *RatingService) UpdateEloByID(ctx context.Context, rating *RatingDTO) error {
+	err := s.store.UpdateRating(ctx, db.UpdateRatingParams{
+		Value:      rating.Value,
+		Deviation:  rating.Deviation,
+		Volatility: rating.Volatility,
+		UserID:     rating.UserID,
+		EloType:    rating.EloType,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &RatingDTO{
-		UserID:  res.UserID,
-		EloType: res.EloType,
-		Value:   res.Value,
-	}, nil
+
+	return nil
 }
