@@ -7,8 +7,7 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 const createMatch = `-- name: CreateMatch :one
@@ -23,18 +22,18 @@ RETURNING match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, mat
 `
 
 type CreateMatchParams struct {
-	P1ID            int64              `json:"p1_id"`
-	P2ID            int64              `json:"p2_id"`
-	P1Elo           int32              `json:"p1_elo"`
-	P2Elo           int32              `json:"p2_elo"`
-	Date            pgtype.Timestamptz `json:"date"`
-	Winner          Winner             `json:"winner"`
-	Termination     Termination        `json:"termination"`
-	MatchType       MatchType          `json:"match_type"`
-	Board           BoardType          `json:"board"`
-	MovementHistory string             `json:"movement_history"`
-	TimeBase        int32              `json:"time_base"`
-	TimeIncrement   int32              `json:"time_increment"`
+	P1ID            int64       `json:"p1_id"`
+	P2ID            int64       `json:"p2_id"`
+	P1Elo           int32       `json:"p1_elo"`
+	P2Elo           int32       `json:"p2_elo"`
+	Date            time.Time   `json:"date"`
+	Winner          Winner      `json:"winner"`
+	Termination     Termination `json:"termination"`
+	MatchType       MatchType   `json:"match_type"`
+	Board           BoardType   `json:"board"`
+	MovementHistory string      `json:"movement_history"`
+	TimeBase        int32       `json:"time_base"`
+	TimeIncrement   int32       `json:"time_increment"`
 }
 
 func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match, error) {
@@ -147,19 +146,19 @@ RETURNING match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, mat
 `
 
 type UpdateMatchParams struct {
-	P1ID            int64              `json:"p1_id"`
-	P2ID            int64              `json:"p2_id"`
-	P1Elo           int32              `json:"p1_elo"`
-	P2Elo           int32              `json:"p2_elo"`
-	Date            pgtype.Timestamptz `json:"date"`
-	Winner          Winner             `json:"winner"`
-	Termination     Termination        `json:"termination"`
-	MatchType       MatchType          `json:"match_type"`
-	Board           BoardType          `json:"board"`
-	MovementHistory string             `json:"movement_history"`
-	TimeBase        int32              `json:"time_base"`
-	TimeIncrement   int32              `json:"time_increment"`
-	MatchID         int64              `json:"match_id"`
+	P1ID            int64       `json:"p1_id"`
+	P2ID            int64       `json:"p2_id"`
+	P1Elo           int32       `json:"p1_elo"`
+	P2Elo           int32       `json:"p2_elo"`
+	Date            time.Time   `json:"date"`
+	Winner          Winner      `json:"winner"`
+	Termination     Termination `json:"termination"`
+	MatchType       MatchType   `json:"match_type"`
+	Board           BoardType   `json:"board"`
+	MovementHistory string      `json:"movement_history"`
+	TimeBase        int32       `json:"time_base"`
+	TimeIncrement   int32       `json:"time_increment"`
+	MatchID         int64       `json:"match_id"`
 }
 
 func (q *Queries) UpdateMatch(ctx context.Context, arg UpdateMatchParams) (Match, error) {
