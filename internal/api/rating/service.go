@@ -42,7 +42,7 @@ func GetEloTypeFromBaseTime(baseTime int32) (db.EloType, error) {
 * de rating que se le han asignado.
 *
  */
-func (s RatingService) sqlcParamToDTO(res []db.Rating) *AllRatingsDTO {
+func sqlcParamToDTO(res []db.Rating) *AllRatingsDTO {
 	if len(res) == 0 {
 		return &AllRatingsDTO{}
 	}
@@ -92,7 +92,7 @@ func (s *RatingService) GetAllElosByID(ctx context.Context, userID int64) (*AllR
 	if err != nil {
 		return nil, err
 	}
-	return s.sqlcParamToDTO(res), nil
+	return sqlcParamToDTO(res), nil
 }
 
 func (s *RatingService) GetEloByID(ctx context.Context, userID int64, baseTime int32) (*RatingDTO, error) {
@@ -219,7 +219,7 @@ func (s *RatingService) UpdateEloByID(ctx context.Context, rating *RatingDTO) er
 }
 
 func (s *RatingService) GetTopRankUsers(ctx context.Context,
-	 ratingType string) ([]RankUserDTO, error) {
+	ratingType string) ([]RankUserDTO, error) {
 	res, err := s.store.GetTopRankUsers(ctx, db.EloType(ratingType))
 	if err != nil {
 		return nil, err
@@ -228,10 +228,10 @@ func (s *RatingService) GetTopRankUsers(ctx context.Context,
 }
 
 func (s *RatingService) GetRankById(ctx context.Context,
-	 body *GetRankByIdDTO, userID int64) (int64, error) {
+	body *GetRankByIdDTO, userID int64) (int64, error) {
 	res, err := s.store.GetRankById(ctx, db.GetRankByIdParams{
 		EloType: body.EloType,
-		UserID: userID,
+		UserID:  userID,
 	})
 	if err != nil {
 		return 0, err
@@ -257,4 +257,3 @@ func ParseRankingRow(
 
 	return res
 }
-
