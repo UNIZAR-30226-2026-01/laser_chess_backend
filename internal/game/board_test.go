@@ -33,12 +33,18 @@ func TestAllBoards(t *testing.T) {
 	tablero.print()
 
 	fmt.Print("== MERCURY ==\n")
-	// tablero.InitBoard("boardTemplates/mercury.csv") TODO
-	// tablero.print()
+	tablero, err = InitBoard(boardtemplates.MERCURY)
+	if err != nil {
+		t.Error(err)
+	}
+	tablero.print()
 
 	fmt.Print("== SOPHIE ==\n")
-	// tablero.InitBoard("boardTemplates/sophie.csv") TODO
-	// tablero.print()
+	tablero, err = InitBoard(boardtemplates.SOPHIE)
+	if err != nil {
+		t.Error(err)
+	}
+	tablero.print()
 }
 
 // Test final de una partida y su resultado esperado
@@ -235,8 +241,8 @@ func TestAImove(t *testing.T) {
 			logPiece, laserPath, _, _ = tablero.calculateReturnValues(logPiece, laserPath, interactionResult)
 
 			fmt.Println(logPiece)
-			tablero.printlaser(laserPath)	
-			
+			tablero.printlaser(laserPath)
+
 		case 1: //AZUL
 			move := GetBestMove(tablero, BLUE_TEAM, 3)
 			logPiece, laserPath, interactionResult, err := tablero.ProcessTurn(move, BLUE_TEAM)
@@ -246,7 +252,7 @@ func TestAImove(t *testing.T) {
 			logPiece, laserPath, _, _ = tablero.calculateReturnValues(logPiece, laserPath, interactionResult)
 
 			fmt.Println(logPiece)
-			tablero.printlaser(laserPath)		
+			tablero.printlaser(laserPath)
 		}
 	}
 }
