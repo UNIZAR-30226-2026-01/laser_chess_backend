@@ -24,4 +24,9 @@ type AccountDTO struct {
 	Avatar       *int32  `json:"avatar,omitempty"`
 }
 
+type AccountStatsDTO struct {
+	Level     int32 `json:"level"`
+	Xp        int32 `json:"xp"`
+	Money     int32 `json:"money"`
+}
 

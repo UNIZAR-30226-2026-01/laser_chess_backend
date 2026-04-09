@@ -58,7 +58,7 @@ func SetupRouter(store *db.Store,
 	matchService := match.NewService(store)
 	matchHandler := match.NewHandler(matchService)
 
-	itemService := item.NewService(store)
+	itemService := item.NewService(store, accountService)
 	itemHandler := item.NewHandler(itemService)
 
 	deviceService := device.NewService(store)

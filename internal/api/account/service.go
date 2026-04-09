@@ -140,6 +140,21 @@ func (s *AccountService) Update(
 	}, nil
 }
 
+func (s *AccountService) UpdateStats(
+	ctx context.Context,
+	accountID int64,
+	body *AccountStatsDTO,
+) error {
+	_, err := s.store.UpdateStats(ctx, db.UpdateStatsParams{
+		AccountID: 	accountID,
+		Level: 		body.Level,
+		Money: 		body.Money,
+		Xp: 		body.Xp,
+	})
+
+	return err
+}
+
 // Desactiva la cuenta del usuario con id == accountID
 func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
 	return s.store.DeleteAccount(ctx, accountID)

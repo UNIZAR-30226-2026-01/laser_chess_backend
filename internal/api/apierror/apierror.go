@@ -29,7 +29,10 @@ var (
 	ErrNotAValidGameMode    = errors.New("time base and/or increment invalid")
 	ErrNotAValidRankedType  = errors.New("ranked type invalid")
 
-	ErrAlreadyFriends		= errors.New("the users are already friends")
+	ErrAlreadyFriends		= errors.New("users are already friends")
+
+	ErrNotEnoughMoney		= errors.New("user doesn't have enough money")
+	ErrUserLevelTooLow		= errors.New("user's level doesn't meet the level requisite")
 )
 
 // Función que detecta el tipo de error, y manda el código de error
