@@ -205,3 +205,13 @@ INSERT INTO public."rating" (
     'extended',
     2222
 );
+
+INSERT INTO shop_item (
+    price, level_requisite, item_type, is_default
+) VALUES (
+    50, 0, 'board_skin', false
+), (
+    1000, 0, 'board_skin', false
+), (
+    1, 10, 'board_skin', false
+);

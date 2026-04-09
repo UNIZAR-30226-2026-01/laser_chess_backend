@@ -33,3 +33,24 @@ type AllRatingsDTO struct {
 	Rapid    int32 `json:"rapid" binding:"required"`
 	Classic  int32 `json:"classic" binding:"required"`
 }
+
+type RankUserDTO struct {
+	UserID 		int64 `json:"user_id" binding:"required"`
+	Username 	string `json:"username" binding:"required"`
+	Level 		int32 `json:"level" binding:"required"`
+	Avatar 		int32 `json:"avatar" binding:"required"`
+	Rating		int32 `json:"rating" binding:"required"`
+}
+
+type GetRankingDTO struct {
+	EloType string `json:"elo_type" binding:"required"`
+}
+
+type GetRankByIdDTO struct {
+	EloType db.EloType `json:"elo_type" binding:"required"`
+}
+
+type RankingDTO struct {
+	Rank int64 `json:"rank" binding:"required"`
+}
+ 

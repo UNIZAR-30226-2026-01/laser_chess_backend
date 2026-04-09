@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "account" (
 CREATE TABLE IF NOT EXISTS "device" (
 	"user_id" BIGSERIAL NOT NULL UNIQUE,
 	"token" VARCHAR(255) NOT NULL UNIQUE,
-	PRIMARY KEY("user_id"),
+	PRIMARY KEY("user_id", "token"),
 	FOREIGN KEY("user_id") REFERENCES "account"("account_id")
 );
 

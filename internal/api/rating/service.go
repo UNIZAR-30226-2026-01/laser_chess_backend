@@ -217,3 +217,44 @@ func (s *RatingService) UpdateEloByID(ctx context.Context, rating *RatingDTO) er
 
 	return nil
 }
+
+func (s *RatingService) GetTopRankUsers(ctx context.Context,
+	 ratingType string) ([]RankUserDTO, error) {
+	res, err := s.store.GetTopRankUsers(ctx, db.EloType(ratingType))
+	if err != nil {
+		return nil, err
+	}
+	return ParseRankingRow(res), nil
+}
+
+func (s *RatingService) GetRankById(ctx context.Context,
+	 body *GetRankByIdDTO, userID int64) (int64, error) {
+	res, err := s.store.GetRankById(ctx, db.GetRankByIdParams{
+		EloType: body.EloType,
+		UserID: userID,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return res, nil
+}
+
+func ParseRankingRow(
+	data []db.GetTopRankUsersRow,
+) []RankUserDTO {
+
+	var res []RankUserDTO
+
+	for _, value := range data {
+		res = append(res, RankUserDTO{
+			UserID:   value.AccountID,
+			Username: value.Username,
+			Level:    value.Level,
+			Avatar:   value.Avatar,
+			Rating:   value.Value,
+		})
+	}
+
+	return res
+}
+

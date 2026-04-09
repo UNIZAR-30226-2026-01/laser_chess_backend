@@ -71,3 +71,19 @@ func (h *MatchHandler) GetUserHistory(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+func (h *MatchHandler) GetPausedMatches(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("userID"), 10, 64)
+	if err != nil {
+		apierror.SendError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := h.service.GetPausedMatches(c.Request.Context(), int64(id))
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}

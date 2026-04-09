@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/device"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/friendship"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/login"
@@ -17,6 +18,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/private"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/public"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -56,10 +58,19 @@ func SetupRouter(store *db.Store,
 	matchService := match.NewService(store)
 	matchHandler := match.NewHandler(matchService)
 
-	itemService := item.NewService(store)
+	itemService := item.NewService(store, accountService)
 	itemHandler := item.NewHandler(itemService)
 
-	friendshipService := friendship.NewService(store)
+	deviceService := device.NewService(store)
+
+	// Creacion del SSE para eventos y notificaciones
+	fcm, err := sse.InitFirebase(deviceService)
+	if err != nil {
+
+	}
+	eventSystem := sse.InitSSE(fcm)
+
+	friendshipService := friendship.NewService(store, eventSystem)
 	friendshipHandler := friendship.NewHandler(friendshipService, accountService)
 
 	// Establecer las rutas de las peticiones http por grupos
@@ -95,6 +106,7 @@ func SetupRouter(store *db.Store,
 		matchRoute := protected.Group("/match")
 		matchRoute.GET("/:matchID", matchHandler.GetMatch)
 		matchRoute.GET("/history/:userID", matchHandler.GetUserHistory)
+		matchRoute.GET("/history/:userID/paused", matchHandler.GetPausedMatches)
 	}
 
 	// Item routes
@@ -114,6 +126,8 @@ func SetupRouter(store *db.Store,
 		ratingRoute.GET("/:userID/extended", ratingHandler.GetExtendedElo)
 		ratingRoute.GET("/:userID/rapid", ratingHandler.GetRapidElo)
 		ratingRoute.GET("/:userID/classic", ratingHandler.GetClassicElo)
+		ratingRoute.GET("/:userID/ranking", ratingHandler.GetRankById)
+		ratingRoute.GET("/top", ratingHandler.GetTopRankUsers)
 	}
 
 	// Friendship routes
@@ -136,9 +150,18 @@ func SetupRouter(store *db.Store,
 		friendshipRoute.DELETE("/:user2Username", friendshipHandler.DeleteFriendship)
 	}
 
+	//  Event routes
+	{
+		eventRoute := protected.Group("/events")
+		eventRoute.GET("", eventSystem.EventHandler)
+	}
+
 	// Endpoints de websockets
-	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService, matchService, ratingService)
-	publicHandler := public.NewPublicHandler(publicHub, registry, accountService, matchService, ratingService)
+	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService,
+		matchService, ratingService, eventSystem)
+
+	publicHandler := public.NewPublicHandler(publicHub, registry, accountService,
+		matchService, ratingService, eventSystem)
 
 	{
 		rtRoute := protected.Group("/rt/")

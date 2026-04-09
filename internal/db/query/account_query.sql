@@ -80,3 +80,13 @@ RETURNING *;
 INSERT INTO device (user_id, token)
 VALUES ($1, $2)
 RETURNING user_id;
+
+-- name: GetDevicesById :many
+SELECT token FROM device
+WHERE user_id = $1;
+
+-- name: DeleteDevice :one
+DELETE FROM device
+WHERE token = $1
+RETURNING token;
+

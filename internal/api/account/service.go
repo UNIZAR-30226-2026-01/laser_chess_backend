@@ -137,6 +137,9 @@ func (s *AccountService) Update(
 		AccountID:    &res.AccountID,
 		Mail:         &res.Mail,
 		Username:     &res.Username,
+		Level:        &res.Level,
+		Xp:           &res.Xp,
+		Money:        &res.Money,
 		BoardSkin:    &res.BoardSkin,
 		PieceSkin:    &res.PieceSkin,
 		WinAnimation: &res.WinAnimation,
@@ -144,18 +147,24 @@ func (s *AccountService) Update(
 	}, nil
 }
 
+func (s *AccountService) UpdateStats(
+	ctx context.Context,
+	accountID int64,
+	body *AccountStatsDTO,
+) error {
+	_, err := s.store.UpdateStats(ctx, db.UpdateStatsParams{
+		AccountID: 	accountID,
+		Level: 		body.Level,
+		Money: 		body.Money,
+		Xp: 		body.Xp,
+	})
+
+	return err
+}
+
 // Desactiva la cuenta del usuario con id == accountID
 func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
 	return s.store.DeleteAccount(ctx, accountID)
 }
 
-// Registra un nuevo dispositivo al usuario con id == accountID
-func (s *AccountService) RegisterDevice(ctx context.Context,
-	token RegisterDeviceDTO, accountID int64) (int64, error) {
 
-	return s.store.RegisterDevice(ctx, db.RegisterDeviceParams{
-		UserID: accountID,
-		Token:  token.Token,
-	})
-
-}
