@@ -214,38 +214,3 @@ func (s *MatchService) GetPausedMatches(ctx context.Context, userID int64) ([]Ma
 
 	return parseMatches(res), nil
 }
-
-/*
-*
-* Desc: Esta funcion llama a una query generada por sqlc que busca el historial
-de partidas de un jugador dado su id.
-* --- Parametros ---
-* ctx, context.Context - Es el contexto de gin.
-* userID, int64 - Es el id de la partida.
-* --- Resultados ---
-* []MatchDTO - Listado de las partidas del jugador.
-* error - Es el error que se haya provocado en la consulta, o nil en caso
-contrario.
-*
-*/
-func (s *MatchService) UpdateMatch(ctx context.Context, match *db.UpdateMatchParams) (*MatchDTO, error) {
-	res, err := s.store.UpdateMatch(ctx, *match)
-	if err != nil {
-		return nil, err
-	}
-
-	return &MatchDTO{
-		P1ID:            res.P1ID,
-		P2ID:            res.P2ID,
-		P1Elo:           res.P1Elo,
-		P2Elo:           res.P2Elo,
-		Date:            res.Date,
-		Winner:          res.Winner,
-		Termination:     res.Termination,
-		MatchType:       res.MatchType,
-		Board:           res.Board,
-		MovementHistory: res.MovementHistory,
-		TimeBase:        res.TimeBase,
-		TimeIncrement:   res.TimeIncrement,
-	}, nil
-}
