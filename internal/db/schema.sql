@@ -26,16 +26,16 @@ CREATE TYPE "termination" AS ENUM (
 );
 
 CREATE TYPE "item_type" AS ENUM (
-	'board_skin',
-	'piece_skin',
-    'win_animation'
+	'BOARD_SKIN',
+	'PIECE_SKIN',
+    'WIN_ANIMATION'
 );
 
 CREATE TYPE "elo_type" AS ENUM (
-	'blitz',
-	'extended',
-	'rapid',
-	'classic'
+	'BLITZ',
+	'EXTENDED',
+	'RAPID',
+	'CLASSIC'
 );
 
 CREATE TABLE IF NOT EXISTS "account" (
