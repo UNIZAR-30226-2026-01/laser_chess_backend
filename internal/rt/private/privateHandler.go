@@ -14,6 +14,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
@@ -25,14 +26,17 @@ type PrivateHandler struct {
 	registry       *rt.MatchRegistry
 	accountService *account.AccountService
 	matchService   *match.MatchService
+	ratingService  *rating.RatingService
 }
 
-func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry, accounts *account.AccountService, matches *match.MatchService) *PrivateHandler {
+func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry,
+	accounts *account.AccountService, matches *match.MatchService, ratings *rating.RatingService) *PrivateHandler {
 	return &PrivateHandler{
 		hub:            hub,
 		registry:       registry,
 		accountService: accounts,
 		matchService:   matches,
+		ratingService:  ratings,
 	}
 }
 
@@ -243,7 +247,7 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 		P1Client = challengedClient
 		P2Client = info.ChallengerClient
 	}
-	room.InitRoom(P1Client, P2Client, h.matchService, info.IsNewMatch,
+	room.InitRoom(P1Client, P2Client, h.matchService, h.ratingService, info.IsNewMatch,
 		&game.GameInfo{
 			BoardType:     info.Board,
 			Log:           info.Log,

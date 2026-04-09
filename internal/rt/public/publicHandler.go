@@ -177,7 +177,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 			matchType = "RANKED"
 		}
 
-		room.InitRoom(P1Client, P2Client, h.matchService, true,
+		room.InitRoom(P1Client, P2Client, h.matchService, h.ratingService, true,
 			&game.GameInfo{
 				BoardType:     game.Board_T(rand.Intn(db.BOARD_NUM)),
 				Log:           "",
