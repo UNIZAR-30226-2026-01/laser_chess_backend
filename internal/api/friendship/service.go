@@ -53,14 +53,30 @@ func (s FriendshipService) Create(ctx context.Context, data *FriendshipDTO) erro
 		return apierror.ErrBadRequest
 	}
 
-	err := s.store.CreateFriendship(ctx, db.CreateFriendshipParams{
+	_, err := s.GetFriendshipStatus(ctx, data)
+	if err != nil {
+		return err
+	} else if err != apierror.ErrNotFound {
+		return apierror.ErrAlreadyFriends
+	}
+
+	err = s.store.CreateFriendship(ctx, db.CreateFriendshipParams{
 		User1ID:   AuxUser1ID,
 		User2ID:   AuxUser2ID,
 		Accepted1: AuxAccepted1,
 		Accepted2: AuxAccepted2,
 	})
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	s.eventSystem.SendEvent(data.ReceiverID, &sse.Event{
+		EventType: "FriendRequest",
+		Data: *data.SenderID,
+	}, true)
+
+	return nil
 }
 
 /*
@@ -89,6 +105,10 @@ func (s FriendshipService) GetFriendshipStatus(
 		User1ID: *data.SenderID,
 		User2ID: data.ReceiverID,
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	if *data.SenderID == res.User1ID {
 		return &FriendshipStatusDTO{
@@ -242,6 +262,25 @@ func (s FriendshipService) AcceptFriendship(
 	if err != nil {
 		return err
 	}
+
+	friendship, err := s.GetFriendshipStatus(ctx, data)
+	if err != nil {
+		return err
+	}
+
+	if friendship.SenderAccept && friendship.ReceiverAccept {
+		return apierror.ErrAlreadyFriends
+	}
+
+	s.eventSystem.SendEvent(data.ReceiverID, &sse.Event{
+		EventType: "NewFriend",
+		Data: *data.SenderID,
+	}, true)
+
+	s.eventSystem.SendEvent(*data.SenderID, &sse.Event{
+		EventType: "NewFriend",
+		Data: data.ReceiverID,
+	}, true)
 
 	return nil
 }

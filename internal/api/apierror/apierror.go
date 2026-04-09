@@ -28,6 +28,8 @@ var (
 	ErrNotYourMatch         = errors.New("match is not yours")
 	ErrNotAValidGameMode    = errors.New("time base and/or increment invalid")
 	ErrNotAValidRankedType  = errors.New("ranked type invalid")
+
+	ErrAlreadyFriends		= errors.New("the users are already friends")
 )
 
 // Función que detecta el tipo de error, y manda el código de error
