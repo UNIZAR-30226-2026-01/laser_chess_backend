@@ -127,23 +127,3 @@ func (h *AccountHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, gin.H{})
 }
-
-// Desactiva la cuenta del user que manda la peticion
-func (h *AccountHandler) RegisterDevice(c *gin.Context) {
-
-	id, err := middleware.ExtractAccountID(c)
-
-	var token RegisterDeviceDTO
-	if err := c.ShouldBindJSON(&token); err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
-		return
-	}
-
-	_, err = h.accountService.RegisterDevice(c.Request.Context(), token, int64(id))
-	if err != nil {
-		apierror.DetectAndSendError(c, err)
-		return
-	}
-
-	c.JSON(http.StatusNoContent, gin.H{})
-}

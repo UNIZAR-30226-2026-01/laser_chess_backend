@@ -145,25 +145,4 @@ func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
 	return s.store.DeleteAccount(ctx, accountID)
 }
 
-// Registra un nuevo dispositivo al usuario con id == accountID
-func (s *AccountService) RegisterDevice(ctx context.Context,
-	token RegisterDeviceDTO, accountID int64) (int64, error) {
 
-	return s.store.RegisterDevice(ctx, db.RegisterDeviceParams{
-		UserID: accountID,
-		Token:  token.Token,
-	})
-
-}
-
-func (s *AccountService) GetDevicesById(ctx context.Context,
-	accountID int64) ([]string, error) {
-
-	return s.store.GetDevicesById(ctx, accountID)
-
-}
-
-func (s *AccountService) DeleteDevice(ctx context.Context,
-	token string) (string, error) {
-	return s.store.DeleteDevice(ctx, token)
-}

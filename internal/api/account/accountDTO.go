@@ -24,6 +24,4 @@ type AccountDTO struct {
 	Avatar       *int32  `json:"avatar,omitempty"`
 }
 
-type RegisterDeviceDTO struct {
-	Token string `json:"token" binding:"required"`
-}
+

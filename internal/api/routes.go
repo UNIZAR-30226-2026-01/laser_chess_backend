@@ -13,6 +13,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/device"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/private"
@@ -60,7 +61,16 @@ func SetupRouter(store *db.Store,
 	itemService := item.NewService(store)
 	itemHandler := item.NewHandler(itemService)
 
-	friendshipService := friendship.NewService(store)
+	deviceService := device.NewService(store)
+
+	// Creacion del SSE para eventos y notificaciones
+	fcm, err := sse.InitFirebase(deviceService)
+	if err != nil {
+
+	}
+	eventSystem := sse.InitSSE(fcm)
+
+	friendshipService := friendship.NewService(store, eventSystem)
 	friendshipHandler := friendship.NewHandler(friendshipService, accountService)
 
 	// Establecer las rutas de las peticiones http por grupos
@@ -143,13 +153,7 @@ func SetupRouter(store *db.Store,
 		friendshipRoute.DELETE("/:user2Username", friendshipHandler.DeleteFriendship)
 	}
 
-	// Endpoints de eventos
-	fcm, err := sse.InitFirebase(accountService)
-	if err != nil {
-
-	}
-	eventSystem := sse.InitSSE(fcm)
-
+	//  Event routes
 	{
 		eventRoute := protected.Group("/events")
 		eventRoute.GET("", eventSystem.EventHandler)
