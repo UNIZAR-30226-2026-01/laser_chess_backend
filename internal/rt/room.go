@@ -7,10 +7,9 @@ import (
 	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
-	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
-	sqlc "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/elo"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // fichero que gestiona las rooms
@@ -21,7 +20,7 @@ import (
 type Room struct {
 	Player1    *Client
 	Player2    *Client
-	IsNewMatch bool
+	isNewMatch bool
 	GameInfo   *game.GameInfo
 	Game       *game.LaserChessGame
 
@@ -30,29 +29,34 @@ type Room struct {
 
 	Broadcast chan game.ResponseToRoom
 
-	MatchService *match.MatchService
+	matchService  *match.MatchService
+	ratingService *rating.RatingService
 }
 
 func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
-	MatchService *match.MatchService, IsNewMatch bool, GameInfo *game.GameInfo) {
+	matchService *match.MatchService, ratingService *rating.RatingService,
+	isNewMatch bool, GameInfo *game.GameInfo) {
 
 	r.Player1 = Player1
 	r.Player2 = Player2
 	r.P1Pause = false
 	r.P2Pause = false
 	r.Broadcast = make(chan game.ResponseToRoom, 2)
-	r.MatchService = MatchService
-	r.IsNewMatch = IsNewMatch
+
+	r.matchService = matchService
+	r.ratingService = ratingService
+
+	r.isNewMatch = isNewMatch
 	r.GameInfo = GameInfo
 
 	r.Game = &game.LaserChessGame{}
 	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID,
 		GameInfo.BoardType, GameInfo.Log, GameInfo.TimeBase, GameInfo.TimeIncrement)
 
-	go r.Run()
+	go r.run()
 }
 
-func (r *Room) End() {
+func (r *Room) end() {
 	fmt.Println("Cierre de la room")
 
 	// Vaciar Broadcast
@@ -68,58 +72,115 @@ VaciarBroadcast:
 		}
 	}
 
+	// TODO: actualizar experiencia
+
+	actualizarElo := r.GameInfo.MatchType != "FRIENDLY" &&
+		r.GameInfo.Winner != "NONE"
+
+	// Guardar en BD
+	if actualizarElo {
+		newP1Rating, newP2Rating, err := r.getUpdatedPlayerRatings()
+		if err != nil {
+			// TODO: gestionar estos errores
+		}
+
+		// Llamamos a la transacción pasándole la partida y los Elos
+		matchData := match.MatchSaveDTO{
+			IsNewMatch: r.isNewMatch,
+			GameInfo:   r.GameInfo,
+			P1ID:       r.Player1.AccountID,
+			P2ID:       r.Player2.AccountID,
+			P1Elo:      int32(newP1Rating.Value),
+			P2Elo:      int32(newP2Rating.Value),
+			Date:       time.Now(),
+		}
+		err = r.matchService.SaveMatchResultTx(context.Background(), matchData, *newP1Rating, *newP2Rating)
+	} else {
+		p1Elo, p2Elo, err := r.getPlayerRatingValues()
+		if err != nil {
+			// TODO: gestionar estos errores
+		}
+
+		// Guardado simple para amistosas con los elos normales
+		matchData := match.MatchSaveDTO{
+			IsNewMatch: r.isNewMatch,
+			GameInfo:   r.GameInfo,
+			P1ID:       r.Player1.AccountID,
+			P2ID:       r.Player2.AccountID,
+			P1Elo:      p1Elo,
+			P2Elo:      p2Elo,
+			Date:       time.Now(),
+		}
+		err = r.matchService.SaveMatch(context.Background(), matchData)
+	}
+
+	// TODO: mandar al cliente la info de elo y exp
+
 	// Avisar y cerrar los clientes
 	r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
 	r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
 
-	// Guardar la partida en BD
-	err := r.SaveMatchInDB()
+}
 
+func (r *Room) getPlayerRatingValues() (int32, int32, error) {
+	ctx := context.Background()
+
+	p1Data, err := r.ratingService.GetEloByID(ctx, r.Player1.AccountID, r.GameInfo.TimeBase)
 	if err != nil {
-		fmt.Println(err)
+		return 0, 0, err
 	}
 
-}
-
-func (r *Room) SaveMatchInDB() error {
-	var err error
-	if r.IsNewMatch {
-		fmt.Println("Cierre de la room con match nueva")
-		_, err = r.MatchService.Create(context.Background(), &match.MatchDTO{
-			P1ID:            r.Player1.AccountID,
-			P2ID:            r.Player2.AccountID,
-			P1Elo:           0, // cambiar
-			P2Elo:           0, // cambiar
-			Date:            pgtype.Timestamptz{Time: time.Now(), Valid: true},
-			Winner:          sqlc.Winner(r.GameInfo.Winner),
-			Termination:     sqlc.Termination(r.GameInfo.Termination),
-			MatchType:       sqlc.MatchType(r.GameInfo.MatchType),
-			Board:           db.IntToBoard[r.GameInfo.BoardType],
-			MovementHistory: r.Game.GetCurrentState(),
-			TimeBase:        int32(r.GameInfo.TimeBase),
-			TimeIncrement:   int32(r.GameInfo.TimeIncrement),
-		})
-	} else {
-		_, err = r.MatchService.UpdateMatch(context.Background(), &sqlc.UpdateMatchParams{
-			P1ID:            r.Player1.AccountID,
-			P2ID:            r.Player2.AccountID,
-			P1Elo:           0, // cambiar
-			P2Elo:           0, // cambiar
-			Date:            pgtype.Timestamptz{Time: time.Now(), Valid: true},
-			Winner:          sqlc.Winner(r.GameInfo.Winner),
-			Termination:     sqlc.Termination(r.GameInfo.Termination),
-			MatchType:       sqlc.MatchType(r.GameInfo.MatchType),
-			Board:           db.IntToBoard[r.GameInfo.BoardType],
-			MovementHistory: r.Game.GetCurrentState(),
-			TimeBase:        int32(r.GameInfo.TimeBase),
-			TimeIncrement:   int32(r.GameInfo.TimeIncrement),
-			MatchID:         r.GameInfo.MatchID,
-		})
+	p2Data, err := r.ratingService.GetEloByID(ctx, r.Player1.AccountID, r.GameInfo.TimeBase)
+	if err != nil {
+		return 0, 0, err
 	}
-	return err
+
+	return p1Data.Value, p2Data.Value, nil
 }
 
-func (r *Room) Run() {
+func (r *Room) getUpdatedPlayerRatings() (*elo.Rating, *elo.Rating, error) {
+	ctx := context.Background()
+
+	// Obtener los ratings actuales de la base de datos
+	p1Data, err := r.ratingService.GetEloByID(ctx, r.Player1.AccountID, r.GameInfo.TimeBase)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	p2Data, err := r.ratingService.GetEloByID(ctx, r.Player1.AccountID, r.GameInfo.TimeBase)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var scoreP1 float64
+	switch r.GameInfo.Winner {
+	case "P1_WINS":
+		scoreP1 = 1.0
+	case "P2_WINS":
+		scoreP1 = 0.0
+	}
+
+	p1Rating := elo.Rating{
+		Value:      float64(p1Data.Value),
+		Deviation:  float64(p1Data.Deviation),
+		Volatility: p1Data.Volatility,
+	}
+	p2Rating := elo.Rating{
+		Value:      float64(p2Data.Value),
+		Deviation:  float64(p2Data.Deviation),
+		Volatility: p2Data.Volatility,
+	}
+
+	p1Rating = elo.ApplyInactivity(p1Rating, p1Data.LastUpdatedAt)
+	p2Rating = elo.ApplyInactivity(p2Rating, p2Data.LastUpdatedAt)
+
+	// Calcular nuevos elos
+	newP1Rating, newP2Rating := elo.ProcessMatch(p1Rating, p2Rating, scoreP1)
+
+	return &newP1Rating, &newP2Rating, nil
+}
+
+func (r *Room) run() {
 
 	fmt.Println("La partida ha iniciado :)")
 
@@ -134,12 +195,12 @@ func (r *Room) Run() {
 			r.Player2.Send <- message
 
 		case message := <-r.Player1.ToRoom:
-			r.FilterMessage(r.Player1, message)
+			r.filterMessage(r.Player1, message)
 		case message := <-r.Player2.ToRoom:
-			r.FilterMessage(r.Player2, message)
+			r.filterMessage(r.Player2, message)
 
 		case gameMsg := <-r.Game.ToRoom:
-			if r.HandleGameMessage(gameMsg) {
+			if r.handleGameMessage(gameMsg) {
 				// Cerrar la room si acaba la partida
 				return
 			}
@@ -147,7 +208,7 @@ func (r *Room) Run() {
 	}
 }
 
-func (r *Room) FilterMessage(player *Client, message ClientSocketMessage) {
+func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
 	// debug
 	fmt.Println("Type: ", message.Type)
 	fmt.Println("Content: ", message.Content)
@@ -165,12 +226,12 @@ func (r *Room) FilterMessage(player *Client, message ClientSocketMessage) {
 			MsgType:   game.GetState,
 		}
 	case game.Pause:
-		r.ManagePause(player)
+		r.managePause(player)
 	}
 }
 
 // El valor que devuelve indica si hay que cerrar la room
-func (r *Room) HandleGameMessage(response game.ResponseToRoom) bool {
+func (r *Room) handleGameMessage(response game.ResponseToRoom) bool {
 	switch response.Type {
 	case game.Move, game.InitialState:
 		r.Broadcast <- response
@@ -191,7 +252,7 @@ func (r *Room) HandleGameMessage(response game.ResponseToRoom) bool {
 		r.GameInfo.Winner = response.Content
 		r.GameInfo.Termination = response.Extra
 
-		r.End()
+		r.end()
 		return true
 
 	case game.Paused:
@@ -200,14 +261,14 @@ func (r *Room) HandleGameMessage(response game.ResponseToRoom) bool {
 		r.GameInfo.Winner = "NONE"
 		r.GameInfo.Termination = "UNFINISHED"
 
-		r.End()
+		r.end()
 		return true
 	}
 
 	return false
 }
 
-func (r *Room) ManagePause(player *Client) {
+func (r *Room) managePause(player *Client) {
 	if r.GameInfo.MatchType != "PRIVATE" {
 		player.Send <- game.ResponseToRoom{Type: game.Error,
 			Content: "You can't pause a public game"}
