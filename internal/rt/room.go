@@ -87,6 +87,7 @@ VaciarBroadcast:
 	// Guardar en BD
 	if actualizarElo {
 		newP1Rating, newP2Rating, err := r.getUpdatedPlayerRatings()
+		fmt.Println("P1Rating: ", newP1Rating, ", P2Rating: ", newP2Rating)
 		if err != nil {
 			// TODO: gestionar estos errores
 		}
@@ -126,10 +127,21 @@ VaciarBroadcast:
 	}
 
 	// TODO: mandar al cliente la info de elo y exp
-
+	fmt.Println("Antes de enviar el EOC a los clientes")
 	// Avisar y cerrar los clientes
-	r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
-	r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
+	r.Player1.mu.RLock()
+	if r.Player1.Online {
+		r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
+	}
+	r.Player1.mu.RUnlock()
+
+	r.Player2.mu.RLock()
+	if r.Player2.Online {
+		r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
+	}
+	r.Player2.mu.RUnlock()
+
+	fmt.Println("Despues de enviar el EOC a los clientes")
 
 	r.Registry.RemoveMatch(r.Player1.AccountID, r.Player2.AccountID)
 
@@ -240,6 +252,28 @@ func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
 		}
 	case game.Pause:
 		r.managePause(player)
+	case game.EOC:
+		go r.manageDisconnection(player)
+	}
+}
+
+func (r *Room) manageDisconnection(player *Client) {
+	timeout := time.NewTimer(3 * time.Second)
+	defer timeout.Stop()
+
+	fmt.Println("Desconexion detectada")
+	if player.AccountID == r.Player1.AccountID {
+		r.Player2.Send <- game.ResponseToRoom{Type: game.Disconnection}
+	}
+
+	select {
+	case <-timeout.C:
+		fmt.Println("Desconexion confirmada")
+		r.Game.FromRoom <- game.RoomMsg{
+			PlayerUid: player.AccountID,
+			MsgType:   game.Disconnection,
+		}
+	case <-player.Reconnect:
 	}
 }
 
@@ -265,6 +299,7 @@ func (r *Room) handleGameMessage(response game.ResponseToRoom) bool {
 		r.GameInfo.Winner = response.Content
 		r.GameInfo.Termination = response.Extra
 
+		fmt.Println("Winner: ", r.GameInfo.Winner, ", Termination: ", r.GameInfo.Termination)
 		r.end()
 		return true
 

@@ -4,7 +4,8 @@ package rt
 // de un usuario en un hub
 
 import (
-	"time"
+	"fmt"
+	"sync"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/gorilla/websocket"
@@ -21,6 +22,11 @@ type Client struct {
 	Send      chan game.ResponseToRoom
 	ToRoom    chan ClientSocketMessage
 
+	Reconnect chan bool
+	Online    bool
+
+	mu sync.RWMutex
+
 	// Canal para avisar de fin
 	Done chan struct{}
 }
@@ -28,10 +34,15 @@ type Client struct {
 func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
 	c.AccountID = AccountID
 	c.Conn = Conn
-	c.Send = make(chan game.ResponseToRoom)
+	c.Send = make(chan game.ResponseToRoom, 1)
 	c.ToRoom = make(chan ClientSocketMessage, 1)
 
 	c.Done = make(chan struct{})
+	c.Reconnect = make(chan bool)
+
+	c.mu.Lock()
+	c.Online = true
+	c.mu.Unlock()
 
 	go c.ReadPump()
 	go c.WritePump()
@@ -46,6 +57,7 @@ func (c *Client) ReadPump() error {
 			close(c.Done)
 		}
 		c.Conn.Close()
+		c.notifyDisconnection()
 	}()
 
 	for {
@@ -90,12 +102,20 @@ func (c *Client) WritePump() error {
 	}
 }
 
-func (c *Client) Close() {
-	deadline := time.Now().Add(time.Second)
-	c.Conn.WriteControl(
-		websocket.CloseMessage,
-		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
-		deadline,
-	)
-	c.Conn.Close()
+func (c *Client) notifyDisconnection() {
+	fmt.Println("Desconexion identificadad desde client")
+	c.mu.Lock()
+	c.Online = false
+	c.mu.Unlock()
+	c.ToRoom <- ClientSocketMessage{Type: string(game.EOC), Content: ""}
 }
+
+// func (c *Client) Close() {
+// 	deadline := time.Now().Add(time.Second)
+// 	c.Conn.WriteControl(
+// 		websocket.CloseMessage,
+// 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+// 		deadline,
+// 	)
+// 	c.Conn.Close()
+// }

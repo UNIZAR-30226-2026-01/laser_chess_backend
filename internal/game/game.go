@@ -247,6 +247,22 @@ func (g *LaserChessGame) HandleRoomMsg(message RoomMsg) bool {
 		}
 
 		return true
+
+	case Disconnection:
+		//gestionar pausa del juego
+		var winner string
+		if message.PlayerUid == g.redPlayer {
+			winner = "P2_WINS"
+		} else {
+			winner = "P1_WINS"
+		}
+		g.ToRoom <- ResponseToRoom{
+			Type:    End,
+			Content: winner,
+			Extra:   "DISCONNECTION",
+		}
+
+		return true
 	}
 
 	return false

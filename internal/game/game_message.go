@@ -15,4 +15,6 @@ const (
 	End          GameMessageType = "End"
 	Error        GameMessageType = "Error"
 	EOC          GameMessageType = "EOC"
+
+	Disconnection GameMessageType = "Disconnection"
 )

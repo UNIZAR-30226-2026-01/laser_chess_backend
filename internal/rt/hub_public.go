@@ -102,7 +102,7 @@ func (ph *PublicHub) Search(request *MatchRequest) {
 			ph.RemoveFromQueue(request)
 			return
 		case <-ticker.C:
-			if radius <= 3 {
+			if radius <= 10 {
 				radius++
 			}
 		case <-newCheck.C:
