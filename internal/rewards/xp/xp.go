@@ -16,7 +16,7 @@ func GetLevel(XP int32) int32 {
 }
 
 func GetLevelXP(level int32) int32 {
-	return 250 * math.Sqrt(level)
+	return int32(math.Floor(250.0 * float64(math.Sqrt(float64(level)))))
 }
 
 func GetMatchXP(p1Elo int32, p2Elo int32, scoreP1 int) (int32, int32) {
