@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	boardtemplates "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game/boardTemplates"
 )
@@ -197,7 +198,7 @@ func TestApplyLogToBoard(t *testing.T) {
 	gameEngine.gameLog = `Rf1%j1,j4,i4,i5,j5,j9%{300};Tg6:f6%a8,a5,b5,b4,a4,a0%{250};Rb4%j1,j4,i4,i5,j5,j9%{200};Ri5xf6%a8,a5,b5,b4,e4,e5,f5,f6%{150};Re4xf8%j1,j4,i4,i5,f5,f4,e4,e5,f5,f8%{100};`
 
 	// Aplicamos el log al estado inicial
-	team, redTimeLeft, blueTimeLeft := gameEngine.ApplyLogToBoard(400)
+	team, redTimeLeft, blueTimeLeft := gameEngine.EngineApplyLogToBoard(400)
 
 	// Correcto el turno siguiente?
 	if team != BLUE_TEAM {
@@ -228,31 +229,30 @@ func TestApplyLogToBoard(t *testing.T) {
 }
 
 func TestAImove(t *testing.T) {
-	tablero, _ := InitBoard(boardtemplates.CURIOSITY)
+	var engine GameEngine
+	engine.InitEngine(CURIOSITY)
 
 	for i := 0; i < 150; i++ {
 		switch i % 2 {
 		case 0: //ROJO
-			move := GetBestMove(tablero, RED_TEAM, 3)
-			logPiece, laserPath, interactionResult, err := tablero.ProcessTurn(move, RED_TEAM)
+			move := GetBestMove(CURIOSITY, engine.gameLog, 3)
+			logPiece, laserPath, _, err := engine.ProcessTurn(move, RED_TEAM, 100*time.Second)
 			if err != nil {
 				t.Error("la IA ha hecho un movimiento malo en RED_TEAM", err)
 			}
-			logPiece, laserPath, _, _ = tablero.calculateReturnValues(logPiece, laserPath, interactionResult)
 
 			fmt.Println(logPiece)
-			tablero.printlaser(laserPath)
+			engine.gameBoard.printlaser(laserPath)
 
 		case 1: //AZUL
-			move := GetBestMove(tablero, BLUE_TEAM, 3)
-			logPiece, laserPath, interactionResult, err := tablero.ProcessTurn(move, BLUE_TEAM)
+			move := GetBestMove(CURIOSITY, engine.gameLog, 3)
+			logPiece, laserPath, _, err := engine.ProcessTurn(move, BLUE_TEAM, 100*time.Second)
 			if err != nil {
 				t.Error("la IA ha hecho un movimiento malo en BLUE_TEAM", err)
 			}
-			logPiece, laserPath, _, _ = tablero.calculateReturnValues(logPiece, laserPath, interactionResult)
 
 			fmt.Println(logPiece)
-			tablero.printlaser(laserPath)
+			engine.gameBoard.printlaser(laserPath)
 		}
 	}
 }

@@ -70,6 +70,23 @@ func (g *GameEngine) getInitialState() string {
 	}
 }
 
+func boardTypeToCsv(boardType Board_T) string {
+	switch boardType {
+	case ACE:
+		return boardtemplates.ACE
+	case CURIOSITY:
+		return boardtemplates.CURIOSITY
+	case GRAIL:
+		return boardtemplates.GRAIL
+	case SOPHIE:
+		return boardtemplates.SOPHIE
+	case MERCURY:
+		return boardtemplates.MERCURY
+	default:
+		return ""
+	}
+}
+
 func formatLaserPath(laserPath []vector2_T) string {
 
 	retVal := ""
@@ -92,6 +109,7 @@ func (g *GameEngine) InitEngine(boardType Board_T) {
 	var err error
 	g.boardType = boardType
 	g.gameBoard, err = InitBoard(g.getInitialState())
+	g.gameLog = ""
 	if err != nil {
 		fmt.Println("error al inicializar el tablero", err)
 	}
@@ -115,7 +133,7 @@ func (g *GameEngine) GetState() string {
 }
 
 // SE PRESUPONE UN LOG QUE NO CAUSA ERRORES
-func (g *GameEngine) ApplyLogToBoard(timeBase int32) (nextTeam team_T, redTimeLeft float64, blueTimeLeft float64) {
+func (g *GameEngine) EngineApplyLogToBoard(timeBase int32) (nextTeam team_T, redTimeLeft float64, blueTimeLeft float64) {
 	//dividimos el log en cachitos
 	logChunks := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
 	nextTeam = RED_TEAM                                           //Equipo que empieza
