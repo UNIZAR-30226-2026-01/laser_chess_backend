@@ -188,10 +188,11 @@ func (ns NullMatchType) Value() (driver.Value, error) {
 type Termination string
 
 const (
-	TerminationOUTOFTIME  Termination = "OUT_OF_TIME"
-	TerminationSURRENDER  Termination = "SURRENDER"
-	TerminationLASER      Termination = "LASER"
-	TerminationUNFINISHED Termination = "UNFINISHED"
+	TerminationOUTOFTIME     Termination = "OUT_OF_TIME"
+	TerminationSURRENDER     Termination = "SURRENDER"
+	TerminationLASER         Termination = "LASER"
+	TerminationUNFINISHED    Termination = "UNFINISHED"
+	TerminationDISCONNECTION Termination = "DISCONNECTION"
 )
 
 func (e *Termination) Scan(src interface{}) error {

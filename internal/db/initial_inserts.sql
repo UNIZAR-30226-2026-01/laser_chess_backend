@@ -170,40 +170,31 @@ INSERT INTO public."friendship" (
 
 INSERT INTO public."rating" (
     user_id,
-    elo_type,
-    value
+    elo_type
 ) VALUES (
     1,
-    'BLITZ',
-    1
+    'BLITZ'
 ), (
     1,
-    'RAPID',
-    11
+    'RAPID'
 ), (
     1,
-    'CLASSIC',
-    111
+    'CLASSIC'
 ), (
     1,
-    'EXTENDED',
-    1111
+    'EXTENDED'
 ), (
     2,
-    'BLITZ',
-    2
+    'BLITZ'
 ), (
     2,
-    'RAPID',
-    22
+    'RAPID'
 ), (
     2,
-    'CLASSIC',
-    222
+    'CLASSIC'
 ), (
     2,
-    'EXTENDED',
-    2222
+    'EXTENDED'
 );
 
 INSERT INTO shop_item (
