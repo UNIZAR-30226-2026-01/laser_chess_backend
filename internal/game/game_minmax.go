@@ -471,6 +471,7 @@ func minmax(b *Board, depth int, alpha int, beta int, myTeam team_T) (score int,
 	return 0, bestMove
 }
 
+// Auxiliar, aplica el log al tablero, no tiene en cuenta el tiempo, solo el estado, para la IA
 func MinMaxApplyLogToBoard(gameLog string, gameBoard *Board) (nextTeam team_T) {
 	//dividimos el log en cachitos
 	logChunks := strings.Split(strings.TrimSuffix(gameLog, ";"), ";")
@@ -505,8 +506,8 @@ func MinMaxApplyLogToBoard(gameLog string, gameBoard *Board) (nextTeam team_T) {
 /*
 	  Desc: Interfaz de la IA - minmax, árbol de juego
 	  --- Parametros ---
-		b *Board 	- Puntero al tablero de la partida, estado raíz del árbol de juego
-		team team_T - Siguiente equipo que debe mover.
+		b Board_t 	- Tipo de tablero, para cargar el estado inicial
+		b_log string - Log de la partida hasta el momento, para cargar el estado actual, la raiz del árbol de juego
 		lvl int 	- Profundidad de la búsqueda en el arbol de juego
 	  --- Resultados ---
 		string - devuelve el siguiente mejor movimiento posible
