@@ -12,10 +12,10 @@ import (
 const createRatings = `-- name: CreateRatings :exec
 INSERT INTO rating (user_id, elo_type)
 VALUES 
-    ($1, 'blitz'),
-    ($1, 'extended'),
-    ($1, 'rapid'),
-    ($1, 'classic')
+    ($1, 'BLITZ'),
+    ($1, 'EXTENDED'),
+    ($1, 'RAPID'),
+    ($1, 'CLASSIC')
 `
 
 func (q *Queries) CreateRatings(ctx context.Context, userID int64) error {
@@ -57,7 +57,7 @@ func (q *Queries) GetAllElos(ctx context.Context, userID int64) ([]Rating, error
 
 const getBlitzElo = `-- name: GetBlitzElo :one
 SELECT user_id, elo_type, value, deviation, volatility, last_updated_at FROM rating
-WHERE user_id = $1 AND elo_type = 'blitz'::elo_type
+WHERE user_id = $1 AND elo_type = 'BLITZ'::elo_type
 `
 
 func (q *Queries) GetBlitzElo(ctx context.Context, userID int64) (Rating, error) {
@@ -76,7 +76,7 @@ func (q *Queries) GetBlitzElo(ctx context.Context, userID int64) (Rating, error)
 
 const getClassicElo = `-- name: GetClassicElo :one
 SELECT user_id, elo_type, value, deviation, volatility, last_updated_at FROM rating
-WHERE user_id = $1 AND elo_type = 'classic'::elo_type
+WHERE user_id = $1 AND elo_type = 'CLASSIC'::elo_type
 `
 
 func (q *Queries) GetClassicElo(ctx context.Context, userID int64) (Rating, error) {
@@ -95,7 +95,7 @@ func (q *Queries) GetClassicElo(ctx context.Context, userID int64) (Rating, erro
 
 const getExtendedElo = `-- name: GetExtendedElo :one
 SELECT user_id, elo_type, value, deviation, volatility, last_updated_at FROM rating
-WHERE user_id = $1 AND elo_type = 'extended'::elo_type
+WHERE user_id = $1 AND elo_type = 'EXTENDED'::elo_type
 `
 
 func (q *Queries) GetExtendedElo(ctx context.Context, userID int64) (Rating, error) {
@@ -137,7 +137,7 @@ func (q *Queries) GetRankById(ctx context.Context, arg GetRankByIdParams) (int64
 
 const getRapidElo = `-- name: GetRapidElo :one
 SELECT user_id, elo_type, value, deviation, volatility, last_updated_at FROM rating
-WHERE user_id = $1 AND elo_type = 'rapid'::elo_type
+WHERE user_id = $1 AND elo_type = 'RAPID'::elo_type
 `
 
 func (q *Queries) GetRapidElo(ctx context.Context, userID int64) (Rating, error) {
