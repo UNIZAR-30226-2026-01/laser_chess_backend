@@ -61,7 +61,10 @@ func (g *GameEngine) getInitialState() string {
 		return boardtemplates.CURIOSITY
 	case GRAIL:
 		return boardtemplates.GRAIL
-		// poner el resto
+	case SOPHIE:
+		return boardtemplates.SOPHIE
+	case MERCURY:
+		return boardtemplates.MERCURY
 	default:
 		return ""
 	}
