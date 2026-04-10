@@ -8,8 +8,8 @@ import (
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/elo"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rewards/elo"
 )
 
 // fichero que gestiona las rooms

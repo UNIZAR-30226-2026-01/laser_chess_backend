@@ -6,7 +6,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/boards"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/elo"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rewards/elo"
 )
 
 type MatchService struct {
