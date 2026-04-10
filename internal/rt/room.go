@@ -408,4 +408,9 @@ func (r *Room) ReconnectPlayer(player *Client) {
 
 		r.Player1.Send <- game.ResponseToRoom{Type: game.Reconnection}
 	}
+
+	r.Game.FromRoom <- game.RoomMsg{
+		PlayerUid: player.AccountID,
+		MsgType:   game.GetState,
+	}
 }
