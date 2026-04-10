@@ -4,13 +4,13 @@ import (
 	"context"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 )
 
 type FriendshipService struct {
-	store 		   *db.Store
-	eventSystem    *sse.EventSystem
+	store       *db.Store
+	eventSystem *sse.EventSystem
 }
 
 func NewService(s *db.Store, events *sse.EventSystem) *FriendshipService {
@@ -54,9 +54,7 @@ func (s FriendshipService) Create(ctx context.Context, data *FriendshipDTO) erro
 	}
 
 	_, err := s.GetFriendshipStatus(ctx, data)
-	if err != nil {
-		return err
-	} else if err != apierror.ErrNotFound {
+	if err == nil {
 		return apierror.ErrAlreadyFriends
 	}
 
@@ -73,7 +71,7 @@ func (s FriendshipService) Create(ctx context.Context, data *FriendshipDTO) erro
 
 	s.eventSystem.SendEvent(data.ReceiverID, &sse.Event{
 		EventType: "FriendRequest",
-		Data: *data.SenderID,
+		Data:      *data.SenderID,
 	}, true)
 
 	return nil
@@ -274,12 +272,12 @@ func (s FriendshipService) AcceptFriendship(
 
 	s.eventSystem.SendEvent(data.ReceiverID, &sse.Event{
 		EventType: "NewFriend",
-		Data: *data.SenderID,
+		Data:      *data.SenderID,
 	}, true)
 
 	s.eventSystem.SendEvent(*data.SenderID, &sse.Event{
 		EventType: "NewFriend",
-		Data: data.ReceiverID,
+		Data:      data.ReceiverID,
 	}, true)
 
 	return nil
