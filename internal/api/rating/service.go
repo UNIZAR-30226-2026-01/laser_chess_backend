@@ -18,13 +18,13 @@ func NewService(s *db.Store) *RatingService {
 
 func GetEloTypeFromBaseTime(baseTime int32) (db.EloType, error) {
 	switch baseTime {
-	case 5:
+	case 300:
 		return db.EloTypeBLITZ, nil
-	case 15:
+	case 900:
 		return db.EloTypeRAPID, nil
-	case 30:
+	case 1800:
 		return db.EloTypeCLASSIC, nil
-	case 60:
+	case 3600:
 		return db.EloTypeEXTENDED, nil
 	default:
 		return db.EloTypeBLITZ, errors.New("El tiempo base no corresponde a una ranked")

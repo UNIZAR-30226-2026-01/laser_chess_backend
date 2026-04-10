@@ -201,7 +201,7 @@ UPDATE rating
 SET value = $3,
     deviation = $4,
     volatility = $5,
-    last_played_at = NOW()
+    last_updated_at = NOW()
 WHERE user_id = $1 AND elo_type = $2
 `
 

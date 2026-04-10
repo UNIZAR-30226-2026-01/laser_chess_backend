@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/boards"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/elo"
 )
@@ -26,7 +27,7 @@ func toCreateMatchParamsFromSaveDTO(data MatchSaveDTO) db.CreateMatchParams {
 		Winner:          db.Winner(data.GameInfo.Winner),
 		Termination:     db.Termination(data.GameInfo.Termination),
 		MatchType:       db.MatchType(data.GameInfo.MatchType),
-		Board:           db.BoardType(data.GameInfo.BoardType),
+		Board:           boards.IntToBoard[data.GameInfo.BoardType],
 		MovementHistory: data.GameInfo.Log,
 		TimeBase:        int32(data.GameInfo.TimeBase),
 		TimeIncrement:   int32(data.GameInfo.TimeIncrement),

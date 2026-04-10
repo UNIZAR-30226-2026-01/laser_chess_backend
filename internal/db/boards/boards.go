@@ -1,4 +1,4 @@
-package db
+package boards
 
 import (
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
