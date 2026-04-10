@@ -156,7 +156,14 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		Ranked:       dto.Ranked,
 	})
 
-	opponentClient := <-ResponseChan
+	var opponentClient *rt.Client
+
+	select {
+	case opponentClient = <-ResponseChan:
+	case <-client.Done:
+		// TODO: sacar de la cola
+		return
+	}
 
 	if playerID > opponentClient.AccountID {
 		// Creamos la partida
@@ -189,12 +196,6 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 				MatchType:     matchType,
 			}, h.registry)
 
-		// Esperamos
-		<-client.Done
-
-	} else {
-		// Esperamos
-		<-opponentClient.Done
 	}
 
 }

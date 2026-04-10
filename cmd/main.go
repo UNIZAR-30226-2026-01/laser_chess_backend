@@ -45,10 +45,10 @@ func main() {
 	matchRegistry := rt.NewMatchRegistry()
 
 	// Inicializar el hub privado
-	privateHub := rt.NewPrivateHub(matchRegistry)
+	privateHub := rt.NewPrivateHub()
 
 	// Inicializar el hub publico
-	publicHub := rt.NewPublicHub(matchRegistry)
+	publicHub := rt.NewPublicHub()
 
 	// == INICIALIZAR ROUTER =============================================
 

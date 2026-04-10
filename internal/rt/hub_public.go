@@ -42,8 +42,6 @@ type GameModeQueue struct {
 }
 
 type PublicHub struct {
-	// registro de partidas activas
-	registry *MatchRegistry
 
 	// Dos mapas para los modos de juego
 	rankingOrCasualQueues [2]map[int]*GameModeQueue
@@ -53,8 +51,8 @@ type PublicHub struct {
 }
 
 // Crea un hub para partidas privadas
-func NewPublicHub(r *MatchRegistry) *PublicHub {
-	ph := &PublicHub{registry: r}
+func NewPublicHub() *PublicHub {
+	ph := &PublicHub{}
 	ph.rankingOrCasualQueues[0] = make(map[int]*GameModeQueue)
 	ph.rankingOrCasualQueues[1] = make(map[int]*GameModeQueue)
 	return ph

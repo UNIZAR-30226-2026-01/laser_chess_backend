@@ -45,7 +45,6 @@ type challengeShard struct {
 
 type PrivateHub struct {
 	// registro de partidas activas
-	registry *MatchRegistry
 
 	shards [numShards]*challengeShard
 }
@@ -65,8 +64,8 @@ func (ph *PrivateHub) shard(userID int64) *challengeShard {
 }
 
 // Crea un hub para partidas privadas
-func NewPrivateHub(r *MatchRegistry) *PrivateHub {
-	ph := &PrivateHub{registry: r}
+func NewPrivateHub() *PrivateHub {
+	ph := &PrivateHub{}
 	for i := range ph.shards {
 		ph.shards[i] = &challengeShard{
 			pendingChallenges: make(map[int64][]int64),

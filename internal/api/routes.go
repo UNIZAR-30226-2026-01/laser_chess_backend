@@ -18,6 +18,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/private"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/public"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/reconnection"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -163,6 +164,9 @@ func SetupRouter(store *db.Store,
 	publicHandler := public.NewPublicHandler(publicHub, registry, accountService,
 		matchService, ratingService, eventSystem)
 
+	reconnectHandler := reconnection.NewReconnectionHandler(registry,
+		ratingService, eventSystem)
+
 	{
 		rtRoute := protected.Group("/rt/")
 
@@ -173,6 +177,9 @@ func SetupRouter(store *db.Store,
 
 		// Partidas publicas
 		rtRoute.GET("matchmaking", publicHandler.GoIntoMatchmaking)
+
+		// Reconexion
+		rtRoute.GET("reconnect", reconnectHandler.Reconnect)
 	}
 
 	return router

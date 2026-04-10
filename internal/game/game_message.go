@@ -17,4 +17,5 @@ const (
 	EOC          GameMessageType = "EOC"
 
 	Disconnection GameMessageType = "Disconnection"
+	Reconnection  GameMessageType = "Reconnection"
 )

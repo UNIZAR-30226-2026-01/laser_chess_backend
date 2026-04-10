@@ -28,7 +28,8 @@ type Room struct {
 	P1Pause bool
 	P2Pause bool
 
-	Broadcast chan game.ResponseToRoom
+	Broadcast   chan game.ResponseToRoom
+	RefreshChan chan bool
 
 	matchService  *match.MatchService
 	ratingService *rating.RatingService
@@ -43,6 +44,7 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	r.P1Pause = false
 	r.P2Pause = false
 	r.Broadcast = make(chan game.ResponseToRoom, 2)
+	r.RefreshChan = make(chan bool)
 
 	r.matchService = matchService
 	r.ratingService = ratingService
@@ -67,21 +69,31 @@ func (r *Room) end() {
 	fmt.Println("Cierre de la room")
 
 	// Vaciar Broadcast
-VaciarBroadcast:
+EmptyBroadcast:
 	for {
 		select {
 		case message := <-r.Broadcast:
 			fmt.Println("Broadcast: ", message)
-			r.Player1.Send <- message
-			r.Player2.Send <- message
+
+			r.Player1.mu.RLock()
+			if r.Player1.Online {
+				r.Player1.Send <- message
+			}
+			r.Player1.mu.RUnlock()
+
+			r.Player2.mu.RLock()
+			if r.Player2.Online {
+				r.Player2.Send <- message
+			}
+			r.Player2.mu.RUnlock()
 		default:
-			break VaciarBroadcast
+			break EmptyBroadcast
 		}
 	}
 
 	// TODO: actualizar experiencia
 
-	actualizarElo := r.GameInfo.MatchType != "FRIENDLY" &&
+	actualizarElo := r.GameInfo.MatchType == "RANKED" &&
 		r.GameInfo.Winner != "NONE"
 
 	// Guardar en BD
@@ -102,7 +114,6 @@ VaciarBroadcast:
 			P2Elo:      int32(newP2Rating.Value),
 			Date:       time.Now(),
 		}
-		fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAA")
 		err = r.matchService.SaveMatchResultTx(context.Background(), matchData, *newP1Rating, *newP2Rating)
 		if err != nil {
 			fmt.Println("EL ERROR: ", err.Error())
@@ -219,9 +230,15 @@ func (r *Room) run() {
 			r.Player1.Send <- message
 			r.Player2.Send <- message
 
-		case message := <-r.Player1.ToRoom:
+		case message, ok := <-r.Player1.ToRoom:
+			if !ok {
+				continue
+			}
 			r.filterMessage(r.Player1, message)
-		case message := <-r.Player2.ToRoom:
+		case message, ok := <-r.Player2.ToRoom:
+			if !ok {
+				continue
+			}
 			r.filterMessage(r.Player2, message)
 
 		case gameMsg := <-r.Game.ToRoom:
@@ -229,11 +246,18 @@ func (r *Room) run() {
 				// Cerrar la room si acaba la partida
 				return
 			}
+		case <-r.RefreshChan:
+			// No hace nada, es para refrescar las referencias
 		}
 	}
 }
 
 func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
+
+	if player != r.Player1 && player != r.Player2 {
+		return
+	}
+
 	// debug
 	fmt.Println("Type: ", message.Type)
 	fmt.Println("Content: ", message.Content)
@@ -258,12 +282,14 @@ func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
 }
 
 func (r *Room) manageDisconnection(player *Client) {
-	timeout := time.NewTimer(3 * time.Second)
+	timeout := time.NewTimer(60 * time.Second)
 	defer timeout.Stop()
 
 	fmt.Println("Desconexion detectada")
 	if player.AccountID == r.Player1.AccountID {
 		r.Player2.Send <- game.ResponseToRoom{Type: game.Disconnection}
+	} else {
+		r.Player1.Send <- game.ResponseToRoom{Type: game.Disconnection}
 	}
 
 	select {
@@ -342,5 +368,44 @@ func (r *Room) managePause(player *Client) {
 			MsgType:    game.Pause,
 			MsgContent: "",
 		}
+	}
+}
+
+func (r *Room) ReconnectPlayer(player *Client) {
+
+	if player.AccountID == r.Player1.AccountID {
+		r.Player1.Reconnect <- true
+
+		// Cerrar el cliente si esta online
+		r.Player1.mu.RLock()
+		if r.Player1.Online {
+			r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
+		}
+		r.Player1.mu.RUnlock()
+
+		// Sustituirlo
+		aux := r.Player1
+		r.Player1 = player
+		r.RefreshChan <- true
+		close(aux.Send)
+
+		r.Player2.Send <- game.ResponseToRoom{Type: game.Reconnection}
+	} else if player.AccountID == r.Player2.AccountID {
+		r.Player2.Reconnect <- true
+
+		// Cerrar el cliente si esta online
+		r.Player2.mu.RLock()
+		if r.Player2.Online {
+			r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
+		}
+		r.Player2.mu.RUnlock()
+
+		// Sustituirlo
+		aux := r.Player2
+		r.Player2 = player
+		r.RefreshChan <- true
+		close(aux.Send)
+
+		r.Player1.Send <- game.ResponseToRoom{Type: game.Reconnection}
 	}
 }

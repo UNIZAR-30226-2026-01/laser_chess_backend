@@ -38,7 +38,7 @@ func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
 	c.ToRoom = make(chan ClientSocketMessage, 1)
 
 	c.Done = make(chan struct{})
-	c.Reconnect = make(chan bool)
+	c.Reconnect = make(chan bool, 1)
 
 	c.mu.Lock()
 	c.Online = true
@@ -58,6 +58,7 @@ func (c *Client) ReadPump() error {
 		}
 		c.Conn.Close()
 		c.notifyDisconnection()
+		fmt.Println("Cierre de la funcion ReadPump")
 	}()
 
 	for {
@@ -109,13 +110,3 @@ func (c *Client) notifyDisconnection() {
 	c.mu.Unlock()
 	c.ToRoom <- ClientSocketMessage{Type: string(game.EOC), Content: ""}
 }
-
-// func (c *Client) Close() {
-// 	deadline := time.Now().Add(time.Second)
-// 	c.Conn.WriteControl(
-// 		websocket.CloseMessage,
-// 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
-// 		deadline,
-// 	)
-// 	c.Conn.Close()
-// }
