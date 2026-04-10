@@ -8,13 +8,13 @@ const (
 	scale = 250.0
 
 	rankMult   = 1.2
-	normalMult = 1
+	normalMult = 1.0
 
 	winXP  = 150.0
 	loseXP = 80.0
 
-	winMoney  = 50
-	loseMoney = 10
+	winMoney  = 50.0
+	loseMoney = 10.0
 )
 
 func GetLevel(XP int32) int32 {
@@ -23,25 +23,27 @@ func GetLevel(XP int32) int32 {
 }
 
 func GetLevelXP(level int32) int32 {
-	return int32(math.Floor(250.0 * float64(math.Pow(float64(level), 2))))
+	return int32(math.Floor(scale * float64(level) * float64(level))
 }
 
 func GetXPBarInfo(XP int32) (int32, int32) {
 	level := GetLevel(XP)
 
 	threshold := GetLevelXP(level+1) - GetLevelXP(level)
-
 	currentLevelXP := XP - GetLevelXP(level)
 
 	return currentLevelXP, threshold
 }
 
 func getEloDifferenceMult(myElo int32, yourElo int32) float64 {
-	return 1.0 + ((float64(myElo) - float64(yourElo)) / 1000.0)
+	rawDiff := (float64(yourElo) - float64(myElo)) / 1000.0
+	mult := 1.0 + rawDiff
+
+	return math.Max(0.5, math.Min(1.5, mult))
 }
 
-func getMults(p1Elo int32, p2Elo int32, isRanked bool) float64 {
-	eloMult := getEloDifferenceMult(p1Elo, p2Elo)
+func getMults(myElo int32, enemyElo int32, isRanked bool) float64 {
+	eloMult := getEloDifferenceMult(myElo, enemyElo)
 
 	var modeMult float64
 	if isRanked {
@@ -55,7 +57,7 @@ func getMults(p1Elo int32, p2Elo int32, isRanked bool) float64 {
 
 func GetMatchXP(p1Elo int32, p2Elo int32, scoreP1 int, isRanked bool) (int32, int32) {
 	p1Mult := getMults(p1Elo, p2Elo, isRanked)
-	p2Mult := getMults(p2Elo, p2Elo, isRanked)
+	p2Mult := getMults(p2Elo, p1Elo, isRanked)
 
 	if scoreP1 >= 1 {
 		// Gana P1
@@ -74,7 +76,7 @@ func GetMatchXP(p1Elo int32, p2Elo int32, scoreP1 int, isRanked bool) (int32, in
 
 func GetMatchMoney(p1Elo int32, p2Elo int32, scoreP1 int, isRanked bool) (int32, int32) {
 	p1Mult := getMults(p1Elo, p2Elo, isRanked)
-	p2Mult := getMults(p2Elo, p2Elo, isRanked)
+	p2Mult := getMults(p2Elo, p1Elo, isRanked)
 
 	if scoreP1 >= 1 {
 		// Gana P1
