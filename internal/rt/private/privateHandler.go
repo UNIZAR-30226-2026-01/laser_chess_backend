@@ -15,7 +15,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/boards"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
@@ -126,7 +126,7 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 
 		info = &rt.ChallengeInfo{
 			ChallengedId:   challengedID,
-			Board:          db.BoardToInt[match.Board],
+			Board:          boards.BoardToInt[match.Board],
 			StartingTime:   match.TimeBase,
 			TimeIncrement:  match.TimeIncrement,
 			Log:            match.MovementHistory,
@@ -176,8 +176,6 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	fmt.Println("CLIENTE CERRADO")
 	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
-
-	h.registry.RemoveMatch(challengerID, challengedID)
 
 }
 
@@ -265,16 +263,13 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 			TimeIncrement: info.TimeIncrement,
 			MatchType:     "PRIVATE",
 			MatchID:       info.MatchID,
-		})
+		}, h.registry)
 
 	// Registrar ambos jugadores en el registry
 
-	h.registry.RegisterMatch(challengerID, challengedID, room)
 	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
 	<-challengedClient.Done
-
-	h.registry.RemoveMatch(challengerID, challengedID)
 
 }
 

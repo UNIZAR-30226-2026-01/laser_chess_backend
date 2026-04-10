@@ -15,7 +15,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/boards"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 
@@ -182,26 +182,19 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 
 		room.InitRoom(P1Client, P2Client, h.matchService, h.ratingService, true,
 			&game.GameInfo{
-				BoardType:     game.Board_T(rand.Intn(db.BOARD_NUM)),
+				BoardType:     game.Board_T(rand.Intn(boards.BOARD_NUM)),
 				Log:           "",
 				TimeBase:      dto.StartingTime,
 				TimeIncrement: dto.TimeIncrement,
 				MatchType:     matchType,
-			})
-
-		// Registramos la partida
-		h.registry.RegisterMatch(playerID, opponentClient.AccountID, room)
+			}, h.registry)
 
 		// Esperamos
 		<-client.Done
 
-		h.registry.RemoveMatch(playerID, opponentClient.AccountID)
-
 	} else {
 		// Esperamos
 		<-opponentClient.Done
-
-		h.registry.RemoveMatch(playerID, opponentClient.AccountID)
 	}
 
 }

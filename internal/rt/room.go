@@ -23,6 +23,7 @@ type Room struct {
 	isNewMatch bool
 	GameInfo   *game.GameInfo
 	Game       *game.LaserChessGame
+	Registry   *MatchRegistry
 
 	P1Pause bool
 	P2Pause bool
@@ -35,7 +36,7 @@ type Room struct {
 
 func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	matchService *match.MatchService, ratingService *rating.RatingService,
-	isNewMatch bool, GameInfo *game.GameInfo) {
+	isNewMatch bool, GameInfo *game.GameInfo, registry *MatchRegistry) {
 
 	r.Player1 = Player1
 	r.Player2 = Player2
@@ -49,9 +50,15 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	r.isNewMatch = isNewMatch
 	r.GameInfo = GameInfo
 
+	fmt.Println(GameInfo.BoardType)
+
 	r.Game = &game.LaserChessGame{}
 	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID,
 		GameInfo.BoardType, GameInfo.Log, GameInfo.TimeBase, GameInfo.TimeIncrement)
+
+	r.Registry = registry
+
+	r.Registry.RegisterMatch(r.Player1.AccountID, r.Player2.AccountID, r)
 
 	go r.run()
 }
@@ -94,7 +101,11 @@ VaciarBroadcast:
 			P2Elo:      int32(newP2Rating.Value),
 			Date:       time.Now(),
 		}
+		fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAA")
 		err = r.matchService.SaveMatchResultTx(context.Background(), matchData, *newP1Rating, *newP2Rating)
+		if err != nil {
+			fmt.Println("EL ERROR: ", err.Error())
+		}
 	} else {
 		p1Elo, p2Elo, err := r.getPlayerRatingValues()
 		if err != nil {
@@ -119,6 +130,8 @@ VaciarBroadcast:
 	// Avisar y cerrar los clientes
 	r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
 	r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
+
+	r.Registry.RemoveMatch(r.Player1.AccountID, r.Player2.AccountID)
 
 }
 
