@@ -253,14 +253,6 @@ func (s FriendshipService) AcceptFriendship(
 	data *FriendshipDTO,
 ) error {
 
-	err := s.store.AcceptFriendship(ctx, db.AcceptFriendshipParams{
-		User1ID: *data.SenderID,
-		User2ID: data.ReceiverID,
-	})
-	if err != nil {
-		return err
-	}
-
 	friendship, err := s.GetFriendshipStatus(ctx, data)
 	if err != nil {
 		return err
@@ -268,6 +260,14 @@ func (s FriendshipService) AcceptFriendship(
 
 	if friendship.SenderAccept && friendship.ReceiverAccept {
 		return apierror.ErrAlreadyFriends
+	}
+
+	err = s.store.AcceptFriendship(ctx, db.AcceptFriendshipParams{
+		User1ID: *data.SenderID,
+		User2ID: data.ReceiverID,
+	})
+	if err != nil {
+		return err
 	}
 
 	s.eventSystem.SendEvent(data.ReceiverID, &sse.Event{
