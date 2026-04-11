@@ -27,7 +27,7 @@ func (es *EventSystem) SendEvent(userID int64, event *Event, sendsFCM bool) {
 	chSlice, exists := es.clientChannels[userID]
 	es.mu.RUnlock()
 
-	if !exists && sendsFCM {
+	if !exists && sendsFCM && es.fcm != nil {
 		err := es.fcm.SendNotification(userID, event)
 		if err != nil {
 			//
