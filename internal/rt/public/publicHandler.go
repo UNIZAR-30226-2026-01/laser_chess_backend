@@ -68,21 +68,21 @@ func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *a
 	}
 }
 
-func (h *PublicHandler) GetIDAndElo(c *gin.Context) (int64, int64) {
+func (h *PublicHandler) GetIDAndELOStats(c *gin.Context) (int64, int32, int32) {
 	// Cojer jwt
 	playerID, err := middleware.ExtractAccountID(c)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
-		return 0, 0
+		return 0, 0, 0
 	}
 
 	playerELO, err := h.ratingService.GetBlitzEloByID(c, playerID)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
-		return 0, 0
+		return 0, 0, 0
 	}
 
-	return playerID, int64(playerELO.Value)
+	return playerID, playerELO.Value, playerELO.Deviation
 }
 
 // Challenge — el challenger upgradea a WS y queda a la espera de que lo acepten.
@@ -125,7 +125,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		return
 	}
 
-	playerID, playerELO := h.GetIDAndElo(c)
+	playerID, playerELO, playerRD := h.GetIDAndELOStats(c)
 
 	// Comprobar que el challenger no tiene ya una partida activa
 	if _, ok := h.registry.GetMatch(playerID); ok {
@@ -151,6 +151,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 	go h.hub.AddPlayerToMatchmaking(&rt.MatchRequest{ // TODO: anadir canal de cancel
 		PlayerClient: client,
 		PlayerELO:    playerELO,
+		PlayerRD:     playerRD,
 		GameMode:     i,
 		ResponseChan: ResponseChan,
 		Ranked:       dto.Ranked,

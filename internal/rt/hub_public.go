@@ -15,11 +15,16 @@ import (
 	"time"
 )
 
+// Variable del fichero
+
+var bracketLenght int = 50
+
 // Info inicial de la partida que se creará
 
 type MatchRequest struct {
 	PlayerClient *Client
-	PlayerELO    int64
+	PlayerELO    int32
+	PlayerRD     int32
 	ELOBracket   int64 // Asigando aqui
 	GameMode     int
 	Ranked       int
@@ -61,8 +66,10 @@ func NewPublicHub() *PublicHub {
 // Inicia el matchmaking para una partida de tipo Rapid
 func (ph *PublicHub) AddPlayerToMatchmaking(request *MatchRequest) {
 
-	// Buscar en el rango de ELO del jugador
-	request.ELOBracket = request.PlayerELO / 100
+	// Buscar en el rango de ELO efectivo del jugador
+	k := int32(2)
+	effectiveELO := request.PlayerELO - k*request.PlayerRD
+	request.ELOBracket = int64(effectiveELO / int32(bracketLenght))
 	request.ListElement = nil
 	request.FoundChan = make(chan bool, 1)
 	ph.CheckCreatedQueue(request)
@@ -86,9 +93,7 @@ func (ph *PublicHub) Search(request *MatchRequest) {
 	radius := 1
 	// Cada 3 segundos aumentamos el radio hasta 3 niveles de diferencia
 	ticker := time.NewTicker(3 * time.Second)
-	newCheck := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
-	defer newCheck.Stop()
 
 	for {
 		select {
@@ -100,11 +105,10 @@ func (ph *PublicHub) Search(request *MatchRequest) {
 			ph.RemoveFromQueue(request)
 			return
 		case <-ticker.C:
-			if radius <= 10 {
+			if radius <= 6 {
 				radius++
 			}
-		case <-newCheck.C:
-			go ph.FindOpponentInRange(request, radius)
+			ph.FindOpponentInRange(request, radius)
 
 		}
 	}
@@ -113,7 +117,7 @@ func (ph *PublicHub) Search(request *MatchRequest) {
 func (ph *PublicHub) FindOpponentInRange(request *MatchRequest, radius int) {
 
 	for i := range radius {
-		eloDiff := int64(i) * 100
+		eloDiff := int64(i)
 		upBracket := request.ELOBracket + eloDiff
 		downBracket := request.ELOBracket - eloDiff
 
@@ -129,14 +133,14 @@ func (ph *PublicHub) FindOpponentInRange(request *MatchRequest, radius int) {
 }
 
 func (ph *PublicHub) CheckBracket(request *MatchRequest, bracket int64) bool {
-	queue := ph.rankingOrCasualQueues[request.Ranked]
+	queue := ph.rankingOrCasualQueues[request.Ranked][request.GameMode]
 
-	queue[request.GameMode].mu.Lock()
-	defer queue[request.GameMode].mu.Unlock()
+	queue.mu.Lock()
+	defer queue.mu.Unlock()
 
-	if queue[request.GameMode].matchmakingQueues[bracket].players.Len() != 0 {
+	if queue.matchmakingQueues[bracket].players.Len() != 0 {
 		opponent :=
-			queue[request.GameMode].matchmakingQueues[bracket].players.Front().Value.(*MatchRequest)
+			queue.matchmakingQueues[bracket].players.Front().Value.(*MatchRequest)
 		if opponent.PlayerClient.AccountID != request.PlayerClient.AccountID {
 			ph.NotifyMatch(request, opponent)
 			return true
@@ -156,30 +160,31 @@ func (ph *PublicHub) CheckCreatedQueue(request *MatchRequest, eloDiff_optional .
 	// Comprobar si existe el mapa del modo de juego
 	ph.mu.Lock()
 
-	queue := ph.rankingOrCasualQueues[request.Ranked]
+	queue := ph.rankingOrCasualQueues[request.Ranked][request.GameMode]
 
-	if queue[request.GameMode] == nil {
-		queue[request.GameMode] = &GameModeQueue{
+	if queue == nil {
+		queue = &GameModeQueue{
 			matchmakingQueues: make(map[int64]*MatchmakingQueue),
 		}
+		ph.rankingOrCasualQueues[request.Ranked][request.GameMode] = queue
 	}
 
 	ph.mu.Unlock()
 
-	queue[request.GameMode].mu.Lock()
-	defer queue[request.GameMode].mu.Unlock()
+	queue.mu.Lock()
+	defer queue.mu.Unlock()
 
 	// Comprobar si existe el mapa del rando de ELO especifico
-	if queue[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff] == nil {
-		queue[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff] =
+	if queue.matchmakingQueues[request.ELOBracket+eloDiff] == nil {
+		queue.matchmakingQueues[request.ELOBracket+eloDiff] =
 			&MatchmakingQueue{
 				players: list.New(),
 			}
 	}
 
 	// Comprobar si existe la lista para este rango de ELO específico
-	if queue[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff].players == nil {
-		queue[request.GameMode].matchmakingQueues[request.ELOBracket+eloDiff].players = list.New()
+	if queue.matchmakingQueues[request.ELOBracket+eloDiff].players == nil {
+		queue.matchmakingQueues[request.ELOBracket+eloDiff].players = list.New()
 	}
 }
 
@@ -194,20 +199,20 @@ func (ph *PublicHub) NotifyMatch(request *MatchRequest, opponent *MatchRequest) 
 }
 
 func (ph *PublicHub) AddToQueue(request *MatchRequest) {
-	queue := ph.rankingOrCasualQueues[request.Ranked]
+	queue := ph.rankingOrCasualQueues[request.Ranked][request.GameMode]
 
-	queue[request.GameMode].mu.Lock()
-	defer queue[request.GameMode].mu.Unlock()
+	queue.mu.Lock()
+	defer queue.mu.Unlock()
 
 	request.ListElement =
-		queue[request.GameMode].matchmakingQueues[request.ELOBracket].players.PushBack(request)
+		queue.matchmakingQueues[request.ELOBracket].players.PushBack(request)
 }
 
 func (ph *PublicHub) RemoveFromQueue(request *MatchRequest) {
-	queue := ph.rankingOrCasualQueues[request.Ranked]
+	queue := ph.rankingOrCasualQueues[request.Ranked][request.GameMode]
 
-	queue[request.GameMode].mu.Lock()
-	defer queue[request.GameMode].mu.Unlock()
+	queue.mu.Lock()
+	defer queue.mu.Unlock()
 
-	queue[request.GameMode].matchmakingQueues[request.ELOBracket].players.Remove(request.ListElement)
+	queue.matchmakingQueues[request.ELOBracket].players.Remove(request.ListElement)
 }
