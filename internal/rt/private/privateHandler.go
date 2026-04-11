@@ -269,7 +269,6 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 
 	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
-	<-challengedClient.Done
 
 }
 

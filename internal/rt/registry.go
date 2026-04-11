@@ -3,7 +3,9 @@ package rt
 // match registry lleva un registro de todas las partidas activas.
 // se usa para saber si un usuario ya esta jugando alguna partida o no
 
-import "sync"
+import (
+	"sync"
+)
 
 type MatchRegistry struct {
 	// userID -> puntero a la Room activa
@@ -43,4 +45,12 @@ func (r *MatchRegistry) RemoveMatch(p1ID, p2ID int64) {
 
 	delete(r.activeMatches, p1ID)
 	delete(r.activeMatches, p2ID)
+}
+
+func (r *MatchRegistry) ReconnectClient(player *Client) bool {
+	room, hasMatch := r.GetMatch(player.AccountID)
+	if hasMatch {
+		room.ReconnectPlayer(player)
+	}
+	return hasMatch
 }
