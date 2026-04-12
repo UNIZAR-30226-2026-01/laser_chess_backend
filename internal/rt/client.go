@@ -25,13 +25,17 @@ type Client struct {
 	Reconnect chan bool
 	Online    bool
 
+	isAI   bool
+	ToAI   chan ClientSocketMessage
+	FromAI chan ClientSocketMessage
+
 	mu sync.RWMutex
 
 	// Canal para avisar de fin
 	Done chan struct{}
 }
 
-func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
+func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn, isAI bool) {
 	c.AccountID = AccountID
 	c.Conn = Conn
 	c.Send = make(chan game.ResponseToRoom, 1)
@@ -44,8 +48,15 @@ func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
 	c.Online = true
 	c.mu.Unlock()
 
-	go c.ReadPump()
-	go c.WritePump()
+	if isAI {
+		c.ToAI = make(chan ClientSocketMessage)
+		c.FromAI = make(chan ClientSocketMessage)
+		go c.RunAIClient()
+	} else {
+		go c.ReadPump()
+		go c.WritePump()
+	}
+
 }
 
 // lee mensajes del socket y los manda a la Room
@@ -109,4 +120,40 @@ func (c *Client) notifyDisconnection() {
 	c.Online = false
 	c.mu.Unlock()
 	c.ToRoom <- ClientSocketMessage{Type: string(game.EOC), Content: ""}
+}
+
+// IMPLEMENTACION PARA IA
+
+// lee mensajes del socket y los manda a la Room
+func (c *Client) RunAIClient() error {
+	defer func() {
+		select {
+		case <-c.Done:
+		default:
+			close(c.Done)
+		}
+	}()
+
+	for {
+		select {
+		case message, ok := <-c.Send:
+			if !ok {
+				return nil
+			}
+			if message.Type == game.EOC {
+				return nil
+			}
+
+			c.ToAI <- ClientSocketMessage{
+				Type:    "Move",
+				Content: message.Content,
+			}
+			response := <-c.FromAI
+			c.ToRoom <- response
+
+		case <-c.Done:
+			// Si ReadPump detecta un error salimos
+			return nil
+		}
+	}
 }

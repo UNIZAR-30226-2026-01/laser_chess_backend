@@ -159,7 +159,7 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 
 	// Construir Client
 	client := &rt.Client{}
-	client.InitClient(challengerID, conn)
+	client.InitClient(challengerID, conn, false)
 
 	info.ChallengerClient = client
 
@@ -243,7 +243,7 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 	// Construir el Client del challenged
 	challengedClient := &rt.Client{}
 
-	challengedClient.InitClient(challengedID, conn)
+	challengedClient.InitClient(challengedID, conn, false)
 
 	// Aceptar el reto en el hub
 	info, err := h.hub.AcceptChallenge(challengerID, challengedID)

@@ -164,8 +164,7 @@ func SetupRouter(store *db.Store,
 	publicHandler := public.NewPublicHandler(publicHub, registry, accountService,
 		matchService, ratingService, eventSystem)
 
-	reconnectHandler := reconnection.NewReconnectionHandler(registry,
-		ratingService, eventSystem)
+	reconnectHandler := reconnection.NewReconnectionHandler(registry, eventSystem)
 
 	{
 		rtRoute := protected.Group("/rt/")
