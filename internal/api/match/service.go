@@ -2,19 +2,28 @@ package match
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/boards"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/elo"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rewards"
 )
 
 type MatchService struct {
-	store *db.Store
+	store          *db.Store
+	accountService *account.AccountService
+	ratingService  *rating.RatingService
 }
 
-func NewService(s *db.Store) *MatchService {
-	return &MatchService{store: s}
+func NewService(s *db.Store, as *account.AccountService, rs *rating.RatingService) *MatchService {
+	return &MatchService{
+		store:          s,
+		accountService: as,
+		ratingService:  rs,
+	}
 }
 
 func toCreateMatchParamsFromSaveDTO(data MatchSaveDTO) db.CreateMatchParams {
@@ -74,20 +83,89 @@ func parseMatches(data []db.Match) []MatchDTO {
 	return res
 }
 
-/*
-* Guarda una partida sin modificar Elos. Crea o actualiza dependiendo
-* de si es una partida nueva o retomada.
- */
-func (s *MatchService) SaveMatch(ctx context.Context, data MatchSaveDTO) error {
-	if data.IsNewMatch {
-		dbParams := toCreateMatchParamsFromSaveDTO(data)
-		_, err := s.store.CreateMatch(ctx, dbParams)
-		return err
+func (s *MatchService) FinalizeMatch(ctx context.Context, summary MatchSummaryDTO) error {
+	isRanked := summary.GameInfo.MatchType == "RANKED"
+
+	// Obtener elos actuales de los players
+	p1RatingData, err := s.ratingService.GetEloByID(ctx, summary.P1ID, summary.GameInfo.TimeBase)
+	if err != nil {
+		return fmt.Errorf("error obteniendo elo p1: %w", err)
 	}
 
-	dbParams := toUpdateMatchParamsFromSaveDTO(data)
-	_, err := s.store.UpdateMatch(ctx, dbParams)
-	return err
+	p2RatingData, err := s.ratingService.GetEloByID(ctx, summary.P2ID, summary.GameInfo.TimeBase)
+	if err != nil {
+		return fmt.Errorf("error obteniendo elo p2: %w", err)
+	}
+
+	// Obtener xp, level y money actuales de los players
+	p1StatsData, err := s.accountService.GetStats(ctx, summary.P1ID)
+	if err != nil {
+		return fmt.Errorf("error obteniendo stats p1: %w", err)
+	}
+
+	p2StatsData, err := s.accountService.GetStats(ctx, summary.P2ID)
+	if err != nil {
+		return fmt.Errorf("error obteniendo stats p2: %w", err)
+	}
+
+	p1Elo := elo.Rating{
+		Value:      float64(p1RatingData.Value),
+		Deviation:  float64(p1RatingData.Deviation),
+		Volatility: p1RatingData.Volatility,
+	}
+	p2Elo := elo.Rating{
+		Value:      float64(p2RatingData.Value),
+		Deviation:  float64(p2RatingData.Deviation),
+		Volatility: p2RatingData.Volatility,
+	}
+
+	var newP1Rating, newP2Rating elo.Rating = p1Elo, p2Elo
+	var p1GainedXP, p2GainedXP, p1GainedMoney, p2GainedMoney int32 = 0, 0, 0, 0
+
+	// Si hay resultado, calcular nuevos elos y recompensas
+	if summary.GameInfo.Winner != "NONE" {
+		var scoreP1 float64
+		if summary.GameInfo.Winner == "P1_WINS" {
+			scoreP1 = 1.0
+		} else {
+			scoreP1 = 0.0
+		}
+
+		if isRanked {
+			// Aplicar inactividad
+			p1Elo = elo.ApplyInactivity(p1Elo, p1RatingData.LastUpdatedAt)
+			p2Elo = elo.ApplyInactivity(p2Elo, p2RatingData.LastUpdatedAt)
+
+			// Procesar Glicko2
+			newP1Rating, newP2Rating = elo.ProcessMatch(p1Elo, p2Elo, scoreP1)
+		}
+
+		// Calcular rewards
+		p1GainedXP, p2GainedXP = rewards.GetMatchXP(p1RatingData.Value, p2RatingData.Value, scoreP1, isRanked)
+		p1GainedMoney, p2GainedMoney = rewards.GetMatchMoney(p1RatingData.Value, p2RatingData.Value, scoreP1, isRanked)
+	}
+
+	// Preparar datos para query
+	matchData := MatchSaveDTO{
+		IsNewMatch: summary.IsNewMatch,
+		GameInfo:   summary.GameInfo,
+		P1ID:       summary.P1ID,
+		P2ID:       summary.P2ID,
+		P1Elo:      int32(newP1Rating.Value),
+		P2Elo:      int32(newP2Rating.Value),
+		Date:       summary.Date,
+	}
+
+	newP1XP := p1StatsData.Xp + p1GainedXP
+	newP2XP := p2StatsData.Xp + p2GainedXP
+
+	newP1Money := p1StatsData.Money + p1GainedMoney
+	newP2Money := p2StatsData.Money + p2GainedMoney
+
+	// Guardar y actualizar elos y recompensas
+	return s.SaveMatchResultTx(ctx, matchData, newP1Rating, newP2Rating,
+		newP1XP, newP2XP, newP1Money, newP2Money)
+
 }
 
 /*
@@ -95,7 +173,8 @@ func (s *MatchService) SaveMatch(ctx context.Context, data MatchSaveDTO) error {
 * forma atómica.
  */
 func (s *MatchService) SaveMatchResultTx(ctx context.Context,
-	match MatchSaveDTO, p1Rating elo.Rating, p2Rating elo.Rating) error {
+	match MatchSaveDTO, p1Rating elo.Rating, p2Rating elo.Rating,
+	p1XP int32, p2XP int32, p1Money int32, p2Money int32) error {
 
 	return s.store.ExecTx(ctx, func(q *db.Queries) error {
 
@@ -115,29 +194,48 @@ func (s *MatchService) SaveMatchResultTx(ctx context.Context,
 		}
 
 		// Actualizar elos
-		eloType, eloErr := rating.GetEloTypeFromBaseTime(match.GameInfo.TimeBase)
-		if eloErr != nil {
-			return eloErr
+		if match.GameInfo.MatchType == "RANKED" {
+			eloType := rating.GetEloTypeFromBaseTime(match.GameInfo.TimeBase)
+
+			err := q.UpdateRating(ctx, db.UpdateRatingParams{
+				UserID:     match.P1ID,
+				EloType:    eloType,
+				Value:      int32(p1Rating.Value),
+				Deviation:  int32(p1Rating.Deviation),
+				Volatility: p1Rating.Volatility,
+			})
+			if err != nil {
+				return err
+			}
+
+			err = q.UpdateRating(ctx, db.UpdateRatingParams{
+				UserID:     match.P2ID,
+				EloType:    eloType,
+				Value:      int32(p2Rating.Value),
+				Deviation:  int32(p2Rating.Deviation),
+				Volatility: p2Rating.Volatility,
+			})
+			if err != nil {
+				return err
+			}
 		}
 
-		err := q.UpdateRating(ctx, db.UpdateRatingParams{
-			UserID:     match.P1ID,
-			EloType:    eloType,
-			Value:      int32(p1Rating.Value),
-			Deviation:  int32(p1Rating.Deviation),
-			Volatility: p1Rating.Volatility,
+		// Actualizar XP y Dinero
+		err := q.UpdateStats(ctx, db.UpdateStatsParams{
+			AccountID: match.P1ID,
+			Level:     rewards.GetLevel(p1XP),
+			Xp:        p1XP,
+			Money:     p1Money,
 		})
 		if err != nil {
 			return err
 		}
 
-		// Actualizar elos
-		err = q.UpdateRating(ctx, db.UpdateRatingParams{
-			UserID:     match.P2ID,
-			EloType:    eloType,
-			Value:      int32(p2Rating.Value),
-			Deviation:  int32(p2Rating.Deviation),
-			Volatility: p2Rating.Volatility,
+		err = q.UpdateStats(ctx, db.UpdateStatsParams{
+			AccountID: match.P2ID,
+			Level:     rewards.GetLevel(p2XP),
+			Xp:        p2XP,
+			Money:     p2Money,
 		})
 		if err != nil {
 			return err

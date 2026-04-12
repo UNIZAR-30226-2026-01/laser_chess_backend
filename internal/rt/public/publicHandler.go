@@ -188,7 +188,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 			matchType = "FRIENDLY"
 		}
 
-		room.InitRoom(P1Client, P2Client, h.matchService, h.ratingService, true,
+		room.InitRoom(P1Client, P2Client, h.matchService, true,
 			&game.GameInfo{
 				BoardType:     game.Board_T(rand.Intn(boards.BOARD_NUM)),
 				Log:           "",

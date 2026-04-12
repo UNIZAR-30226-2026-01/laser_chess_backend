@@ -267,7 +267,7 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 		P1Client = challengedClient
 		P2Client = info.ChallengerClient
 	}
-	room.InitRoom(P1Client, P2Client, h.matchService, h.ratingService, info.IsNewMatch,
+	room.InitRoom(P1Client, P2Client, h.matchService, info.IsNewMatch,
 		&game.GameInfo{
 			BoardType:     info.Board,
 			Log:           info.Log,

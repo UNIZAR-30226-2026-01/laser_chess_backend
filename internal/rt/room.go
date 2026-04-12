@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/elo"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 )
 
@@ -31,13 +29,12 @@ type Room struct {
 	Broadcast   chan game.ResponseToRoom
 	RefreshChan chan bool
 
-	matchService  *match.MatchService
-	ratingService *rating.RatingService
+	matchService *match.MatchService
 }
 
 func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
-	matchService *match.MatchService, ratingService *rating.RatingService,
-	isNewMatch bool, GameInfo *game.GameInfo, registry *MatchRegistry) {
+	matchService *match.MatchService, isNewMatch bool,
+	GameInfo *game.GameInfo, registry *MatchRegistry) {
 
 	r.Player1 = Player1
 	r.Player2 = Player2
@@ -47,7 +44,6 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	r.RefreshChan = make(chan bool)
 
 	r.matchService = matchService
-	r.ratingService = ratingService
 
 	r.isNewMatch = isNewMatch
 	r.GameInfo = GameInfo
@@ -91,53 +87,24 @@ EmptyBroadcast:
 		}
 	}
 
-	// TODO: actualizar experiencia
+	// Delegamos la logica de fin de partida en el matchService
 
-	actualizarElo := r.GameInfo.MatchType == "RANKED" &&
-		r.GameInfo.Winner != "NONE"
+	summary := match.MatchSummaryDTO{
+		IsNewMatch: r.isNewMatch,
+		GameInfo:   r.GameInfo,
+		P1ID:       r.Player1.AccountID,
+		P2ID:       r.Player2.AccountID,
+		Date:       time.Now(),
+	}
 
-	// Guardar en BD
-	if actualizarElo {
-		newP1Rating, newP2Rating, err := r.getUpdatedPlayerRatings()
-		fmt.Println("P1Rating: ", newP1Rating, ", P2Rating: ", newP2Rating)
-		if err != nil {
-			// TODO: gestionar estos errores
-		}
-
-		// Llamamos a la transacción pasándole la partida y los Elos
-		matchData := match.MatchSaveDTO{
-			IsNewMatch: r.isNewMatch,
-			GameInfo:   r.GameInfo,
-			P1ID:       r.Player1.AccountID,
-			P2ID:       r.Player2.AccountID,
-			P1Elo:      int32(newP1Rating.Value),
-			P2Elo:      int32(newP2Rating.Value),
-			Date:       time.Now(),
-		}
-		err = r.matchService.SaveMatchResultTx(context.Background(), matchData, *newP1Rating, *newP2Rating)
-		if err != nil {
-			fmt.Println("EL ERROR: ", err.Error())
-		}
-	} else {
-		p1Elo, p2Elo, err := r.getPlayerRatingValues()
-		if err != nil {
-			// TODO: gestionar estos errores
-		}
-
-		// Guardado simple para amistosas con los elos normales
-		matchData := match.MatchSaveDTO{
-			IsNewMatch: r.isNewMatch,
-			GameInfo:   r.GameInfo,
-			P1ID:       r.Player1.AccountID,
-			P2ID:       r.Player2.AccountID,
-			P1Elo:      p1Elo,
-			P2Elo:      p2Elo,
-			Date:       time.Now(),
-		}
-		err = r.matchService.SaveMatch(context.Background(), matchData)
+	err := r.matchService.FinalizeMatch(context.Background(), summary)
+	if err != nil {
+		fmt.Println("ERROR finalizando la partida: ", err.Error())
+		// TODO: gestionar error
 	}
 
 	// TODO: mandar al cliente la info de elo y exp
+
 	fmt.Println("Antes de enviar el EOC a los clientes")
 	// Avisar y cerrar los clientes
 	r.Player1.mu.RLock()
@@ -156,64 +123,6 @@ EmptyBroadcast:
 
 	r.Registry.RemoveMatch(r.Player1.AccountID, r.Player2.AccountID)
 
-}
-
-func (r *Room) getPlayerRatingValues() (int32, int32, error) {
-	ctx := context.Background()
-
-	p1Data, err := r.ratingService.GetEloByID(ctx, r.Player1.AccountID, r.GameInfo.TimeBase)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	p2Data, err := r.ratingService.GetEloByID(ctx, r.Player1.AccountID, r.GameInfo.TimeBase)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return p1Data.Value, p2Data.Value, nil
-}
-
-func (r *Room) getUpdatedPlayerRatings() (*elo.Rating, *elo.Rating, error) {
-	ctx := context.Background()
-
-	// Obtener los ratings actuales de la base de datos
-	p1Data, err := r.ratingService.GetEloByID(ctx, r.Player1.AccountID, r.GameInfo.TimeBase)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	p2Data, err := r.ratingService.GetEloByID(ctx, r.Player1.AccountID, r.GameInfo.TimeBase)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var scoreP1 float64
-	switch r.GameInfo.Winner {
-	case "P1_WINS":
-		scoreP1 = 1.0
-	case "P2_WINS":
-		scoreP1 = 0.0
-	}
-
-	p1Rating := elo.Rating{
-		Value:      float64(p1Data.Value),
-		Deviation:  float64(p1Data.Deviation),
-		Volatility: p1Data.Volatility,
-	}
-	p2Rating := elo.Rating{
-		Value:      float64(p2Data.Value),
-		Deviation:  float64(p2Data.Deviation),
-		Volatility: p2Data.Volatility,
-	}
-
-	p1Rating = elo.ApplyInactivity(p1Rating, p1Data.LastUpdatedAt)
-	p2Rating = elo.ApplyInactivity(p2Rating, p2Data.LastUpdatedAt)
-
-	// Calcular nuevos elos
-	newP1Rating, newP2Rating := elo.ProcessMatch(p1Rating, p2Rating, scoreP1)
-
-	return &newP1Rating, &newP2Rating, nil
 }
 
 func (r *Room) run() {

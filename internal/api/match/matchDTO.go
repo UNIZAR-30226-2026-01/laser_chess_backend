@@ -31,3 +31,12 @@ type MatchSaveDTO struct {
 	P2Elo      int32
 	Date       time.Time
 }
+
+// Este DTO sirve para pasar toda la info desde la Room al Service
+type MatchSummaryDTO struct {
+	IsNewMatch bool
+	GameInfo   *game.GameInfo
+	P1ID       int64
+	P2ID       int64
+	Date       time.Time
+}

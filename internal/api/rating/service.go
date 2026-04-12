@@ -16,18 +16,25 @@ func NewService(s *db.Store) *RatingService {
 	return &RatingService{store: s}
 }
 
-func GetEloTypeFromBaseTime(baseTime int32) (db.EloType, error) {
-	switch baseTime {
-	case 300:
-		return db.EloTypeBLITZ, nil
-	case 900:
-		return db.EloTypeRAPID, nil
-	case 1800:
-		return db.EloTypeCLASSIC, nil
-	case 3600:
-		return db.EloTypeEXTENDED, nil
-	default:
-		return db.EloTypeBLITZ, errors.New("El tiempo base no corresponde a una ranked")
+// Devuelve que tipo de elo corresponde a un tiempo
+// Sirve tanto como para ranked, como para saber
+// en una privada cual es el elo más cercano
+func GetEloTypeFromBaseTime(baseTime int32) db.EloType {
+	if baseTime < 600 {
+		// Blitz ~ 300 s
+		return db.EloTypeBLITZ
+
+	} else if baseTime < 1350 {
+		// Rapid ~ 900 s
+		return db.EloTypeRAPID
+
+	} else if baseTime < 2700 {
+		// Classic ~ 1800 s
+		return db.EloTypeCLASSIC
+
+	} else {
+		// Extended ~ 3600 s
+		return db.EloTypeEXTENDED
 	}
 }
 
@@ -96,10 +103,7 @@ func (s *RatingService) GetAllElosByID(ctx context.Context, userID int64) (*AllR
 }
 
 func (s *RatingService) GetEloByID(ctx context.Context, userID int64, baseTime int32) (*RatingDTO, error) {
-	eloType, err := GetEloTypeFromBaseTime(baseTime)
-	if err != nil {
-		return nil, err
-	}
+	eloType := GetEloTypeFromBaseTime(baseTime)
 
 	switch eloType {
 	case db.EloTypeBLITZ:

@@ -153,12 +153,22 @@ func (s *AccountService) Update(
 	}, nil
 }
 
+func (s *AccountService) GetStats(ctx context.Context, accountID int64) (*AccountStatsDTO, error) {
+	stats, err := s.store.GetStats(ctx, accountID)
+
+	return &AccountStatsDTO{
+		Level: stats.Level,
+		Xp:    stats.Xp,
+		Money: stats.Money,
+	}, err
+}
+
 func (s *AccountService) UpdateStats(
 	ctx context.Context,
 	accountID int64,
 	body *AccountStatsDTO,
 ) error {
-	_, err := s.store.UpdateStats(ctx, db.UpdateStatsParams{
+	err := s.store.UpdateStats(ctx, db.UpdateStatsParams{
 		AccountID: accountID,
 		Level:     body.Level,
 		Money:     body.Money,

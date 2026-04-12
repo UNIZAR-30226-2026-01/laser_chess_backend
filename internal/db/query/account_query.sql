@@ -67,14 +67,18 @@ SET
 WHERE account_id = $1 AND is_deleted = FALSE
 RETURNING *;
 
--- name: UpdateStats :one
+-- name: GetStats :one
+SELECT level, xp, money
+FROM account
+WHERE account_id = $1 AND is_deleted = FALSE;
+
+-- name: UpdateStats :exec
 UPDATE account
 SET
     level = $2,
     xp = $3,
     money = $4
-WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING *;
+WHERE account_id = $1 AND is_deleted = FALSE;
 
 -- name: RegisterDevice :one
 INSERT INTO device (user_id, token)

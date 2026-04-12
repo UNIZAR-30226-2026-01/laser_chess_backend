@@ -23,7 +23,7 @@ func GetLevel(XP int32) int32 {
 }
 
 func GetLevelXP(level int32) int32 {
-	return int32(math.Floor(scale * float64(level) * float64(level))
+	return int32(math.Floor(scale * float64(level) * float64(level)))
 }
 
 func GetXPBarInfo(XP int32) (int32, int32) {
@@ -55,7 +55,7 @@ func getMults(myElo int32, enemyElo int32, isRanked bool) float64 {
 	return eloMult * modeMult
 }
 
-func GetMatchXP(p1Elo int32, p2Elo int32, scoreP1 int, isRanked bool) (int32, int32) {
+func GetMatchXP(p1Elo int32, p2Elo int32, scoreP1 float64, isRanked bool) (int32, int32) {
 	p1Mult := getMults(p1Elo, p2Elo, isRanked)
 	p2Mult := getMults(p2Elo, p1Elo, isRanked)
 
@@ -74,7 +74,7 @@ func GetMatchXP(p1Elo int32, p2Elo int32, scoreP1 int, isRanked bool) (int32, in
 	}
 }
 
-func GetMatchMoney(p1Elo int32, p2Elo int32, scoreP1 int, isRanked bool) (int32, int32) {
+func GetMatchMoney(p1Elo int32, p2Elo int32, scoreP1 float64, isRanked bool) (int32, int32) {
 	p1Mult := getMults(p1Elo, p2Elo, isRanked)
 	p2Mult := getMults(p2Elo, p1Elo, isRanked)
 

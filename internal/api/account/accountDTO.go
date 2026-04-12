@@ -25,8 +25,7 @@ type AccountDTO struct {
 }
 
 type AccountStatsDTO struct {
-	Level     int32 `json:"level"`
-	Xp        int32 `json:"xp"`
-	Money     int32 `json:"money"`
+	Level int32 `json:"level"`
+	Xp    int32 `json:"xp"`
+	Money int32 `json:"money"`
 }
-
