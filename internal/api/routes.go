@@ -159,7 +159,7 @@ func SetupRouter(store *db.Store,
 
 	// Endpoints de websockets
 	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService,
-		matchService, ratingService, eventSystem)
+		matchService, ratingService, eventSystem, friendshipService)
 
 	publicHandler := public.NewPublicHandler(publicHub, registry, accountService,
 		matchService, ratingService, eventSystem)

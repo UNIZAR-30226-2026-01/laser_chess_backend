@@ -12,6 +12,7 @@ import (
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/friendship"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
@@ -23,25 +24,28 @@ import (
 )
 
 type PrivateHandler struct {
-	hub            *rt.PrivateHub
-	registry       *rt.MatchRegistry
-	accountService *account.AccountService
-	matchService   *match.MatchService
-	ratingService  *rating.RatingService
-	eventSystem    *sse.EventSystem
+	hub               *rt.PrivateHub
+	registry          *rt.MatchRegistry
+	accountService    *account.AccountService
+	matchService      *match.MatchService
+	friendshipService *friendship.FriendshipService
+	ratingService     *rating.RatingService
+	eventSystem       *sse.EventSystem
 }
 
 func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry,
 	accounts *account.AccountService, matches *match.MatchService,
-	ratings *rating.RatingService, events *sse.EventSystem) *PrivateHandler {
+	ratings *rating.RatingService, events *sse.EventSystem,
+	friendships *friendship.FriendshipService) *PrivateHandler {
 
 	return &PrivateHandler{
-		hub:            hub,
-		registry:       registry,
-		accountService: accounts,
-		matchService:   matches,
-		ratingService:  ratings,
-		eventSystem:    events,
+		hub:               hub,
+		registry:          registry,
+		accountService:    accounts,
+		matchService:      matches,
+		friendshipService: friendships,
+		ratingService:     ratings,
+		eventSystem:       events,
 	}
 }
 
@@ -78,13 +82,22 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 
 	// No puedes retarte a ti mismo
 	if challengerID == challengedID {
-		apierror.SendError(c, http.StatusBadRequest, apierror.ErrSelfChallenge)
+		apierror.DetectAndSendError(c, apierror.ErrSelfChallenge)
 		return
+	}
+
+	// No puedes retar a un usuario que no es tu amigo
+	_, err = h.friendshipService.GetFriendshipStatus(c, &friendship.FriendshipDTO{
+		SenderID:   &challengerID,
+		ReceiverID: challengedID,
+	})
+	if err != nil {
+		apierror.DetectAndSendError(c, apierror.ErrNotFriends)
 	}
 
 	// Comprobar que el challenger no tiene ya una partida activa
 	if _, ok := h.registry.GetMatch(challengerID); ok {
-		apierror.SendError(c, http.StatusConflict, apierror.ErrAlreadyInMatch)
+		apierror.DetectAndSendError(c, apierror.ErrAlreadyInMatch)
 		return
 	}
 
@@ -106,21 +119,20 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 		// La partida era pausada
 		match, err := h.matchService.GetByID(c, *dto.MatchId)
 		if err != nil {
-			apierror.SendError(c, http.StatusNotFound, apierror.ErrNotFound)
+			apierror.DetectAndSendError(c, apierror.ErrNotFound)
 			return
 		}
 
 		// Comprobar que la partida no estaba terminada
 		if match.Termination != "UNFINISHED" {
-			apierror.SendError(c, http.StatusBadRequest,
-				apierror.ErrMatchAlreadyFinished)
+			apierror.DetectAndSendError(c, apierror.ErrMatchAlreadyFinished)
 			return
 		}
 
 		// Comprobar que los ids coinciden
 		if (match.P1ID != challengerID && match.P2ID != challengedID) &&
 			(match.P1ID != challengedID && match.P2ID != challengerID) {
-			apierror.SendError(c, http.StatusBadRequest, apierror.ErrNotYourMatch)
+			apierror.DetectAndSendError(c, apierror.ErrNotYourMatch)
 			return
 		}
 
