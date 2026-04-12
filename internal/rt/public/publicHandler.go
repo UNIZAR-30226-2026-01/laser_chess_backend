@@ -68,7 +68,27 @@ func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *a
 	}
 }
 
-func (h *PublicHandler) GetIDAndELOStats(c *gin.Context) (int64, int32, int32) {
+func (h *PublicHandler) GetELOByGameMode(c *gin.Context, gameMode int,
+	id int64) (*rating.RatingDTO, error) {
+	var err error = nil
+	var playerELO *rating.RatingDTO = nil
+	switch gameMode {
+	case 300:
+		playerELO, err = h.ratingService.GetBlitzEloByID(c, id)
+	case 900:
+		playerELO, err = h.ratingService.GetRapidEloByID(c, id)
+	case 1800:
+		playerELO, err = h.ratingService.GetClassicEloByID(c, id)
+	case 3600:
+		playerELO, err = h.ratingService.GetExtendedEloByID(c, id)
+	}
+	if err != nil {
+		return playerELO, err
+	}
+	return playerELO, nil
+}
+
+func (h *PublicHandler) GetIDAndELOStats(c *gin.Context, gameMode int) (int64, int32, int32) {
 	// Cojer jwt
 	playerID, err := middleware.ExtractAccountID(c)
 	if err != nil {
@@ -76,7 +96,7 @@ func (h *PublicHandler) GetIDAndELOStats(c *gin.Context) (int64, int32, int32) {
 		return 0, 0, 0
 	}
 
-	playerELO, err := h.ratingService.GetBlitzEloByID(c, playerID)
+	playerELO, err := h.GetELOByGameMode(c, gameMode, playerID)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return 0, 0, 0
@@ -125,7 +145,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		return
 	}
 
-	playerID, playerELO, playerRD := h.GetIDAndELOStats(c)
+	playerID, playerELO, playerRD := h.GetIDAndELOStats(c, int(gameMode.StartingTime))
 
 	// Comprobar que el challenger no tiene ya una partida activa
 	if _, ok := h.registry.GetMatch(playerID); ok {
@@ -142,7 +162,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 
 	// Construir Client
 	client := &rt.Client{}
-	client.InitClient(playerID, conn)
+	client.InitClient(playerID, conn, false)
 
 	// Iniciar el matchmaking
 
