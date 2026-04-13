@@ -217,6 +217,9 @@ func (r *Room) handleGameMessage(response game.ResponseToRoom) bool {
 	switch response.Type {
 	case game.Move, game.InitialState:
 		r.Broadcast <- response
+		if response.Type == game.Move {
+			r.GameInfo.Log += response.Content
+		}
 
 	case game.State, game.Error:
 		// Mandar exclusivamente al jugador correspondiente usando el Extra
