@@ -127,6 +127,7 @@ func (c *Client) notifyDisconnection() {
 // lee mensajes del socket y los manda a la Room
 func (c *Client) RunAIClient() error {
 	defer func() {
+		c.ToAI <- ClientSocketMessage{Type: "EOC", Content: ""}
 		select {
 		case <-c.Done:
 		default:
