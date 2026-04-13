@@ -57,7 +57,12 @@ CREATE TABLE IF NOT EXISTS "account" (
 	"win_animation" INTEGER NOT NULL,
 	"avatar" INTEGER NOT NULL,
 
-	PRIMARY KEY("account_id")
+	PRIMARY KEY("account_id"),
+	CHECK (
+        "username" <> '' AND 
+        "username" NOT LIKE '% %'
+    ),
+	CHECK ("mail" ~ '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$')
 );
 
 CREATE TABLE IF NOT EXISTS "device" (

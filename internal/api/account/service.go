@@ -5,8 +5,10 @@ package account
 
 import (
 	"context"
+	"regexp"
 	"fmt"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/auth"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 )
@@ -27,6 +29,14 @@ func NewService(s *db.Store) *AccountService {
 // Por ahora se inventa los items equipados por defecto,
 // pero habrá que hacer que los ownee y los tenga equipados.
 func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*AccountDTO, error) {
+
+	if !IsMail(body.Mail) {
+		return nil, apierror.ErrInvalidMailFormat
+	}
+
+	if len(body.Password) > 50 || len(body.Password) < 6 {
+		return nil, apierror.ErrInvalidPasswordLenght
+	}
 
 	passwordHash, err := auth.HashPassword(body.Password)
 	if err != nil {
@@ -181,4 +191,10 @@ func (s *AccountService) UpdateStats(
 // Desactiva la cuenta del usuario con id == accountID
 func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
 	return s.store.DeleteAccount(ctx, accountID)
+}
+
+// Comprueba si un string es una direccion de email o no
+func IsMail(credential string) bool {
+	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	return emailRegex.MatchString(credential)
 }
