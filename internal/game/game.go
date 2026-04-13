@@ -185,7 +185,6 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 		g.ToRoom <- ResponseToRoom{
 			Type:    Move,
 			Content: result,
-			Extra:   fmt.Sprint(formatLaserPath(laser)),
 		}
 
 		// Si se ha terminado la partida se notifica de esto
@@ -304,4 +303,8 @@ func (g *LaserChessGame) Run() {
 			return
 		}
 	}
+}
+
+func (g *LaserChessGame) GetLog() string {
+	return g.gameEngine.gameLog
 }

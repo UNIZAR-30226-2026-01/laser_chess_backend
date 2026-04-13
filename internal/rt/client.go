@@ -97,6 +97,7 @@ func (c *Client) WritePump() error {
 	for {
 		select {
 		case message, ok := <-c.Send:
+			fmt.Println("MENSAJE RECIBIDO DE LA ROOM AL CLIENTE")
 			if !ok {
 				return nil
 			}
@@ -141,19 +142,46 @@ func (c *Client) RunAIClient() error {
 			if !ok {
 				return nil
 			}
-			if message.Type == game.EOC {
-				return nil
-			}
 
-			c.ToAI <- ClientSocketMessage{
-				Type:    "Move",
-				Content: message.Content,
+			switch message.Type {
+			case game.EOC:
+				return nil
+			case game.InitialState:
+				fmt.Println("Turno recibido")
+				if message.Extra == "0" {
+					c.ToAI <- ClientSocketMessage{
+						Type:    "Move",
+						Content: "",
+					}
+					response := <-c.FromAI
+					c.ToRoom <- response
+					// Filtramos el mensaje del movimiento
+					if msg := <-c.Send; msg.Type == "ERROR" {
+						return nil // TODO: mirar error
+					}
+					continue
+				}
+			case game.Move:
+				fmt.Println("Calculando movimiento")
+
+				c.ToAI <- ClientSocketMessage{
+					Type:    "Move",
+					Content: message.Content,
+				}
+				response := <-c.FromAI
+				fmt.Println("Enviando mensaje a room: ", response.Content)
+
+				c.ToRoom <- response
+				fmt.Println("Mensaje enviado a room")
+
+				// Filtramos el mensaje del movimiento
+				<-c.Send
+			default:
+
 			}
-			response := <-c.FromAI
-			c.ToRoom <- response
 
 		case <-c.Done:
-			// Si ReadPump detecta un error salimos
+			// Si se detecta un error salimos
 			return nil
 		}
 	}

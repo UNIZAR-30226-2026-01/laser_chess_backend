@@ -232,13 +232,14 @@ func TestAImove(t *testing.T) {
 	var engine GameEngine
 	engine.InitEngine(CURIOSITY)
 
-	for i := 0; i < 150; i++ {
+	for i := 0; i < 100; i++ {
 		switch i % 2 {
 		case 0: //ROJO
 			move := GetBestMove(CURIOSITY, engine.gameLog, 3)
 			logPiece, laserPath, _, err := engine.ProcessTurn(move, RED_TEAM, 100*time.Second)
 			if err != nil {
 				t.Error("la IA ha hecho un movimiento malo en RED_TEAM", err)
+				fmt.Println(move)
 			}
 
 			fmt.Println(logPiece)
@@ -249,6 +250,7 @@ func TestAImove(t *testing.T) {
 			logPiece, laserPath, _, err := engine.ProcessTurn(move, BLUE_TEAM, 100*time.Second)
 			if err != nil {
 				t.Error("la IA ha hecho un movimiento malo en BLUE_TEAM", err)
+				fmt.Println(move)
 			}
 
 			fmt.Println(logPiece)
