@@ -223,8 +223,9 @@ func (s *RatingService) UpdateEloByID(ctx context.Context, rating *RatingDTO) er
 }
 
 func (s *RatingService) GetTopRankUsers(ctx context.Context,
-	ratingType string) ([]RankUserDTO, error) {
-	res, err := s.store.GetTopRankUsers(ctx, db.EloType(ratingType))
+	eloType string) ([]RankUserDTO, error) {
+	eloType = strings.ToUpper(eloType)
+	res, err := s.store.GetTopRankUsers(ctx, db.EloType(eloType))
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +234,7 @@ func (s *RatingService) GetTopRankUsers(ctx context.Context,
 
 func (s *RatingService) GetRankById(ctx context.Context,
 	eloType string, userID int64) (int64, error) {
+	eloType = strings.ToUpper(eloType)
 	res, err := s.store.GetRankById(ctx, db.GetRankByIdParams{
 		EloType: db.EloType(eloType),
 		UserID:  userID,
