@@ -25,13 +25,17 @@ type Client struct {
 	Reconnect chan bool
 	Online    bool
 
+	isAI   bool
+	ToAI   chan ClientSocketMessage
+	FromAI chan ClientSocketMessage
+
 	mu sync.RWMutex
 
 	// Canal para avisar de fin
 	Done chan struct{}
 }
 
-func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
+func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn, isAI bool) {
 	c.AccountID = AccountID
 	c.Conn = Conn
 	c.Send = make(chan game.ResponseToRoom, 1)
@@ -44,8 +48,15 @@ func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
 	c.Online = true
 	c.mu.Unlock()
 
-	go c.ReadPump()
-	go c.WritePump()
+	if isAI {
+		c.ToAI = make(chan ClientSocketMessage)
+		c.FromAI = make(chan ClientSocketMessage)
+		go c.RunAIClient()
+	} else {
+		go c.ReadPump()
+		go c.WritePump()
+	}
+
 }
 
 // lee mensajes del socket y los manda a la Room
@@ -86,6 +97,7 @@ func (c *Client) WritePump() error {
 	for {
 		select {
 		case message, ok := <-c.Send:
+			fmt.Println("MENSAJE RECIBIDO DE LA ROOM AL CLIENTE")
 			if !ok {
 				return nil
 			}
@@ -109,4 +121,68 @@ func (c *Client) notifyDisconnection() {
 	c.Online = false
 	c.mu.Unlock()
 	c.ToRoom <- ClientSocketMessage{Type: string(game.EOC), Content: ""}
+}
+
+// IMPLEMENTACION PARA IA
+
+// lee mensajes del socket y los manda a la Room
+func (c *Client) RunAIClient() error {
+	defer func() {
+		c.ToAI <- ClientSocketMessage{Type: "EOC", Content: ""}
+		select {
+		case <-c.Done:
+		default:
+			close(c.Done)
+		}
+	}()
+
+	for {
+		select {
+		case message, ok := <-c.Send:
+			if !ok {
+				return nil
+			}
+
+			switch message.Type {
+			case game.EOC:
+				return nil
+			case game.InitialState:
+				fmt.Println("Turno recibido")
+				if message.Extra == "0" {
+					c.ToAI <- ClientSocketMessage{
+						Type:    "Move",
+						Content: "",
+					}
+					response := <-c.FromAI
+					c.ToRoom <- response
+					// Filtramos el mensaje del movimiento
+					if msg := <-c.Send; msg.Type == "ERROR" {
+						return nil // TODO: mirar error
+					}
+					continue
+				}
+			case game.Move:
+				fmt.Println("Calculando movimiento")
+
+				c.ToAI <- ClientSocketMessage{
+					Type:    "Move",
+					Content: message.Content,
+				}
+				response := <-c.FromAI
+				fmt.Println("Enviando mensaje a room: ", response.Content)
+
+				c.ToRoom <- response
+				fmt.Println("Mensaje enviado a room")
+
+				// Filtramos el mensaje del movimiento
+				<-c.Send
+			default:
+
+			}
+
+		case <-c.Done:
+			// Si se detecta un error salimos
+			return nil
+		}
+	}
 }

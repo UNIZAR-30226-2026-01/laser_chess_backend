@@ -16,6 +16,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/bot"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/private"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/public"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/reconnection"
@@ -164,8 +165,9 @@ func SetupRouter(store *db.Store,
 	publicHandler := public.NewPublicHandler(publicHub, registry, accountService,
 		matchService, ratingService, eventSystem)
 
-	reconnectHandler := reconnection.NewReconnectionHandler(registry,
-		ratingService, eventSystem)
+	reconnectHandler := reconnection.NewReconnectionHandler(registry, eventSystem)
+
+	botHandler := bot.NewBotHandler(registry, matchService, eventSystem)
 
 	{
 		rtRoute := protected.Group("/rt/")
@@ -180,6 +182,9 @@ func SetupRouter(store *db.Store,
 
 		// Reconexion
 		rtRoute.GET("reconnect", reconnectHandler.Reconnect)
+
+		// Contra bots
+		rtRoute.GET("bot", botHandler.BotMatch)
 	}
 
 	return router

@@ -89,6 +89,8 @@ EmptyBroadcast:
 
 	// Delegamos la logica de fin de partida en el matchService
 
+	r.GameInfo.Log = r.Game.GetLog()
+
 	summary := match.MatchSummaryDTO{
 		IsNewMatch: r.isNewMatch,
 		GameInfo:   r.GameInfo,
@@ -136,8 +138,10 @@ func (r *Room) run() {
 		select {
 		case message := <-r.Broadcast:
 			fmt.Println("Broadcast: ", message)
+			fmt.Println("ROOM: Enviando mensaje de broadcast a jugadores")
 			r.Player1.Send <- message
 			r.Player2.Send <- message
+			fmt.Println("ROOM: Enviado mensaje de broadcast a jugadores")
 
 		case message, ok := <-r.Player1.ToRoom:
 			if !ok {
@@ -151,6 +155,7 @@ func (r *Room) run() {
 			r.filterMessage(r.Player2, message)
 
 		case gameMsg := <-r.Game.ToRoom:
+			fmt.Println("ROOM: Mensaje recibido de game")
 			if r.handleGameMessage(gameMsg) {
 				// Cerrar la room si acaba la partida
 				return
@@ -173,11 +178,13 @@ func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
 
 	switch game.GameMessageType(message.Type) {
 	case game.Move:
+		fmt.Println("ROOM: Enviando movimiento a game")
 		r.Game.FromRoom <- game.RoomMsg{
 			PlayerUid:  player.AccountID,
 			MsgType:    game.Move,
 			MsgContent: message.Content,
 		}
+		fmt.Println("ROOM: Movimiento enviado a game")
 	case game.GetState:
 		r.Game.FromRoom <- game.RoomMsg{
 			PlayerUid: player.AccountID,
@@ -214,9 +221,12 @@ func (r *Room) manageDisconnection(player *Client) {
 
 // El valor que devuelve indica si hay que cerrar la room
 func (r *Room) handleGameMessage(response game.ResponseToRoom) bool {
+	fmt.Println("ROOM: Dentro de handleGameMessage: ", response.Type, " ; ", response.Content)
 	switch response.Type {
 	case game.Move, game.InitialState:
+
 		r.Broadcast <- response
+		fmt.Println("ROOM: Enviado mensaje de movimiento a jugadores")
 
 	case game.State, game.Error:
 		// Mandar exclusivamente al jugador correspondiente usando el Extra

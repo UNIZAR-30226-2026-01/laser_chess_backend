@@ -115,7 +115,8 @@ func (g *GameEngine) InitEngine(boardType Board_T) {
 	}
 }
 
-func (g *GameEngine) ProcessTurn(instruction string, team team_T, timeLeft time.Duration) (string, []vector2_T, laserInteractionResult_T, error) {
+func (g *GameEngine) ProcessTurn(instruction string, team team_T,
+	timeLeft time.Duration) (string, []vector2_T, laserInteractionResult_T, error) {
 	result, laser, laserEnd, err := g.gameBoard.ProcessTurn(instruction, team)
 	if err != nil {
 		return result, laser, laserEnd, err
@@ -124,7 +125,7 @@ func (g *GameEngine) ProcessTurn(instruction string, team team_T, timeLeft time.
 	timeLeftStr := formatTimeLeft(timeLeft)
 	g.gameLog += result + "%" + formatLaserPath(laser) + timeLeftStr
 
-	result += timeLeftStr
+	result = result + "%" + formatLaserPath(laser) + timeLeftStr
 	return result, laser, laserEnd, err
 }
 

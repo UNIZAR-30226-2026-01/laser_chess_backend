@@ -22,6 +22,9 @@ var (
 	ErrInvalidToken        = errors.New("invalid token")
 	ErrUnauthorized        = errors.New("unauthorized access")
 
+	ErrInvalidPasswordLenght = errors.New("password must be between 6 and 50 characters")
+	ErrInvalidMailFormat 	 = errors.New("mail format is invalid")
+
 	ErrSelfChallenge        = errors.New("you can't challenge yourself")
 	ErrNotFriends           = errors.New("users are not friends")
 	ErrAlreadyInMatch       = errors.New("user already in match")
