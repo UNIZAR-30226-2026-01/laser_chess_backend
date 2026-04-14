@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -101,7 +102,8 @@ func formatLaserPath(laserPath []vector2_T) string {
 }
 
 func formatTimeLeft(timeLeft time.Duration) string {
-	timeStr := fmt.Sprintf("%.2f", timeLeft.Seconds())
+	timeLeftMS := math.Floor(float64(timeLeft.Milliseconds()))
+	timeStr := fmt.Sprintf("%d", int64(timeLeftMS))
 	return "%{" + timeStr + "}" + ";"
 }
 
@@ -144,7 +146,6 @@ func (g *GameEngine) EngineApplyLogToBoard(timeBase int32) (nextTeam team_T, red
 	logChunks := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
 	nextTeam = RED_TEAM                                           //Equipo que empieza
 	re := regexp.MustCompile(`^([^%]+)%(?:[^%]+)%\{([0-9.]+)\}$`) //regla expresión regular
-
 
 	//aplicamos cada cachito usando processTurn y los procesamos.
 	for _, logChunk := range logChunks {
