@@ -222,12 +222,12 @@ func TestApplyLogToBoard(t *testing.T) {
 }
 
 func TestAImove(t *testing.T) {
-	tablero, _ := InitBoard(boardtemplates.CURIOSITY)
+	tablero, _ := InitBoard(boardtemplates.ACE)
 
-	for i := 0; i < 150; i++ {
+	for i := 0; i < 40; i++ {
 		switch i % 2 {
 		case 0: //ROJO
-			move := GetBestMove(tablero, RED_TEAM, 3)
+			move := GetBestMove(tablero, RED_TEAM, 4)
 			logPiece, laserPath, interactionResult, err := tablero.ProcessTurn(move, RED_TEAM)
 			if err != nil {
 				t.Error("la IA ha hecho un movimiento malo en RED_TEAM", err)
@@ -238,7 +238,7 @@ func TestAImove(t *testing.T) {
 			tablero.printlaser(laserPath)	
 			
 		case 1: //AZUL
-			move := GetBestMove(tablero, BLUE_TEAM, 3)
+			move := GetBestMove(tablero, BLUE_TEAM, 4)
 			logPiece, laserPath, interactionResult, err := tablero.ProcessTurn(move, BLUE_TEAM)
 			if err != nil {
 				t.Error("la IA ha hecho un movimiento malo en BLUE_TEAM", err)

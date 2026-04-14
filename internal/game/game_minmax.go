@@ -252,7 +252,6 @@ func (a *AIGameState)evaluateBoard(b *Board) (score int){
 	//Comer piezas,  quién tenga más piezas está en mejor posición
 	score += (len(a.rDeflectors) - len(a.bDeflectors)) * 30
 	score += (len(a.rShields) - len(a.bShields)) * 50
-	score += (len(a.rKings) - len(a.bKings)) * 10000
 	//Control del laser, quién controle más puntos de inflexion está en mejor posicion
 	laserPath, _ := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
 	for _, pair := range laserPath[1 : len(laserPath)-1] {
@@ -320,19 +319,21 @@ func evaluateKingDefense(b *Board, king int, team team_T) int {
 				switch v := b.cells[nx][ny].(type) {
 				case *BoardPieceShield:
 					if v.team == team {
-						bonus += 10
+						bonus += 5
+					}else{
+						bonus -= -1
 					}
 				case *BoardPieceDeflector:
+					if v.team == team {
+						bonus += 2
+					}else{
+						bonus -= 2
+					}
+				case *BoardPieceSwitch:
 					if v.team == team {
 						bonus += 5
 					}else{
 						bonus -= 10
-					}
-				case *BoardPieceSwitch:
-					if v.team == team {
-						bonus += 3
-					}else{
-						bonus -= 7
 					}
 				}
 			}
@@ -431,7 +432,7 @@ func minmax(b *Board, depth int, alpha int, beta int, myTeam team_T) (score int,
                 break // Poda: Azul nunca permitiría llegar a esta rama
             }
         }
-        return maximizedScore + depth * 5, bestMove
+        return maximizedScore + depth * 1, bestMove
         
     case BLUE_TEAM: // AZUL MINIMIZA
         minimizedScore := MAX_SCORE
@@ -452,7 +453,7 @@ func minmax(b *Board, depth int, alpha int, beta int, myTeam team_T) (score int,
                 break // Poda: Rojo nunca permitiría llegar a esta rama
             }
         }
-        return minimizedScore + depth * -5 , bestMove
+        return minimizedScore + depth * -1 , bestMove
     }
     return 0, bestMove
 }
