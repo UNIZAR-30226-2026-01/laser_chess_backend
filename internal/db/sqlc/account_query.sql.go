@@ -60,6 +60,18 @@ func (q *Queries) DeleteAccount(ctx context.Context, accountID int64) error {
 	return err
 }
 
+const deleteDevice = `-- name: DeleteDevice :one
+DELETE FROM device
+WHERE token = $1
+RETURNING token
+`
+
+func (q *Queries) DeleteDevice(ctx context.Context, token string) (string, error) {
+	row := q.db.QueryRow(ctx, deleteDevice, token)
+	err := row.Scan(&token)
+	return token, err
+}
+
 const getAccountByID = `-- name: GetAccountByID :one
 SELECT account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar FROM account
 WHERE account_id = $1 AND is_deleted = FALSE LIMIT 1
@@ -131,6 +143,50 @@ func (q *Queries) GetAccountIDByUsername(ctx context.Context, username string) (
 	var account_id int64
 	err := row.Scan(&account_id)
 	return account_id, err
+}
+
+const getDevicesById = `-- name: GetDevicesById :many
+SELECT token FROM device
+WHERE user_id = $1
+`
+
+func (q *Queries) GetDevicesById(ctx context.Context, userID int64) ([]string, error) {
+	rows, err := q.db.Query(ctx, getDevicesById, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var token string
+		if err := rows.Scan(&token); err != nil {
+			return nil, err
+		}
+		items = append(items, token)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getStats = `-- name: GetStats :one
+SELECT level, xp, money
+FROM account
+WHERE account_id = $1 AND is_deleted = FALSE
+`
+
+type GetStatsRow struct {
+	Level int32 `json:"level"`
+	Xp    int32 `json:"xp"`
+	Money int32 `json:"money"`
+}
+
+func (q *Queries) GetStats(ctx context.Context, accountID int64) (GetStatsRow, error) {
+	row := q.db.QueryRow(ctx, getStats, accountID)
+	var i GetStatsRow
+	err := row.Scan(&i.Level, &i.Xp, &i.Money)
+	return i, err
 }
 
 const getUsernameByID = `-- name: GetUsernameByID :one
@@ -265,14 +321,13 @@ func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) 
 	return err
 }
 
-const updateStats = `-- name: UpdateStats :one
+const updateStats = `-- name: UpdateStats :exec
 UPDATE account
 SET
     level = $2,
     xp = $3,
     money = $4
 WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar
 `
 
 type UpdateStatsParams struct {
@@ -282,27 +337,12 @@ type UpdateStatsParams struct {
 	Money     int32 `json:"money"`
 }
 
-func (q *Queries) UpdateStats(ctx context.Context, arg UpdateStatsParams) (Account, error) {
-	row := q.db.QueryRow(ctx, updateStats,
+func (q *Queries) UpdateStats(ctx context.Context, arg UpdateStatsParams) error {
+	_, err := q.db.Exec(ctx, updateStats,
 		arg.AccountID,
 		arg.Level,
 		arg.Xp,
 		arg.Money,
 	)
-	var i Account
-	err := row.Scan(
-		&i.AccountID,
-		&i.Mail,
-		&i.Username,
-		&i.PasswordHash,
-		&i.IsDeleted,
-		&i.Level,
-		&i.Xp,
-		&i.Money,
-		&i.BoardSkin,
-		&i.PieceSkin,
-		&i.WinAnimation,
-		&i.Avatar,
-	)
-	return i, err
+	return err
 }

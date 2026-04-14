@@ -137,15 +137,15 @@ func (c *BoardPieceLaser) processLaser(dir pointing_T) (pointing_T, laserInterac
 }
 
 // DEBUG
-func (c *BoardPieceLaser) printLaserInteractionResult(e laserInteractionResult_T) string {
-	switch e {
-	case 0:
-		return "CONTINUE"
-	case 1:
-		return "HIT"
-	case 2:
-		return "STOP"
-	default:
-		return "OUT_OF_BOUNDS"
-	}
-}
+// func (c *BoardPieceLaser) printLaserInteractionResult(e laserInteractionResult_T) string {
+// 	switch e {
+// 	case 0:
+// 		return "CONTINUE"
+// 	case 1:
+// 		return "HIT"
+// 	case 2:
+// 		return "STOP"
+// 	default:
+// 		return "OUT_OF_BOUNDS"
+// 	}
+// }

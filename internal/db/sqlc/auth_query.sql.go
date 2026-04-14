@@ -7,8 +7,7 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 const countSessionsByAccount = `-- name: CountSessionsByAccount :one
@@ -29,9 +28,9 @@ VALUES ($1, $2, $3)
 `
 
 type CreateRefreshSessionParams struct {
-	AccountID int64              `json:"account_id"`
-	TokenHash string             `json:"token_hash"`
-	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	AccountID int64     `json:"account_id"`
+	TokenHash string    `json:"token_hash"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 func (q *Queries) CreateRefreshSession(ctx context.Context, arg CreateRefreshSessionParams) error {

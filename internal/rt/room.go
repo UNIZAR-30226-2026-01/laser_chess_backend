@@ -7,10 +7,7 @@ import (
 	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
-	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
-	sqlc "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // fichero que gestiona las rooms
@@ -21,88 +18,116 @@ import (
 type Room struct {
 	Player1    *Client
 	Player2    *Client
-	IsNewMatch bool
+	isNewMatch bool
 	GameInfo   *game.GameInfo
 	Game       *game.LaserChessGame
+	Registry   *MatchRegistry
 
 	P1Pause bool
 	P2Pause bool
 
-	Broadcast chan game.ResponseToRoom
+	Broadcast   chan game.ResponseToRoom
+	RefreshChan chan bool
 
-	MatchService *match.MatchService
+	matchService *match.MatchService
 }
 
 func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
-	MatchService *match.MatchService, IsNewMatch bool, GameInfo *game.GameInfo) {
+	matchService *match.MatchService, isNewMatch bool,
+	GameInfo *game.GameInfo, registry *MatchRegistry) {
 
 	r.Player1 = Player1
 	r.Player2 = Player2
 	r.P1Pause = false
 	r.P2Pause = false
-	r.Broadcast = make(chan game.ResponseToRoom, 1)
-	r.MatchService = MatchService
-	r.IsNewMatch = IsNewMatch
+	r.Broadcast = make(chan game.ResponseToRoom, 2)
+	r.RefreshChan = make(chan bool)
+
+	r.matchService = matchService
+
+	r.isNewMatch = isNewMatch
 	r.GameInfo = GameInfo
+
+	fmt.Println(GameInfo.BoardType)
 
 	r.Game = &game.LaserChessGame{}
 	r.Game.InitLaserChessGame(r.Player1.AccountID, r.Player2.AccountID,
 		GameInfo.BoardType, GameInfo.Log, GameInfo.TimeBase, GameInfo.TimeIncrement)
 
-	go r.Run()
+	r.Registry = registry
+
+	r.Registry.RegisterMatch(r.Player1.AccountID, r.Player2.AccountID, r)
+
+	go r.run()
 }
 
-func (r *Room) End() {
+func (r *Room) end() {
 	fmt.Println("Cierre de la room")
 
-	// Guardar la partida en BD
-	err := r.SaveMatchInDB()
+	// Vaciar Broadcast
+EmptyBroadcast:
+	for {
+		select {
+		case message := <-r.Broadcast:
+			fmt.Println("Broadcast: ", message)
 
+			r.Player1.mu.RLock()
+			if r.Player1.Online {
+				r.Player1.Send <- message
+			}
+			r.Player1.mu.RUnlock()
+
+			r.Player2.mu.RLock()
+			if r.Player2.Online {
+				r.Player2.Send <- message
+			}
+			r.Player2.mu.RUnlock()
+		default:
+			break EmptyBroadcast
+		}
+	}
+
+	// Delegamos la logica de fin de partida en el matchService
+
+	r.GameInfo.Log = r.Game.GetLog()
+
+	summary := match.MatchSummaryDTO{
+		IsNewMatch: r.isNewMatch,
+		GameInfo:   r.GameInfo,
+		P1ID:       r.Player1.AccountID,
+		P2ID:       r.Player2.AccountID,
+		Date:       time.Now(),
+	}
+
+	err := r.matchService.FinalizeMatch(context.Background(), summary)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("ERROR finalizando la partida: ", err.Error())
+		// TODO: gestionar error
 	}
+
+	// TODO: mandar al cliente la info de elo y exp
+
+	fmt.Println("Antes de enviar el EOC a los clientes")
+	// Avisar y cerrar los clientes
+	r.Player1.mu.RLock()
+	if r.Player1.Online {
+		r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
+	}
+	r.Player1.mu.RUnlock()
+
+	r.Player2.mu.RLock()
+	if r.Player2.Online {
+		r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
+	}
+	r.Player2.mu.RUnlock()
+
+	fmt.Println("Despues de enviar el EOC a los clientes")
+
+	r.Registry.RemoveMatch(r.Player1.AccountID, r.Player2.AccountID)
 
 }
 
-func (r *Room) SaveMatchInDB() error {
-	var err error
-	if r.IsNewMatch {
-		fmt.Println("Cierre de la room con match nueva")
-		_, err = r.MatchService.Create(context.Background(), &match.MatchDTO{
-			P1ID:            r.Player1.AccountID,
-			P2ID:            r.Player2.AccountID,
-			P1Elo:           0, // cambiar
-			P2Elo:           0, // cambiar
-			Date:            pgtype.Timestamptz{Time: time.Now(), Valid: true},
-			Winner:          sqlc.Winner(r.GameInfo.Winner),
-			Termination:     sqlc.Termination(r.GameInfo.Termination),
-			MatchType:       sqlc.MatchType(r.GameInfo.MatchType),
-			Board:           db.IntToBoard[r.GameInfo.BoardType],
-			MovementHistory: r.Game.GetCurrentState(),
-			TimeBase:        int32(r.GameInfo.TimeBase),
-			TimeIncrement:   int32(r.GameInfo.TimeIncrement),
-		})
-	} else {
-		_, err = r.MatchService.UpdateMatch(context.Background(), &sqlc.UpdateMatchParams{
-			P1ID:            r.Player1.AccountID,
-			P2ID:            r.Player2.AccountID,
-			P1Elo:           0, // cambiar
-			P2Elo:           0, // cambiar
-			Date:            pgtype.Timestamptz{Time: time.Now(), Valid: true},
-			Winner:          sqlc.Winner(r.GameInfo.Winner),
-			Termination:     sqlc.Termination(r.GameInfo.Termination),
-			MatchType:       sqlc.MatchType(r.GameInfo.MatchType),
-			Board:           db.IntToBoard[r.GameInfo.BoardType],
-			MovementHistory: r.Game.GetCurrentState(),
-			TimeBase:        int32(r.GameInfo.TimeBase),
-			TimeIncrement:   int32(r.GameInfo.TimeIncrement),
-			MatchID:         r.GameInfo.MatchID,
-		})
-	}
-	return err
-}
-
-func (r *Room) Run() {
+func (r *Room) run() {
 
 	fmt.Println("La partida ha iniciado :)")
 
@@ -113,50 +138,95 @@ func (r *Room) Run() {
 		select {
 		case message := <-r.Broadcast:
 			fmt.Println("Broadcast: ", message)
+			fmt.Println("ROOM: Enviando mensaje de broadcast a jugadores")
 			r.Player1.Send <- message
 			r.Player2.Send <- message
+			fmt.Println("ROOM: Enviado mensaje de broadcast a jugadores")
 
-		case message := <-r.Player1.ToRoom:
-			r.FilterMessage(r.Player1, message)
-		case message := <-r.Player2.ToRoom:
-			r.FilterMessage(r.Player2, message)
+		case message, ok := <-r.Player1.ToRoom:
+			if !ok {
+				continue
+			}
+			r.filterMessage(r.Player1, message)
+		case message, ok := <-r.Player2.ToRoom:
+			if !ok {
+				continue
+			}
+			r.filterMessage(r.Player2, message)
 
 		case gameMsg := <-r.Game.ToRoom:
-			if r.HandleGameMessage(gameMsg) {
+			fmt.Println("ROOM: Mensaje recibido de game")
+			if r.handleGameMessage(gameMsg) {
 				// Cerrar la room si acaba la partida
 				return
 			}
+		case <-r.RefreshChan:
+			// No hace nada, es para refrescar las referencias
 		}
 	}
 }
 
-func (r *Room) FilterMessage(player *Client, message ClientSocketMessage) {
+func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
+
+	if player != r.Player1 && player != r.Player2 {
+		return
+	}
+
 	// debug
 	fmt.Println("Type: ", message.Type)
 	fmt.Println("Content: ", message.Content)
 
 	switch game.GameMessageType(message.Type) {
 	case game.Move:
+		fmt.Println("ROOM: Enviando movimiento a game")
 		r.Game.FromRoom <- game.RoomMsg{
 			PlayerUid:  player.AccountID,
 			MsgType:    game.Move,
 			MsgContent: message.Content,
 		}
+		fmt.Println("ROOM: Movimiento enviado a game")
 	case game.GetState:
 		r.Game.FromRoom <- game.RoomMsg{
 			PlayerUid: player.AccountID,
 			MsgType:   game.GetState,
 		}
 	case game.Pause:
-		r.ManagePause(player)
+		r.managePause(player)
+	case game.EOC:
+		go r.manageDisconnection(player)
+	}
+}
+
+func (r *Room) manageDisconnection(player *Client) {
+	timeout := time.NewTimer(60 * time.Second)
+	defer timeout.Stop()
+
+	fmt.Println("Desconexion detectada")
+	if player.AccountID == r.Player1.AccountID {
+		r.Player2.Send <- game.ResponseToRoom{Type: game.Disconnection}
+	} else {
+		r.Player1.Send <- game.ResponseToRoom{Type: game.Disconnection}
+	}
+
+	select {
+	case <-timeout.C:
+		fmt.Println("Desconexion confirmada")
+		r.Game.FromRoom <- game.RoomMsg{
+			PlayerUid: player.AccountID,
+			MsgType:   game.Disconnection,
+		}
+	case <-player.Reconnect:
 	}
 }
 
 // El valor que devuelve indica si hay que cerrar la room
-func (r *Room) HandleGameMessage(response game.ResponseToRoom) bool {
+func (r *Room) handleGameMessage(response game.ResponseToRoom) bool {
+	fmt.Println("ROOM: Dentro de handleGameMessage: ", response.Type, " ; ", response.Content)
 	switch response.Type {
 	case game.Move, game.InitialState:
+
 		r.Broadcast <- response
+		fmt.Println("ROOM: Enviado mensaje de movimiento a jugadores")
 
 	case game.State, game.Error:
 		// Mandar exclusivamente al jugador correspondiente usando el Extra
@@ -169,30 +239,35 @@ func (r *Room) HandleGameMessage(response game.ResponseToRoom) bool {
 		}
 
 	case game.End:
-		r.Player2.Send <- response
-		r.Player1.Send <- response
+		r.Broadcast <- response
 
 		r.GameInfo.Winner = response.Content
 		r.GameInfo.Termination = response.Extra
 
-		r.End()
+		fmt.Println("Winner: ", r.GameInfo.Winner, ", Termination: ", r.GameInfo.Termination)
+		r.end()
 		return true
 
 	case game.Paused:
-		r.Player2.Send <- response
-		r.Player1.Send <- response
+		r.Broadcast <- response
 
 		r.GameInfo.Winner = "NONE"
 		r.GameInfo.Termination = "UNFINISHED"
 
-		r.End()
+		r.end()
 		return true
 	}
 
 	return false
 }
 
-func (r *Room) ManagePause(player *Client) {
+func (r *Room) managePause(player *Client) {
+	if r.GameInfo.MatchType != "PRIVATE" {
+		player.Send <- game.ResponseToRoom{Type: game.Error,
+			Content: "You can't pause a public game"}
+		return
+	}
+
 	switch player.AccountID {
 	case r.Player1.AccountID:
 		r.P1Pause = true
@@ -212,5 +287,49 @@ func (r *Room) ManagePause(player *Client) {
 			MsgType:    game.Pause,
 			MsgContent: "",
 		}
+	}
+}
+
+func (r *Room) ReconnectPlayer(player *Client) {
+
+	if player.AccountID == r.Player1.AccountID {
+		r.Player1.Reconnect <- true
+
+		// Cerrar el cliente si esta online
+		r.Player1.mu.RLock()
+		if r.Player1.Online {
+			r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
+		}
+		r.Player1.mu.RUnlock()
+
+		// Sustituirlo
+		aux := r.Player1
+		r.Player1 = player
+		r.RefreshChan <- true
+		close(aux.Send)
+
+		r.Player2.Send <- game.ResponseToRoom{Type: game.Reconnection}
+	} else if player.AccountID == r.Player2.AccountID {
+		r.Player2.Reconnect <- true
+
+		// Cerrar el cliente si esta online
+		r.Player2.mu.RLock()
+		if r.Player2.Online {
+			r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
+		}
+		r.Player2.mu.RUnlock()
+
+		// Sustituirlo
+		aux := r.Player2
+		r.Player2 = player
+		r.RefreshChan <- true
+		close(aux.Send)
+
+		r.Player1.Send <- game.ResponseToRoom{Type: game.Reconnection}
+	}
+
+	r.Game.FromRoom <- game.RoomMsg{
+		PlayerUid: player.AccountID,
+		MsgType:   game.GetState,
 	}
 }

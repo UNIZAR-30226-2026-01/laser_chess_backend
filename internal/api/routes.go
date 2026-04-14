@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/device"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/friendship"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/item"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/login"
@@ -15,8 +16,11 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/bot"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/private"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/public"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/reconnection"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -51,15 +55,24 @@ func SetupRouter(store *db.Store,
 	ratingHandler := rating.NewHandler(ratingService)
 
 	accountService := account.NewService(store)
-	accountHandler := account.NewHandler(accountService, ratingService)
+	accountHandler := account.NewHandler(accountService)
 
-	matchService := match.NewService(store)
+	matchService := match.NewService(store, accountService, ratingService)
 	matchHandler := match.NewHandler(matchService)
 
-	itemService := item.NewService(store)
+	itemService := item.NewService(store, accountService)
 	itemHandler := item.NewHandler(itemService)
 
-	friendshipService := friendship.NewService(store)
+	deviceService := device.NewService(store)
+
+	// Creacion del SSE para eventos y notificaciones
+	fcm, err := sse.InitFirebase(deviceService)
+	if err != nil {
+
+	}
+	eventSystem := sse.InitSSE(fcm)
+
+	friendshipService := friendship.NewService(store, eventSystem)
 	friendshipHandler := friendship.NewHandler(friendshipService, accountService)
 
 	// Establecer las rutas de las peticiones http por grupos
@@ -93,11 +106,9 @@ func SetupRouter(store *db.Store,
 	// Match routes
 	{
 		matchRoute := protected.Group("/match")
-		// Probablemente las partidas las acabe creando la app, a si
-		// que creo que no se usara el POST (la funcion del service si)
-		matchRoute.POST("", matchHandler.CreateMatch)
 		matchRoute.GET("/:matchID", matchHandler.GetMatch)
 		matchRoute.GET("/history/:userID", matchHandler.GetUserHistory)
+		matchRoute.GET("/history/:userID/paused", matchHandler.GetPausedMatches)
 	}
 
 	// Item routes
@@ -117,6 +128,8 @@ func SetupRouter(store *db.Store,
 		ratingRoute.GET("/:userID/extended", ratingHandler.GetExtendedElo)
 		ratingRoute.GET("/:userID/rapid", ratingHandler.GetRapidElo)
 		ratingRoute.GET("/:userID/classic", ratingHandler.GetClassicElo)
+		ratingRoute.GET("/ranking/:eloType/:id", ratingHandler.GetRankById)
+		ratingRoute.GET("/top/:eloType", ratingHandler.GetTopRankUsers)
 	}
 
 	// Friendship routes
@@ -139,9 +152,22 @@ func SetupRouter(store *db.Store,
 		friendshipRoute.DELETE("/:user2Username", friendshipHandler.DeleteFriendship)
 	}
 
+	//  Event routes
+	{
+		eventRoute := protected.Group("/events")
+		eventRoute.GET("", eventSystem.EventHandler)
+	}
+
 	// Endpoints de websockets
-	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService, matchService)
-	publicHandler := public.NewPublicHandler(publicHub, registry, accountService, matchService, ratingService)
+	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService,
+		matchService, ratingService, eventSystem, friendshipService)
+
+	publicHandler := public.NewPublicHandler(publicHub, registry, accountService,
+		matchService, ratingService, eventSystem)
+
+	reconnectHandler := reconnection.NewReconnectionHandler(registry, eventSystem)
+
+	botHandler := bot.NewBotHandler(registry, matchService, eventSystem)
 
 	{
 		rtRoute := protected.Group("/rt/")
@@ -152,14 +178,13 @@ func SetupRouter(store *db.Store,
 		rtRoute.GET("/challenges", privateHandler.GetChallenges)
 
 		// Partidas publicas
-		rtRoute.GET("/blitz2", publicHandler.Blitz2Matchmaking)
-		rtRoute.GET("/blitz5", publicHandler.Blitz5Matchmaking)
-		rtRoute.GET("/rapid5", publicHandler.Rapid5Matchmaking)
-		rtRoute.GET("/rapid10", publicHandler.Rapid10Matchmaking)
-		rtRoute.GET("/classic10", publicHandler.Classic10Matchmaking)
-		rtRoute.GET("/classic15", publicHandler.Classic15Matchmaking)
-		rtRoute.GET("/extended15", publicHandler.Extended15Matchmaking)
-		rtRoute.GET("/extended20", publicHandler.Extended20Matchmaking)
+		rtRoute.GET("matchmaking", publicHandler.GoIntoMatchmaking)
+
+		// Reconexion
+		rtRoute.GET("reconnect", reconnectHandler.Reconnect)
+
+		// Contra bots
+		rtRoute.GET("bot", botHandler.BotMatch)
 	}
 
 	return router

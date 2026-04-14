@@ -72,33 +72,18 @@ func (h *MatchHandler) GetUserHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-/*
-*
-* Desc: Esta funcion llama a otra funcion del service que crea una partida dado
-un JSON.
-* --- Parametros ---
-* c, *gin.Context - Es el contexto de gin de donde saca el JSON.
-* ------------------
-* Nota: si bien no hace un return de un valor, devuelve en el contexto un JSON
-con un objeto de confirmacion que contiene los id de ambos jugadores junto con
-un StatusCreated si no hay errores, y un error en caso contrario.
-*
-*/
-func (h *MatchHandler) CreateMatch(c *gin.Context) {
-
-	var body MatchDTO
-
-	// Mira si el json que nos han pasado coincide con el dto
-	if err := c.ShouldBindJSON(&body); err != nil {
+func (h *MatchHandler) GetPausedMatches(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("userID"), 10, 64)
+	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := h.service.Create(c.Request.Context(), &body)
+	res, err := h.service.GetPausedMatches(c.Request.Context(), int64(id))
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, res)
+	c.JSON(http.StatusOK, res)
 }

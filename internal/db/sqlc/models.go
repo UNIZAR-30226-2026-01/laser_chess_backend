@@ -7,8 +7,7 @@ package db
 import (
 	"database/sql/driver"
 	"fmt"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 type BoardType string
@@ -16,9 +15,9 @@ type BoardType string
 const (
 	BoardTypeACE       BoardType = "ACE"
 	BoardTypeCURIOSITY BoardType = "CURIOSITY"
-	BoardTypeSOPHIE    BoardType = "SOPHIE"
 	BoardTypeGRAIL     BoardType = "GRAIL"
 	BoardTypeMERCURY   BoardType = "MERCURY"
+	BoardTypeSOPHIE    BoardType = "SOPHIE"
 )
 
 func (e *BoardType) Scan(src interface{}) error {
@@ -59,10 +58,10 @@ func (ns NullBoardType) Value() (driver.Value, error) {
 type EloType string
 
 const (
-	EloTypeBlitz    EloType = "blitz"
-	EloTypeExtended EloType = "extended"
-	EloTypeRapid    EloType = "rapid"
-	EloTypeClassic  EloType = "classic"
+	EloTypeBLITZ    EloType = "BLITZ"
+	EloTypeEXTENDED EloType = "EXTENDED"
+	EloTypeRAPID    EloType = "RAPID"
+	EloTypeCLASSIC  EloType = "CLASSIC"
 )
 
 func (e *EloType) Scan(src interface{}) error {
@@ -103,9 +102,9 @@ func (ns NullEloType) Value() (driver.Value, error) {
 type ItemType string
 
 const (
-	ItemTypeBoardSkin    ItemType = "board_skin"
-	ItemTypePieceSkin    ItemType = "piece_skin"
-	ItemTypeWinAnimation ItemType = "win_animation"
+	ItemTypeBOARDSKIN    ItemType = "BOARD_SKIN"
+	ItemTypePIECESKIN    ItemType = "PIECE_SKIN"
+	ItemTypeWINANIMATION ItemType = "WIN_ANIMATION"
 )
 
 func (e *ItemType) Scan(src interface{}) error {
@@ -146,10 +145,9 @@ func (ns NullItemType) Value() (driver.Value, error) {
 type MatchType string
 
 const (
-	MatchTypeRANKED   MatchType = "RANKED"
-	MatchTypeFRIENDLY MatchType = "FRIENDLY"
-	MatchTypePRIVATE  MatchType = "PRIVATE"
-	MatchTypeBOTS     MatchType = "BOTS"
+	MatchTypePRIVATE MatchType = "PRIVATE"
+	MatchTypeRANKED  MatchType = "RANKED"
+	MatchTypeBOTS    MatchType = "BOTS"
 )
 
 func (e *MatchType) Scan(src interface{}) error {
@@ -190,10 +188,11 @@ func (ns NullMatchType) Value() (driver.Value, error) {
 type Termination string
 
 const (
-	TerminationOUTOFTIME  Termination = "OUT_OF_TIME"
-	TerminationSURRENDER  Termination = "SURRENDER"
-	TerminationLASER      Termination = "LASER"
-	TerminationUNFINISHED Termination = "UNFINISHED"
+	TerminationOUTOFTIME     Termination = "OUT_OF_TIME"
+	TerminationSURRENDER     Termination = "SURRENDER"
+	TerminationLASER         Termination = "LASER"
+	TerminationUNFINISHED    Termination = "UNFINISHED"
+	TerminationDISCONNECTION Termination = "DISCONNECTION"
 )
 
 func (e *Termination) Scan(src interface{}) error {
@@ -236,7 +235,6 @@ type Winner string
 const (
 	WinnerP1WINS Winner = "P1_WINS"
 	WinnerP2WINS Winner = "P2_WINS"
-	WinnerDRAW   Winner = "DRAW"
 	WinnerNONE   Winner = "NONE"
 )
 
@@ -308,33 +306,36 @@ type ItemOwner struct {
 }
 
 type Match struct {
-	MatchID         int64              `json:"match_id"`
-	P1ID            int64              `json:"p1_id"`
-	P2ID            int64              `json:"p2_id"`
-	P1Elo           int32              `json:"p1_elo"`
-	P2Elo           int32              `json:"p2_elo"`
-	Date            pgtype.Timestamptz `json:"date"`
-	Winner          Winner             `json:"winner"`
-	Termination     Termination        `json:"termination"`
-	MatchType       MatchType          `json:"match_type"`
-	Board           BoardType          `json:"board"`
-	MovementHistory string             `json:"movement_history"`
-	TimeBase        int32              `json:"time_base"`
-	TimeIncrement   int32              `json:"time_increment"`
+	MatchID         int64       `json:"match_id"`
+	P1ID            int64       `json:"p1_id"`
+	P2ID            int64       `json:"p2_id"`
+	P1Elo           int32       `json:"p1_elo"`
+	P2Elo           int32       `json:"p2_elo"`
+	Date            time.Time   `json:"date"`
+	Winner          Winner      `json:"winner"`
+	Termination     Termination `json:"termination"`
+	MatchType       MatchType   `json:"match_type"`
+	Board           BoardType   `json:"board"`
+	MovementHistory string      `json:"movement_history"`
+	TimeBase        int32       `json:"time_base"`
+	TimeIncrement   int32       `json:"time_increment"`
 }
 
 type Rating struct {
-	UserID  int64   `json:"user_id"`
-	EloType EloType `json:"elo_type"`
-	Value   int32   `json:"value"`
+	UserID        int64     `json:"user_id"`
+	EloType       EloType   `json:"elo_type"`
+	Value         int32     `json:"value"`
+	Deviation     int32     `json:"deviation"`
+	Volatility    float64   `json:"volatility"`
+	LastUpdatedAt time.Time `json:"last_updated_at"`
 }
 
 type RefreshSession struct {
-	SessionID int64              `json:"session_id"`
-	AccountID int64              `json:"account_id"`
-	TokenHash string             `json:"token_hash"`
-	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	SessionID int64     `json:"session_id"`
+	AccountID int64     `json:"account_id"`
+	TokenHash string    `json:"token_hash"`
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type ShopItem struct {

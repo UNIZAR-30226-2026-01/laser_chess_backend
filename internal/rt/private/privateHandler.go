@@ -12,27 +12,40 @@ import (
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/friendship"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/boards"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 	"github.com/gin-gonic/gin"
 )
 
 type PrivateHandler struct {
-	hub            *rt.PrivateHub
-	registry       *rt.MatchRegistry
-	accountService *account.AccountService
-	matchService   *match.MatchService
+	hub               *rt.PrivateHub
+	registry          *rt.MatchRegistry
+	accountService    *account.AccountService
+	matchService      *match.MatchService
+	friendshipService *friendship.FriendshipService
+	ratingService     *rating.RatingService
+	eventSystem       *sse.EventSystem
 }
 
-func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry, accounts *account.AccountService, matches *match.MatchService) *PrivateHandler {
+func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry,
+	accounts *account.AccountService, matches *match.MatchService,
+	ratings *rating.RatingService, events *sse.EventSystem,
+	friendships *friendship.FriendshipService) *PrivateHandler {
+
 	return &PrivateHandler{
-		hub:            hub,
-		registry:       registry,
-		accountService: accounts,
-		matchService:   matches,
+		hub:               hub,
+		registry:          registry,
+		accountService:    accounts,
+		matchService:      matches,
+		friendshipService: friendships,
+		ratingService:     ratings,
+		eventSystem:       events,
 	}
 }
 
@@ -69,14 +82,72 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 
 	// No puedes retarte a ti mismo
 	if challengerID == challengedID {
-		apierror.SendError(c, http.StatusBadRequest, apierror.ErrSelfChallenge)
+		apierror.DetectAndSendError(c, apierror.ErrSelfChallenge)
 		return
+	}
+
+	// No puedes retar a un usuario que no es tu amigo
+	_, err = h.friendshipService.GetFriendshipStatus(c, &friendship.FriendshipDTO{
+		SenderID:   &challengerID,
+		ReceiverID: challengedID,
+	})
+	if err != nil {
+		apierror.DetectAndSendError(c, apierror.ErrNotFriends)
 	}
 
 	// Comprobar que el challenger no tiene ya una partida activa
 	if _, ok := h.registry.GetMatch(challengerID); ok {
-		apierror.SendError(c, http.StatusConflict, apierror.ErrAlreadyInMatch)
+		apierror.DetectAndSendError(c, apierror.ErrAlreadyInMatch)
 		return
+	}
+
+	// Coger info de la partida (y comprobar validez antes de hacer el upgrade)
+	var info *rt.ChallengeInfo
+	if dto.MatchId == nil {
+		// La partida es nueva
+		info = &rt.ChallengeInfo{
+			ChallengedId:   challengedID,
+			Board:          game.Board_T(*dto.Board),
+			StartingTime:   *dto.StartingTime,
+			TimeIncrement:  *dto.TimeIncrement,
+			Log:            "",
+			IsNewMatch:     true,
+			MatchID:        0,
+			IsChallengerP1: true,
+		}
+	} else {
+		// La partida era pausada
+		match, err := h.matchService.GetByID(c, *dto.MatchId)
+		if err != nil {
+			apierror.DetectAndSendError(c, apierror.ErrNotFound)
+			return
+		}
+
+		// Comprobar que la partida no estaba terminada
+		if match.Termination != "UNFINISHED" {
+			apierror.DetectAndSendError(c, apierror.ErrMatchAlreadyFinished)
+			return
+		}
+
+		// Comprobar que los ids coinciden
+		if (match.P1ID != challengerID && match.P2ID != challengedID) &&
+			(match.P1ID != challengedID && match.P2ID != challengerID) {
+			apierror.DetectAndSendError(c, apierror.ErrNotYourMatch)
+			return
+		}
+
+		info = &rt.ChallengeInfo{
+			ChallengedId:   challengedID,
+			Board:          boards.BoardToInt[match.Board],
+			StartingTime:   match.TimeBase,
+			TimeIncrement:  match.TimeIncrement,
+			Log:            match.MovementHistory,
+			IsNewMatch:     false,
+			MatchID:        *dto.MatchId,
+			IsChallengerP1: challengerID == match.P1ID,
+		}
+
+		fmt.Println(match.MovementHistory)
 	}
 
 	// Hacer el upgrade a websocket
@@ -88,78 +159,35 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 
 	// Construir Client
 	client := &rt.Client{}
-	client.InitClient(challengerID, conn)
+	client.InitClient(challengerID, conn, false)
+
+	info.ChallengerClient = client
 
 	// Registrar reto en el hub privado
-
-	var info *rt.ChallengeInfo
-	if dto.MatchId == nil {
-		// La partida es nueva
-		info = &rt.ChallengeInfo{
-			ChallengerClient: client,
-			ChallengedId:     challengedID,
-			Board:            game.Board_T(*dto.Board),
-			StartingTime:     *dto.StartingTime,
-			TimeIncrement:    *dto.TimeIncrement,
-			Log:              "",
-			IsNewMatch:       true,
-			MatchID:          0,
-			IsChallengerP1:   true,
-		}
-	} else {
-		// La partida era pausada
-		match, err := h.matchService.GetByID(c, *dto.MatchId)
-		if err != nil {
-			client.Close()
-			apierror.SendError(c, http.StatusNotFound, apierror.ErrNotFound)
-		}
-
-		// Comprobar que la partida no estaba terminada
-		if match.Termination != "UNFINISHED" {
-			client.Close()
-			apierror.SendError(c, http.StatusBadRequest,
-				apierror.ErrMatchAlreadyFinished)
-		}
-
-		// Comprobar que los
-		if (match.P1ID != challengerID && match.P2ID != challengedID) &&
-			(match.P1ID != challengedID && match.P2ID != challengerID) {
-			client.Close()
-			apierror.SendError(c, http.StatusBadRequest, apierror.ErrNotYourMatch)
-		}
-
-		info = &rt.ChallengeInfo{
-			ChallengerClient: client,
-			ChallengedId:     challengedID,
-			Board:            db.BoardToInt[match.Board],
-			StartingTime:     match.TimeBase,
-			TimeIncrement:    match.TimeIncrement,
-			Log:              match.MovementHistory,
-			IsNewMatch:       false,
-			MatchID:          *dto.MatchId,
-			IsChallengerP1:   challengerID == match.P1ID,
-		}
-
-		fmt.Println(match.MovementHistory)
-	}
-
 	err = h.hub.CreateChallenge(challengerID, challengedID, info)
 	if err != nil {
-		client.Close()
+		client.Send <- game.ResponseToRoom{
+			Type:    game.Error,
+			Content: "Error al aceptar reto",
+		}
+		client.Send <- game.ResponseToRoom{Type: game.EOC}
 		apierror.SendError(c, http.StatusConflict, err)
 		return
 	}
 
+	h.eventSystem.SendEvent(challengedID, &sse.Event{
+		EventType: "Challenge",
+		Data:      challengerID,
+	}, true)
+
 	// Esperar a que el WS se cierre.
 	// Si el challenger cancela antes de que lo acepten, limpiamos el reto.
 	// Si la partida arranca, la Room cerrará la conn al terminar.
-	fmt.Println("AAAAAAAAAAAAAAAAAAAAAAA")
 	<-client.Done
 
 	fmt.Println("CLIENTE CERRADO")
+	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
-
-	h.registry.RemoveMatch(challengerID, challengedID)
 
 }
 
@@ -212,17 +240,21 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 		return
 	}
 
+	// Construir el Client del challenged
+	challengedClient := &rt.Client{}
+
+	challengedClient.InitClient(challengedID, conn, false)
+
 	// Aceptar el reto en el hub
 	info, err := h.hub.AcceptChallenge(challengerID, challengedID)
 	if err != nil {
-		conn.Close()
-		apierror.SendError(c, http.StatusNotFound, err)
+		challengedClient.Send <- game.ResponseToRoom{
+			Type:    game.Error,
+			Content: "Error al aceptar reto",
+		}
+		challengedClient.Send <- game.ResponseToRoom{Type: game.EOC}
 		return
 	}
-
-	// Construir el Client del challenged
-	challengedClient := &rt.Client{}
-	challengedClient.InitClient(challengedID, conn)
 
 	// Crear la Room y arrancar la partida
 	room := &rt.Room{}
@@ -243,15 +275,12 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 			TimeIncrement: info.TimeIncrement,
 			MatchType:     "PRIVATE",
 			MatchID:       info.MatchID,
-		})
+		}, h.registry)
 
 	// Registrar ambos jugadores en el registry
 
-	h.registry.RegisterMatch(challengerID, challengedID, room)
+	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
-	<-challengedClient.Done
-
-	h.registry.RemoveMatch(challengerID, challengedID)
 
 }
 

@@ -284,6 +284,10 @@ func (h *FriendshipHandler) Create(c *gin.Context) {
 
 	body.SenderID = &accountID
 	body.ReceiverID, err = h.accountService.GetIDByUsername(c, jsonRecieved.ReceiverUsername)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+	}
+
 	err = h.friendshipService.Create(c.Request.Context(), &body)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)

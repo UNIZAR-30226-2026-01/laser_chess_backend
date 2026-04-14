@@ -9,62 +9,22 @@ import (
 	"context"
 )
 
-const createRatings = `-- name: CreateRatings :many
-INSERT INTO rating (
-    user_id, elo_type, value
-)
+const createRatings = `-- name: CreateRatings :exec
+INSERT INTO rating (user_id, elo_type)
 VALUES 
-(
-    $1, 'blitz',   $2
-),
-(
-    $1, 'extended',  $3
-),
-(
-    $1, 'rapid',   $4
-),
-(
-    $1, 'classic', $5
-)
-RETURNING user_id, elo_type, value
+    ($1, 'BLITZ'),
+    ($1, 'EXTENDED'),
+    ($1, 'RAPID'),
+    ($1, 'CLASSIC')
 `
 
-type CreateRatingsParams struct {
-	UserID  int64 `json:"user_id"`
-	Value   int32 `json:"value"`
-	Value_2 int32 `json:"value_2"`
-	Value_3 int32 `json:"value_3"`
-	Value_4 int32 `json:"value_4"`
-}
-
-func (q *Queries) CreateRatings(ctx context.Context, arg CreateRatingsParams) ([]Rating, error) {
-	rows, err := q.db.Query(ctx, createRatings,
-		arg.UserID,
-		arg.Value,
-		arg.Value_2,
-		arg.Value_3,
-		arg.Value_4,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Rating
-	for rows.Next() {
-		var i Rating
-		if err := rows.Scan(&i.UserID, &i.EloType, &i.Value); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) CreateRatings(ctx context.Context, userID int64) error {
+	_, err := q.db.Exec(ctx, createRatings, userID)
+	return err
 }
 
 const getAllElos = `-- name: GetAllElos :many
-SELECT user_id, elo_type, value FROM rating
+SELECT user_id, elo_type, value, deviation, volatility, last_updated_at FROM rating
 WHERE user_id = $1
 `
 
@@ -77,7 +37,14 @@ func (q *Queries) GetAllElos(ctx context.Context, userID int64) ([]Rating, error
 	var items []Rating
 	for rows.Next() {
 		var i Rating
-		if err := rows.Scan(&i.UserID, &i.EloType, &i.Value); err != nil {
+		if err := rows.Scan(
+			&i.UserID,
+			&i.EloType,
+			&i.Value,
+			&i.Deviation,
+			&i.Volatility,
+			&i.LastUpdatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -89,70 +56,170 @@ func (q *Queries) GetAllElos(ctx context.Context, userID int64) ([]Rating, error
 }
 
 const getBlitzElo = `-- name: GetBlitzElo :one
-SELECT user_id, elo_type, value FROM rating
-WHERE user_id = $1 AND elo_type = 'blitz'::elo_type
+SELECT user_id, elo_type, value, deviation, volatility, last_updated_at FROM rating
+WHERE user_id = $1 AND elo_type = 'BLITZ'::elo_type
 `
 
 func (q *Queries) GetBlitzElo(ctx context.Context, userID int64) (Rating, error) {
 	row := q.db.QueryRow(ctx, getBlitzElo, userID)
 	var i Rating
-	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
+	err := row.Scan(
+		&i.UserID,
+		&i.EloType,
+		&i.Value,
+		&i.Deviation,
+		&i.Volatility,
+		&i.LastUpdatedAt,
+	)
 	return i, err
 }
 
 const getClassicElo = `-- name: GetClassicElo :one
-SELECT user_id, elo_type, value FROM rating
-WHERE user_id = $1 AND elo_type = 'classic'::elo_type
+SELECT user_id, elo_type, value, deviation, volatility, last_updated_at FROM rating
+WHERE user_id = $1 AND elo_type = 'CLASSIC'::elo_type
 `
 
 func (q *Queries) GetClassicElo(ctx context.Context, userID int64) (Rating, error) {
 	row := q.db.QueryRow(ctx, getClassicElo, userID)
 	var i Rating
-	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
+	err := row.Scan(
+		&i.UserID,
+		&i.EloType,
+		&i.Value,
+		&i.Deviation,
+		&i.Volatility,
+		&i.LastUpdatedAt,
+	)
 	return i, err
 }
 
 const getExtendedElo = `-- name: GetExtendedElo :one
-SELECT user_id, elo_type, value FROM rating
-WHERE user_id = $1 AND elo_type = 'extended'::elo_type
+SELECT user_id, elo_type, value, deviation, volatility, last_updated_at FROM rating
+WHERE user_id = $1 AND elo_type = 'EXTENDED'::elo_type
 `
 
 func (q *Queries) GetExtendedElo(ctx context.Context, userID int64) (Rating, error) {
 	row := q.db.QueryRow(ctx, getExtendedElo, userID)
 	var i Rating
-	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
+	err := row.Scan(
+		&i.UserID,
+		&i.EloType,
+		&i.Value,
+		&i.Deviation,
+		&i.Volatility,
+		&i.LastUpdatedAt,
+	)
 	return i, err
 }
 
+const getRankById = `-- name: GetRankById :one
+SELECT rank 
+FROM (
+    SELECT user_id, 
+    ROW_NUMBER() OVER (ORDER BY value DESC) as rank
+    FROM rating
+    WHERE elo_type = $1 
+) as rankings
+WHERE user_id = $2
+`
+
+type GetRankByIdParams struct {
+	EloType EloType `json:"elo_type"`
+	UserID  int64   `json:"user_id"`
+}
+
+func (q *Queries) GetRankById(ctx context.Context, arg GetRankByIdParams) (int64, error) {
+	row := q.db.QueryRow(ctx, getRankById, arg.EloType, arg.UserID)
+	var rank int64
+	err := row.Scan(&rank)
+	return rank, err
+}
+
 const getRapidElo = `-- name: GetRapidElo :one
-SELECT user_id, elo_type, value FROM rating
-WHERE user_id = $1 AND elo_type = 'rapid'::elo_type
+SELECT user_id, elo_type, value, deviation, volatility, last_updated_at FROM rating
+WHERE user_id = $1 AND elo_type = 'RAPID'::elo_type
 `
 
 func (q *Queries) GetRapidElo(ctx context.Context, userID int64) (Rating, error) {
 	row := q.db.QueryRow(ctx, getRapidElo, userID)
 	var i Rating
-	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
+	err := row.Scan(
+		&i.UserID,
+		&i.EloType,
+		&i.Value,
+		&i.Deviation,
+		&i.Volatility,
+		&i.LastUpdatedAt,
+	)
 	return i, err
 }
 
-const updateRating = `-- name: UpdateRating :one
+const getTopRankUsers = `-- name: GetTopRankUsers :many
+SELECT r.value, a.account_id, a.username, a.level, a.avatar
+FROM rating r 
+JOIN account a ON a.account_id = r.user_id
+WHERE r.elo_type = $1
+ORDER BY r.value DESC LIMIT 100
+`
+
+type GetTopRankUsersRow struct {
+	Value     int32  `json:"value"`
+	AccountID int64  `json:"account_id"`
+	Username  string `json:"username"`
+	Level     int32  `json:"level"`
+	Avatar    int32  `json:"avatar"`
+}
+
+func (q *Queries) GetTopRankUsers(ctx context.Context, eloType EloType) ([]GetTopRankUsersRow, error) {
+	rows, err := q.db.Query(ctx, getTopRankUsers, eloType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopRankUsersRow
+	for rows.Next() {
+		var i GetTopRankUsersRow
+		if err := rows.Scan(
+			&i.Value,
+			&i.AccountID,
+			&i.Username,
+			&i.Level,
+			&i.Avatar,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateRating = `-- name: UpdateRating :exec
 UPDATE rating
-SET
-    value = $3
+SET value = $3,
+    deviation = $4,
+    volatility = $5,
+    last_updated_at = NOW()
 WHERE user_id = $1 AND elo_type = $2
-RETURNING user_id, elo_type, value
 `
 
 type UpdateRatingParams struct {
-	UserID  int64   `json:"user_id"`
-	EloType EloType `json:"elo_type"`
-	Value   int32   `json:"value"`
+	UserID     int64   `json:"user_id"`
+	EloType    EloType `json:"elo_type"`
+	Value      int32   `json:"value"`
+	Deviation  int32   `json:"deviation"`
+	Volatility float64 `json:"volatility"`
 }
 
-func (q *Queries) UpdateRating(ctx context.Context, arg UpdateRatingParams) (Rating, error) {
-	row := q.db.QueryRow(ctx, updateRating, arg.UserID, arg.EloType, arg.Value)
-	var i Rating
-	err := row.Scan(&i.UserID, &i.EloType, &i.Value)
-	return i, err
+func (q *Queries) UpdateRating(ctx context.Context, arg UpdateRatingParams) error {
+	_, err := q.db.Exec(ctx, updateRating,
+		arg.UserID,
+		arg.EloType,
+		arg.Value,
+		arg.Deviation,
+		arg.Volatility,
+	)
+	return err
 }

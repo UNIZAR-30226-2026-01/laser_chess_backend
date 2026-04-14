@@ -104,6 +104,7 @@ func (h *RatingHandler) GetRapidElo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
 func (h *RatingHandler) GetClassicElo(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("userID"), 10, 64)
 	if err != nil {
@@ -120,15 +121,16 @@ func (h *RatingHandler) GetClassicElo(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-/*
-func (h *RatingHandler) UpdateElo(c *gin.Context){
-	var rating RatingDTO
-	if err := c.ShouldBindJSON(&rating); err != nil{
+func (h *RatingHandler) GetRankById(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
-		return
 	}
 
-	res, err := h.service.UpdateEloByID(c.Request.Context(), rating)
+	eloType := c.Param("eloType")
+
+	res, err := h.service.GetRankById(c.Request.Context(), eloType, id)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -136,4 +138,14 @@ func (h *RatingHandler) UpdateElo(c *gin.Context){
 
 	c.JSON(http.StatusOK, res)
 }
-*/
+
+func (h *RatingHandler) GetTopRankUsers(c *gin.Context) {
+	eloType := c.Param("eloType")
+	res, err := h.service.GetTopRankUsers(c.Request.Context(), eloType)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}

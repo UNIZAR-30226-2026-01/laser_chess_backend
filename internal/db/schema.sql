@@ -1,22 +1,20 @@
 CREATE TYPE "winner" AS ENUM (
 	'P1_WINS',
 	'P2_WINS',
-	'DRAW',
 	'NONE'
 );
 
 CREATE TYPE "board_type" AS ENUM (
 	'ACE',
 	'CURIOSITY',
-	'SOPHIE',
 	'GRAIL',
-	'MERCURY'
+	'MERCURY',
+	'SOPHIE'
 );
 
 CREATE TYPE "match_type" AS ENUM (
-	'RANKED',
-	'FRIENDLY',
 	'PRIVATE',
+	'RANKED',
 	'BOTS'
 );
 
@@ -24,20 +22,21 @@ CREATE TYPE "termination" AS ENUM (
 	'OUT_OF_TIME',
 	'SURRENDER',
 	'LASER',
-	'UNFINISHED'
+	'UNFINISHED',
+	'DISCONNECTION'
 );
 
 CREATE TYPE "item_type" AS ENUM (
-	'board_skin',
-	'piece_skin',
-    'win_animation'
+	'BOARD_SKIN',
+	'PIECE_SKIN',
+    'WIN_ANIMATION'
 );
 
 CREATE TYPE "elo_type" AS ENUM (
-	'blitz',
-	'extended',
-	'rapid',
-	'classic'
+	'BLITZ',
+	'EXTENDED',
+	'RAPID',
+	'CLASSIC'
 );
 
 CREATE TABLE IF NOT EXISTS "account" (
@@ -58,13 +57,18 @@ CREATE TABLE IF NOT EXISTS "account" (
 	"win_animation" INTEGER NOT NULL,
 	"avatar" INTEGER NOT NULL,
 
-	PRIMARY KEY("account_id")
+	PRIMARY KEY("account_id"),
+	CHECK (
+        "username" <> '' AND 
+        "username" NOT LIKE '% %'
+    ),
+	CHECK ("mail" ~ '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$')
 );
 
 CREATE TABLE IF NOT EXISTS "device" (
 	"user_id" BIGSERIAL NOT NULL UNIQUE,
 	"token" VARCHAR(255) NOT NULL UNIQUE,
-	PRIMARY KEY("user_id"),
+	PRIMARY KEY("user_id", "token"),
 	FOREIGN KEY("user_id") REFERENCES "account"("account_id")
 );
 
@@ -125,7 +129,11 @@ CREATE TABLE IF NOT EXISTS "friendship" (
 CREATE TABLE IF NOT EXISTS "rating" (
 	"user_id" BIGINT NOT NULL,
 	"elo_type" ELO_TYPE NOT NULL,
-	"value" INT NOT NULL,
+	"value" INT NOT NULL DEFAULT 1500,
+    "deviation" INT NOT NULL DEFAULT 350,
+    "volatility" FLOAT NOT NULL DEFAULT 0.06,
+    "last_updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
 	PRIMARY KEY("user_id", "elo_type"),
 	FOREIGN KEY("user_id") REFERENCES "account"("account_id"),
 	CHECK ("value" >= 0)

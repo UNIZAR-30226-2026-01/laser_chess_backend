@@ -4,7 +4,8 @@ package rt
 // de un usuario en un hub
 
 import (
-	"time"
+	"fmt"
+	"sync"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/gorilla/websocket"
@@ -21,67 +22,167 @@ type Client struct {
 	Send      chan game.ResponseToRoom
 	ToRoom    chan ClientSocketMessage
 
+	Reconnect chan bool
+	Online    bool
+
+	isAI   bool
+	ToAI   chan ClientSocketMessage
+	FromAI chan ClientSocketMessage
+
+	mu sync.RWMutex
+
 	// Canal para avisar de fin
 	Done chan struct{}
 }
 
-func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn) {
+func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn, isAI bool) {
 	c.AccountID = AccountID
 	c.Conn = Conn
-	c.Send = make(chan game.ResponseToRoom)
-	c.ToRoom = make(chan ClientSocketMessage)
+	c.Send = make(chan game.ResponseToRoom, 1)
+	c.ToRoom = make(chan ClientSocketMessage, 1)
 
 	c.Done = make(chan struct{})
+	c.Reconnect = make(chan bool, 1)
 
-	go c.ReadPump()
-	go c.WritePump()
+	c.mu.Lock()
+	c.Online = true
+	c.mu.Unlock()
+
+	if isAI {
+		c.ToAI = make(chan ClientSocketMessage)
+		c.FromAI = make(chan ClientSocketMessage)
+		go c.RunAIClient()
+	} else {
+		go c.ReadPump()
+		go c.WritePump()
+	}
+
 }
 
 // lee mensajes del socket y los manda a la Room
 func (c *Client) ReadPump() error {
-	defer c.Close()
+	defer func() {
+		select {
+		case <-c.Done:
+		default:
+			close(c.Done)
+		}
+		c.Conn.Close()
+		c.notifyDisconnection()
+		fmt.Println("Cierre de la funcion ReadPump")
+	}()
 
 	for {
 		var message ClientSocketMessage
 		err := c.Conn.ReadJSON(&message)
-
 		if err != nil {
 			return err
 		}
 
 		c.ToRoom <- message
 	}
-
 }
 
 // saca mensajes del canal c.Send y los escribe en el navegador
 func (c *Client) WritePump() error {
 	defer func() {
-		close(c.Done)
-		c.Close()
+		select {
+		case <-c.Done:
+		default:
+			close(c.Done)
+		}
+		c.Conn.Close()
 	}()
 
-	for message := range c.Send {
-		err := c.Conn.WriteJSON(message)
-		if err != nil {
-			return err
-		}
-
-		if message.Type == game.End || message.Type == game.Paused {
-
+	for {
+		select {
+		case message, ok := <-c.Send:
+			fmt.Println("MENSAJE RECIBIDO DE LA ROOM AL CLIENTE")
+			if !ok {
+				return nil
+			}
+			err := c.Conn.WriteJSON(message)
+			if err != nil {
+				return err
+			}
+			if message.Type == game.EOC {
+				return nil
+			}
+		case <-c.Done:
+			// Si ReadPump detecta un error salimos
 			return nil
 		}
 	}
-
-	return nil
 }
 
-func (c *Client) Close() {
-	deadline := time.Now().Add(time.Second)
-	c.Conn.WriteControl(
-		websocket.CloseMessage,
-		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
-		deadline,
-	)
-	c.Conn.Close()
+func (c *Client) notifyDisconnection() {
+	fmt.Println("Desconexion identificadad desde client")
+	c.mu.Lock()
+	c.Online = false
+	c.mu.Unlock()
+	c.ToRoom <- ClientSocketMessage{Type: string(game.EOC), Content: ""}
+}
+
+// IMPLEMENTACION PARA IA
+
+// lee mensajes del socket y los manda a la Room
+func (c *Client) RunAIClient() error {
+	defer func() {
+		c.ToAI <- ClientSocketMessage{Type: "EOC", Content: ""}
+		select {
+		case <-c.Done:
+		default:
+			close(c.Done)
+		}
+	}()
+
+	for {
+		select {
+		case message, ok := <-c.Send:
+			if !ok {
+				return nil
+			}
+
+			switch message.Type {
+			case game.EOC:
+				return nil
+			case game.InitialState:
+				fmt.Println("Turno recibido")
+				if message.Extra == "0" {
+					c.ToAI <- ClientSocketMessage{
+						Type:    "Move",
+						Content: "",
+					}
+					response := <-c.FromAI
+					c.ToRoom <- response
+					// Filtramos el mensaje del movimiento
+					if msg := <-c.Send; msg.Type == "ERROR" {
+						return nil // TODO: mirar error
+					}
+					continue
+				}
+			case game.Move:
+				fmt.Println("Calculando movimiento")
+
+				c.ToAI <- ClientSocketMessage{
+					Type:    "Move",
+					Content: message.Content,
+				}
+				response := <-c.FromAI
+				fmt.Println("Enviando mensaje a room: ", response.Content)
+
+				c.ToRoom <- response
+				fmt.Println("Mensaje enviado a room")
+
+				// Filtramos el mensaje del movimiento
+				<-c.Send
+			default:
+
+			}
+
+		case <-c.Done:
+			// Si se detecta un error salimos
+			return nil
+		}
+	}
 }

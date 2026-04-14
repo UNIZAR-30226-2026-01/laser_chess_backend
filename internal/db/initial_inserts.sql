@@ -7,7 +7,7 @@ INSERT INTO shop_item (
 VALUES (
     0,
     0,
-    'board_skin',
+    'BOARD_SKIN',
     true
 );
 
@@ -20,7 +20,7 @@ INSERT INTO shop_item (
 VALUES (
     0,
     0,
-    'piece_skin',
+    'PIECE_SKIN',
     true
 );
 
@@ -33,7 +33,7 @@ INSERT INTO shop_item (
 VALUES (
     0,
     0,
-    'win_animation',
+    'WIN_ANIMATION',
     true
 );
 
@@ -42,9 +42,9 @@ INSERT INTO public.account (
     username,
     password_hash,
     is_deleted,
-    "level",
+    level,
     xp,
-    "money",
+    money,
     board_skin,
     piece_skin,
     win_animation,
@@ -170,38 +170,39 @@ INSERT INTO public."friendship" (
 
 INSERT INTO public."rating" (
     user_id,
-    elo_type,
-    value
+    elo_type
 ) VALUES (
     1,
-    'blitz',
-    1
+    'BLITZ'
 ), (
     1,
-    'rapid',
-    11
+    'RAPID'
 ), (
     1,
-    'classic',
-    111
+    'CLASSIC'
 ), (
     1,
-    'extended',
-    1111
+    'EXTENDED'
 ), (
     2,
-    'blitz',
-    2
+    'BLITZ'
 ), (
     2,
-    'rapid',
-    22
+    'RAPID'
 ), (
     2,
-    'classic',
-    222
+    'CLASSIC'
 ), (
     2,
-    'extended',
-    2222
+    'EXTENDED'
+);
+
+INSERT INTO shop_item (
+    price, level_requisite, item_type, is_default
+) VALUES (
+    50, 0, 'BOARD_SKIN', false
+), (
+    1000, 0, 'BOARD_SKIN', false
+), (
+    1, 10, 'BOARD_SKIN', false
 );

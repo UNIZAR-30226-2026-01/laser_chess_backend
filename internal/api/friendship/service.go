@@ -5,14 +5,16 @@ import (
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 )
 
 type FriendshipService struct {
-	store *db.Store
+	store       *db.Store
+	eventSystem *sse.EventSystem
 }
 
-func NewService(s *db.Store) *FriendshipService {
-	return &FriendshipService{store: s}
+func NewService(s *db.Store, events *sse.EventSystem) *FriendshipService {
+	return &FriendshipService{store: s, eventSystem: events}
 }
 
 /*
@@ -51,14 +53,28 @@ func (s FriendshipService) Create(ctx context.Context, data *FriendshipDTO) erro
 		return apierror.ErrBadRequest
 	}
 
-	err := s.store.CreateFriendship(ctx, db.CreateFriendshipParams{
+	_, err := s.GetFriendshipStatus(ctx, data)
+	if err == nil {
+		return apierror.ErrAlreadyFriends
+	}
+
+	err = s.store.CreateFriendship(ctx, db.CreateFriendshipParams{
 		User1ID:   AuxUser1ID,
 		User2ID:   AuxUser2ID,
 		Accepted1: AuxAccepted1,
 		Accepted2: AuxAccepted2,
 	})
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	s.eventSystem.SendEvent(data.ReceiverID, &sse.Event{
+		EventType: "FriendRequest",
+		Data:      *data.SenderID,
+	}, true)
+
+	return nil
 }
 
 /*
@@ -87,6 +103,10 @@ func (s FriendshipService) GetFriendshipStatus(
 		User1ID: *data.SenderID,
 		User2ID: data.ReceiverID,
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	if *data.SenderID == res.User1ID {
 		return &FriendshipStatusDTO{
@@ -233,13 +253,32 @@ func (s FriendshipService) AcceptFriendship(
 	data *FriendshipDTO,
 ) error {
 
-	err := s.store.AcceptFriendship(ctx, db.AcceptFriendshipParams{
+	friendship, err := s.GetFriendshipStatus(ctx, data)
+	if err != nil {
+		return err
+	}
+
+	if friendship.SenderAccept && friendship.ReceiverAccept {
+		return apierror.ErrAlreadyFriends
+	}
+
+	err = s.store.AcceptFriendship(ctx, db.AcceptFriendshipParams{
 		User1ID: *data.SenderID,
 		User2ID: data.ReceiverID,
 	})
 	if err != nil {
 		return err
 	}
+
+	s.eventSystem.SendEvent(data.ReceiverID, &sse.Event{
+		EventType: "NewFriend",
+		Data:      *data.SenderID,
+	}, true)
+
+	s.eventSystem.SendEvent(*data.SenderID, &sse.Event{
+		EventType: "NewFriend",
+		Data:      data.ReceiverID,
+	}, true)
 
 	return nil
 }

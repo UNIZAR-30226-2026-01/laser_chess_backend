@@ -7,8 +7,7 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 const createMatch = `-- name: CreateMatch :one
@@ -23,18 +22,18 @@ RETURNING match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, mat
 `
 
 type CreateMatchParams struct {
-	P1ID            int64              `json:"p1_id"`
-	P2ID            int64              `json:"p2_id"`
-	P1Elo           int32              `json:"p1_elo"`
-	P2Elo           int32              `json:"p2_elo"`
-	Date            pgtype.Timestamptz `json:"date"`
-	Winner          Winner             `json:"winner"`
-	Termination     Termination        `json:"termination"`
-	MatchType       MatchType          `json:"match_type"`
-	Board           BoardType          `json:"board"`
-	MovementHistory string             `json:"movement_history"`
-	TimeBase        int32              `json:"time_base"`
-	TimeIncrement   int32              `json:"time_increment"`
+	P1ID            int64       `json:"p1_id"`
+	P2ID            int64       `json:"p2_id"`
+	P1Elo           int32       `json:"p1_elo"`
+	P2Elo           int32       `json:"p2_elo"`
+	Date            time.Time   `json:"date"`
+	Winner          Winner      `json:"winner"`
+	Termination     Termination `json:"termination"`
+	MatchType       MatchType   `json:"match_type"`
+	Board           BoardType   `json:"board"`
+	MovementHistory string      `json:"movement_history"`
+	TimeBase        int32       `json:"time_base"`
+	TimeIncrement   int32       `json:"time_increment"`
 }
 
 func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match, error) {
@@ -97,6 +96,46 @@ func (q *Queries) GetMatch(ctx context.Context, matchID int64) (Match, error) {
 	return i, err
 }
 
+const getPausedMatches = `-- name: GetPausedMatches :many
+SELECT match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, match_type, board, movement_history, time_base, time_increment FROM match
+WHERE (p1_id = $1 OR p2_id = $1) AND termination = 'UNFINISHED'::termination
+ORDER BY date DESC
+`
+
+func (q *Queries) GetPausedMatches(ctx context.Context, p1ID int64) ([]Match, error) {
+	rows, err := q.db.Query(ctx, getPausedMatches, p1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Match
+	for rows.Next() {
+		var i Match
+		if err := rows.Scan(
+			&i.MatchID,
+			&i.P1ID,
+			&i.P2ID,
+			&i.P1Elo,
+			&i.P2Elo,
+			&i.Date,
+			&i.Winner,
+			&i.Termination,
+			&i.MatchType,
+			&i.Board,
+			&i.MovementHistory,
+			&i.TimeBase,
+			&i.TimeIncrement,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserHistory = `-- name: GetUserHistory :many
 SELECT match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, match_type, board, movement_history, time_base, time_increment FROM match
 WHERE p1_id = $1 OR p2_id = $1
@@ -147,19 +186,19 @@ RETURNING match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, mat
 `
 
 type UpdateMatchParams struct {
-	P1ID            int64              `json:"p1_id"`
-	P2ID            int64              `json:"p2_id"`
-	P1Elo           int32              `json:"p1_elo"`
-	P2Elo           int32              `json:"p2_elo"`
-	Date            pgtype.Timestamptz `json:"date"`
-	Winner          Winner             `json:"winner"`
-	Termination     Termination        `json:"termination"`
-	MatchType       MatchType          `json:"match_type"`
-	Board           BoardType          `json:"board"`
-	MovementHistory string             `json:"movement_history"`
-	TimeBase        int32              `json:"time_base"`
-	TimeIncrement   int32              `json:"time_increment"`
-	MatchID         int64              `json:"match_id"`
+	P1ID            int64       `json:"p1_id"`
+	P2ID            int64       `json:"p2_id"`
+	P1Elo           int32       `json:"p1_elo"`
+	P2Elo           int32       `json:"p2_elo"`
+	Date            time.Time   `json:"date"`
+	Winner          Winner      `json:"winner"`
+	Termination     Termination `json:"termination"`
+	MatchType       MatchType   `json:"match_type"`
+	Board           BoardType   `json:"board"`
+	MovementHistory string      `json:"movement_history"`
+	TimeBase        int32       `json:"time_base"`
+	TimeIncrement   int32       `json:"time_increment"`
+	MatchID         int64       `json:"match_id"`
 }
 
 func (q *Queries) UpdateMatch(ctx context.Context, arg UpdateMatchParams) (Match, error) {

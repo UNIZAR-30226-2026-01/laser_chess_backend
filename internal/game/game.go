@@ -65,7 +65,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 
 	//si el log no está vacío hay que reconstruir el estado
 	if g.gameEngine.gameLog != "" {
-		team, timeLeftRed, timeLeftBlue := g.gameEngine.ApplyLogToBoard(timeBase)
+		team, timeLeftRed, timeLeftBlue := g.gameEngine.EngineApplyLogToBoard(timeBase)
 
 		switch team {
 		case RED_TEAM:
@@ -185,7 +185,6 @@ func (g *LaserChessGame) processMove(message RoomMsg) bool {
 		g.ToRoom <- ResponseToRoom{
 			Type:    Move,
 			Content: result,
-			Extra:   fmt.Sprint(formatLaserPath(laser)),
 		}
 
 		// Si se ha terminado la partida se notifica de esto
@@ -247,6 +246,22 @@ func (g *LaserChessGame) HandleRoomMsg(message RoomMsg) bool {
 		}
 
 		return true
+
+	case Disconnection:
+		//gestionar pausa del juego
+		var winner string
+		if message.PlayerUid == g.redPlayer {
+			winner = "P2_WINS"
+		} else {
+			winner = "P1_WINS"
+		}
+		g.ToRoom <- ResponseToRoom{
+			Type:    End,
+			Content: winner,
+			Extra:   "DISCONNECTION",
+		}
+
+		return true
 	}
 
 	return false
@@ -288,4 +303,8 @@ func (g *LaserChessGame) Run() {
 			return
 		}
 	}
+}
+
+func (g *LaserChessGame) GetLog() string {
+	return g.gameEngine.gameLog
 }

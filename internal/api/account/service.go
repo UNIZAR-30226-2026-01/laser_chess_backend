@@ -5,7 +5,10 @@ package account
 
 import (
 	"context"
+	"regexp"
+	"fmt"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/auth"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 )
@@ -18,21 +21,33 @@ func NewService(s *db.Store) *AccountService {
 	return &AccountService{store: s}
 }
 
-// Crea una cuenta
+// Crea una cuenta, haciendo las inicializaciones pertinentes:
+//   - Crear tablas de rating
+//   - Hacer que tenga los items por defecto
+//
 // Primero hashea la contraseña
 // Por ahora se inventa los items equipados por defecto,
 // pero habrá que hacer que los ownee y los tenga equipados.
 func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*AccountDTO, error) {
+
+	if !IsMail(body.Mail) {
+		return nil, apierror.ErrInvalidMailFormat
+	}
+
+	if len(body.Password) > 50 || len(body.Password) < 6 {
+		return nil, apierror.ErrInvalidPasswordLenght
+	}
 
 	passwordHash, err := auth.HashPassword(body.Password)
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Println("First check")
+
 	var res int64
 
 	// Ejecutar en transaccion
-	// Ahora no tiene sentido, pero lo tendra cuando hagamos lo de los items
 	err = s.store.ExecTx(ctx, func(q *db.Queries) error {
 		var errTx error
 
@@ -49,10 +64,17 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 			WinAnimation: 3,
 			Avatar:       1,
 		})
-
 		if errTx != nil {
 			return errTx
 		}
+		fmt.Println("Second check")
+
+		// Inicializar ratings
+		errTx = q.CreateRatings(ctx, res)
+		if errTx != nil {
+			return errTx
+		}
+		fmt.Println("Third check")
 
 		//TODO: hacer que ownee los cosmeticos por defecto
 
@@ -62,6 +84,7 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Fourth check")
 
 	// Solo devuelve el AccountID
 	return &AccountDTO{AccountID: &res}, nil
@@ -130,6 +153,9 @@ func (s *AccountService) Update(
 		AccountID:    &res.AccountID,
 		Mail:         &res.Mail,
 		Username:     &res.Username,
+		Level:        &res.Level,
+		Xp:           &res.Xp,
+		Money:        &res.Money,
 		BoardSkin:    &res.BoardSkin,
 		PieceSkin:    &res.PieceSkin,
 		WinAnimation: &res.WinAnimation,
@@ -137,18 +163,38 @@ func (s *AccountService) Update(
 	}, nil
 }
 
+func (s *AccountService) GetStats(ctx context.Context, accountID int64) (*AccountStatsDTO, error) {
+	stats, err := s.store.GetStats(ctx, accountID)
+
+	return &AccountStatsDTO{
+		Level: stats.Level,
+		Xp:    stats.Xp,
+		Money: stats.Money,
+	}, err
+}
+
+func (s *AccountService) UpdateStats(
+	ctx context.Context,
+	accountID int64,
+	body *AccountStatsDTO,
+) error {
+	err := s.store.UpdateStats(ctx, db.UpdateStatsParams{
+		AccountID: accountID,
+		Level:     body.Level,
+		Money:     body.Money,
+		Xp:        body.Xp,
+	})
+
+	return err
+}
+
 // Desactiva la cuenta del usuario con id == accountID
 func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
 	return s.store.DeleteAccount(ctx, accountID)
 }
 
-// Registra un nuevo dispositivo al usuario con id == accountID
-func (s *AccountService) RegisterDevice(ctx context.Context,
-	token RegisterDeviceDTO, accountID int64) (int64, error) {
-
-	return s.store.RegisterDevice(ctx, db.RegisterDeviceParams{
-		UserID: accountID,
-		Token:  token.Token,
-	})
-
+// Comprueba si un string es una direccion de email o no
+func IsMail(credential string) bool {
+	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	return emailRegex.MatchString(credential)
 }

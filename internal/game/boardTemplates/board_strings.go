@@ -27,4 +27,22 @@ DAL,,SAD,,DRR,,DRL,,,
 ,,,SRL,ERU,DRD,,,,DRU
 ,,,,KR,,,,,
 ,,,DRR,ERU,DRD,,,,LRU`
+
+	SOPHIE string = `LAD,,,,KA,DRR,DAL,,,
+,,,EAU,,EAL,,,,DRU
+DAD,,,,DAU,DAL,,SRL,,DRR
+,,,,,,,SAD,,
+,,SRD,,,,,,,
+DAL,,SAL,,DRR,DRD,,,,DRU
+DAD,,,,ERR,,ERD,,,
+,,,DRR,DAL,KR,,,,LRU`
+
+	MERCURY string = `LAR,,,,DAU,KA,DAL,,,SRL
+,,,,,EAU,DAL,,,
+DAL,,,SAL,,EAU,,,,
+DAD,,,,DRR,,,,DRU,
+,DAD,,,,DAL,,,,DRU
+,,,,ERD,,SRL,,,DRR
+,,,DRR,ERD,,,,,
+SAL,,,DRR,KR,DRD,,,,LRL`
 )

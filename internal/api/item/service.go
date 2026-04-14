@@ -4,14 +4,17 @@ import (
 	"context"
 
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 )
 
 type itemService struct {
 	store *db.Store
+	accountService *account.AccountService
 }
 
-func NewService(s *db.Store) *itemService {
-	return &itemService{store: s}
+func NewService(s *db.Store, accounts *account.AccountService) *itemService {
+	return &itemService{store: s, accountService: accounts}
 }
 
 /*
@@ -32,10 +35,51 @@ func (s *itemService) Create(
 	itemID int32,
 ) error {
 
-	return s.store.CreateItemOwner(ctx, db.CreateItemOwnerParams{
-		UserID: accountID,
-		ItemID: itemID,
+	err := s.store.ExecTx(ctx, func(q *db.Queries) error {
+		// Cojemos la informacion del user
+		accountInfo, errTx := s.accountService.GetByID(ctx, accountID)
+		if errTx != nil {
+			return errTx
+		}
+
+		// Cojemos la unformacion del item
+		itemInfo, errTx := s.GetByID(ctx, itemID)
+		if errTx != nil {
+			return errTx
+		}
+
+		// Comprobamos que el user tenga suficiente dinero
+		if *accountInfo.Money < itemInfo.Price {
+			return apierror.ErrNotEnoughMoney
+		}
+
+		// Comprobamos que el user tenga el nivel suficiente
+		if *accountInfo.Level < itemInfo.LevelRequisite {
+			return apierror.ErrUserLevelTooLow
+		}
+
+		// Actualizamos el dinero del user
+		errTx = s.accountService.UpdateStats(ctx, accountID, 
+			&account.AccountStatsDTO{
+				Level: *accountInfo.Level,
+				Xp: *accountInfo.Xp,
+				Money: *accountInfo.Money - itemInfo.Price,
+			})
+
+		// Creamos el objeto itemOwner
+		errTx = s.store.CreateItemOwner(ctx, db.CreateItemOwnerParams{
+			UserID: accountID,
+			ItemID: itemID,
+		})
+
+		if errTx != nil {
+			return errTx
+		}
+
+		return nil
 	})
+
+	return err
 }
 
 /*

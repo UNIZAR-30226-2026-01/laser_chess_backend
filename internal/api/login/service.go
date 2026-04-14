@@ -5,13 +5,12 @@ package login
 
 import (
 	"context"
-	"regexp"
 	"time"
 
+	account "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/auth"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type LoginService struct {
@@ -22,16 +21,10 @@ func NewService(s *db.Store) *LoginService {
 	return &LoginService{store: s}
 }
 
-// Comprueba si un string es una direccion de email o no
-func isMail(credential string) bool {
-	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	return emailRegex.MatchString(credential)
-}
-
 // Coge el userID y contraseña hasheada de un user a partir de su mail
 // o nombre de usuario
 func (s *LoginService) getCredentials(ctx context.Context, body *LoginDTO) (int64, string, error) {
-	if isMail(body.Credential) {
+	if account.IsMail(body.Credential) {
 		mailRes, err := s.store.GetAccountByMail(ctx, body.Credential)
 		if err != nil {
 			return -1, "", err
@@ -84,7 +77,7 @@ func (s *LoginService) saveNewSession(ctx context.Context, accountID int64, refr
 	return s.store.CreateRefreshSession(ctx, db.CreateRefreshSessionParams{
 		AccountID: accountID,
 		TokenHash: auth.HashToken(refreshToken),
-		ExpiresAt: pgtype.Timestamptz{Time: expiresAt, Valid: true},
+		ExpiresAt: expiresAt,
 	})
 }
 
@@ -135,7 +128,7 @@ func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*Login
 
 	// Si el refresh ha expirado no se hace nada
 	// El user tendra que hacer login de nuevo
-	if time.Now().After(session.ExpiresAt.Time) {
+	if time.Now().After(session.ExpiresAt) {
 		s.store.DeleteRefreshSession(ctx, tokenHash)
 		return nil, apierror.ErrUnauthorized
 	}
@@ -152,7 +145,7 @@ func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*Login
 	err = s.store.CreateRefreshSession(ctx, db.CreateRefreshSessionParams{
 		AccountID: session.AccountID,
 		TokenHash: auth.HashToken(newRefreshToken),
-		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(auth.RefreshTokenTTL), Valid: true},
+		ExpiresAt: time.Now().Add(auth.RefreshTokenTTL),
 	})
 
 	return &LoginResult{

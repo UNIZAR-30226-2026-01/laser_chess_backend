@@ -22,10 +22,22 @@ var (
 	ErrInvalidToken        = errors.New("invalid token")
 	ErrUnauthorized        = errors.New("unauthorized access")
 
+	ErrInvalidPasswordLenght = errors.New("password must be between 6 and 50 characters")
+	ErrInvalidMailFormat 	 = errors.New("mail format is invalid")
+
 	ErrSelfChallenge        = errors.New("you can't challenge yourself")
+	ErrNotFriends           = errors.New("users are not friends")
 	ErrAlreadyInMatch       = errors.New("user already in match")
 	ErrMatchAlreadyFinished = errors.New("match is already finished")
 	ErrNotYourMatch         = errors.New("match is not yours")
+	ErrNotAValidGameMode    = errors.New("time base and/or increment invalid")
+	ErrNotAValidRankedType  = errors.New("ranked type invalid")
+	ErrNoMatchInCourse      = errors.New("user doesn't have any running matches")
+
+	ErrAlreadyFriends = errors.New("users are already friends")
+
+	ErrNotEnoughMoney  = errors.New("user doesn't have enough money")
+	ErrUserLevelTooLow = errors.New("user's level doesn't meet the level requisite")
 )
 
 // Función que detecta el tipo de error, y manda el código de error
@@ -68,6 +80,24 @@ func DetectAndSendError(c *gin.Context, err error) {
 
 		case errors.Is(err, ErrInvalidToken):
 			httpCode = http.StatusUnauthorized
+
+		case errors.Is(err, ErrNoMatchInCourse):
+			httpCode = http.StatusNotFound
+
+		case errors.Is(err, ErrMatchAlreadyFinished):
+			httpCode = http.StatusBadRequest
+
+		case errors.Is(err, ErrNotYourMatch):
+			httpCode = http.StatusBadRequest
+
+		case errors.Is(err, ErrSelfChallenge):
+			httpCode = http.StatusBadRequest
+
+		case errors.Is(err, ErrNotFriends):
+			httpCode = http.StatusBadRequest
+
+		case errors.Is(err, ErrAlreadyInMatch):
+			httpCode = http.StatusConflict
 
 		default:
 			httpCode = http.StatusInternalServerError

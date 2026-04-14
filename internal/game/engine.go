@@ -61,7 +61,27 @@ func (g *GameEngine) getInitialState() string {
 		return boardtemplates.CURIOSITY
 	case GRAIL:
 		return boardtemplates.GRAIL
-		// poner el resto
+	case SOPHIE:
+		return boardtemplates.SOPHIE
+	case MERCURY:
+		return boardtemplates.MERCURY
+	default:
+		return ""
+	}
+}
+
+func boardTypeToCsv(boardType Board_T) string {
+	switch boardType {
+	case ACE:
+		return boardtemplates.ACE
+	case CURIOSITY:
+		return boardtemplates.CURIOSITY
+	case GRAIL:
+		return boardtemplates.GRAIL
+	case SOPHIE:
+		return boardtemplates.SOPHIE
+	case MERCURY:
+		return boardtemplates.MERCURY
 	default:
 		return ""
 	}
@@ -89,12 +109,14 @@ func (g *GameEngine) InitEngine(boardType Board_T) {
 	var err error
 	g.boardType = boardType
 	g.gameBoard, err = InitBoard(g.getInitialState())
+	g.gameLog = ""
 	if err != nil {
 		fmt.Println("error al inicializar el tablero", err)
 	}
 }
 
-func (g *GameEngine) ProcessTurn(instruction string, team team_T, timeLeft time.Duration) (string, []vector2_T, laserInteractionResult_T, error) {
+func (g *GameEngine) ProcessTurn(instruction string, team team_T,
+	timeLeft time.Duration) (string, []vector2_T, laserInteractionResult_T, error) {
 	result, laser, laserEnd, err := g.gameBoard.ProcessTurn(instruction, team)
 	if err != nil {
 		return result, laser, laserEnd, err
@@ -103,7 +125,7 @@ func (g *GameEngine) ProcessTurn(instruction string, team team_T, timeLeft time.
 	timeLeftStr := formatTimeLeft(timeLeft)
 	g.gameLog += result + "%" + formatLaserPath(laser) + timeLeftStr
 
-	result += timeLeftStr
+	result = result + "%" + formatLaserPath(laser) + timeLeftStr
 	return result, laser, laserEnd, err
 }
 
@@ -112,7 +134,7 @@ func (g *GameEngine) GetState() string {
 }
 
 // SE PRESUPONE UN LOG QUE NO CAUSA ERRORES
-func (g *GameEngine) ApplyLogToBoard(timeBase int32) (nextTeam team_T, redTimeLeft float64, blueTimeLeft float64) {
+func (g *GameEngine) EngineApplyLogToBoard(timeBase int32) (nextTeam team_T, redTimeLeft float64, blueTimeLeft float64) {
 	//dividimos el log en cachitos
 	logChunks := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
 	nextTeam = RED_TEAM                                           //Equipo que empieza
