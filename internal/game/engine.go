@@ -136,11 +136,15 @@ func (g *GameEngine) GetState() string {
 // SE PRESUPONE UN LOG QUE NO CAUSA ERRORES
 func (g *GameEngine) EngineApplyLogToBoard(timeBase int32) (nextTeam team_T, redTimeLeft float64, blueTimeLeft float64) {
 	//dividimos el log en cachitos
+	redTimeLeft = float64(timeBase)
+	blueTimeLeft = float64(timeBase)
+	if g.gameLog == "" {
+		return nextTeam, redTimeLeft, blueTimeLeft
+	}
 	logChunks := strings.Split(strings.TrimSuffix(g.gameLog, ";"), ";")
 	nextTeam = RED_TEAM                                           //Equipo que empieza
 	re := regexp.MustCompile(`^([^%]+)%(?:[^%]+)%\{([0-9.]+)\}$`) //regla expresión regular
-	redTimeLeft = float64(timeBase)
-	blueTimeLeft = float64(timeBase)
+
 
 	//aplicamos cada cachito usando processTurn y los procesamos.
 	for _, logChunk := range logChunks {

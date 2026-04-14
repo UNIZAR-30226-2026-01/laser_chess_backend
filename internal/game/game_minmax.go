@@ -234,8 +234,6 @@ func (a *AIGameState) getFrontier(b *Board, team team_T) []AIMove {
 			//MOVER - si
 			moves = append(moves, a.get8DirectionsAux(b, px, py, team)...)
 		}
-		// LASER
-		// TODO
 	}
 	return moves
 }
@@ -254,7 +252,6 @@ func (a *AIGameState) evaluateBoard(b *Board) (score int) {
 	//Comer piezas,  quién tenga más piezas está en mejor posición
 	score += (len(a.rDeflectors) - len(a.bDeflectors)) * 30
 	score += (len(a.rShields) - len(a.bShields)) * 50
-	score += (len(a.rKings) - len(a.bKings)) * 10000
 	//Control del laser, quién controle más puntos de inflexion está en mejor posicion
 	laserPath, _ := b.redTeamLaser.shootLaser(XDIM-1, YDIM-1, b)
 	for _, pair := range laserPath[1 : len(laserPath)-1] {
@@ -334,19 +331,21 @@ func evaluateKingDefense(b *Board, king int, team team_T) int {
 				switch v := b.cells[nx][ny].(type) {
 				case *BoardPieceShield:
 					if v.team == team {
-						bonus += 10
+						bonus += 5
+					}else{
+						bonus -= -1
 					}
 				case *BoardPieceDeflector:
+					if v.team == team {
+						bonus += 2
+					}else{
+						bonus -= 2
+					}
+				case *BoardPieceSwitch:
 					if v.team == team {
 						bonus += 5
 					} else {
 						bonus -= 10
-					}
-				case *BoardPieceSwitch:
-					if v.team == team {
-						bonus += 3
-					} else {
-						bonus -= 7
 					}
 				}
 			}
