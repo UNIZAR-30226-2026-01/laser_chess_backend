@@ -34,7 +34,7 @@ func (ai *AIClient) run() {
 			return
 		}
 		fmt.Println("Llamada a GetBestMove con board: ", ai.board, ", log: ", ai.log, ", y level: ", ai.lvl)
-		move := game.GetBestMove(ai.board, message.Content, ai.lvl)
+		move := game.GetBestMove(ai.board, ai.log, ai.lvl)
 		ai.log += move
 
 		// Pausa
