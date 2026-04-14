@@ -35,16 +35,17 @@ func (ai *AIClient) run() {
 		}
 		fmt.Println("Llamada a GetBestMove con board: ", ai.board, ", log: ", ai.log, ", y level: ", ai.lvl)
 		move := game.GetBestMove(ai.board, ai.log, ai.lvl)
-		ai.log += move
 
-		// Pausa
-		time.Sleep(1 * time.Second)
+		// Tiempo para no saturar al usuario
+		time.Sleep(500 * time.Millisecond)
 
 		ai.client.FromAI <- ClientSocketMessage{
 			Type:    "Move",
 			Content: move,
 		}
-		fmt.Println("Fin de la llamada a GetBestMove")
+
+		log := <-ai.client.ToAI
+		ai.log += log.Content
 
 	}
 }

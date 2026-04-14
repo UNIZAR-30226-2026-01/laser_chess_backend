@@ -171,9 +171,13 @@ func (c *Client) RunAIClient() error {
 					}
 					response := <-c.FromAI
 					c.ToRoom <- response
-					// Filtramos el mensaje del movimiento
-					if msg := <-c.Send; msg.Type == "ERROR" {
-						return nil // TODO: mirar error
+
+					// Enviamos el mensaje del movimiento a la IA para que
+					// aplique su log
+					log := <-c.Send
+					c.ToAI <- ClientSocketMessage{
+						Type:    "Move",
+						Content: log.Content,
 					}
 					continue
 				}
@@ -191,7 +195,11 @@ func (c *Client) RunAIClient() error {
 				fmt.Println("Mensaje enviado a room")
 
 				// Filtramos el mensaje del movimiento
-				<-c.Send
+				log := <-c.Send
+				c.ToAI <- ClientSocketMessage{
+					Type:    "Move",
+					Content: log.Content,
+				}
 			default:
 
 			}
