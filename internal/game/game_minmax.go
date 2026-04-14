@@ -234,8 +234,6 @@ func (a *AIGameState) getFrontier(b *Board, team team_T) []AIMove {
 			//MOVER - si
 			moves = append(moves, a.get8DirectionsAux(b, px, py, team)...)
 		}
-		// LASER
-		// TODO
 	}
 	return moves
 }
