@@ -23,11 +23,12 @@ var (
 	ErrUnauthorized        = errors.New("unauthorized access")
 
 	ErrInvalidPasswordLenght = errors.New("password must be between 6 and 50 characters")
-	ErrInvalidMailFormat 	 = errors.New("mail format is invalid")
+	ErrInvalidMailFormat     = errors.New("mail format is invalid")
 
 	ErrSelfChallenge        = errors.New("you can't challenge yourself")
 	ErrNotFriends           = errors.New("users are not friends")
 	ErrAlreadyInMatch       = errors.New("user already in match")
+	ErrAlreadyInQueue       = errors.New("user already in queue")
 	ErrMatchAlreadyFinished = errors.New("match is already finished")
 	ErrNotYourMatch         = errors.New("match is not yours")
 	ErrNotAValidGameMode    = errors.New("time base and/or increment invalid")
@@ -97,6 +98,9 @@ func DetectAndSendError(c *gin.Context, err error) {
 			httpCode = http.StatusBadRequest
 
 		case errors.Is(err, ErrAlreadyInMatch):
+			httpCode = http.StatusConflict
+
+		case errors.Is(err, ErrAlreadyInQueue):
 			httpCode = http.StatusConflict
 
 		default:
