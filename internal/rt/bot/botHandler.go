@@ -79,8 +79,8 @@ func (h *BotHandler) BotMatch(c *gin.Context) {
 		&game.GameInfo{
 			BoardType:     game.Board_T(*dto.Board),
 			Log:           "",
-			TimeBase:      *dto.StartingTime,
-			TimeIncrement: *dto.TimeIncrement,
+			TimeBase:      *dto.StartingTime * 1000,
+			TimeIncrement: *dto.TimeIncrement * 1000,
 			MatchType:     "BOTS",
 		}, h.registry)
 

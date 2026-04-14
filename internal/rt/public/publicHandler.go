@@ -218,8 +218,8 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 			&game.GameInfo{
 				BoardType:     game.Board_T(rand.Intn(boards.BOARD_NUM)),
 				Log:           "",
-				TimeBase:      dto.StartingTime,
-				TimeIncrement: dto.TimeIncrement,
+				TimeBase:      dto.StartingTime * 1000,
+				TimeIncrement: dto.TimeIncrement * 1000,
 				MatchType:     matchType,
 			}, h.registry)
 

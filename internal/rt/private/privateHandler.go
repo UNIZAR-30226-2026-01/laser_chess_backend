@@ -108,8 +108,8 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 		info = &rt.ChallengeInfo{
 			ChallengedId:   challengedID,
 			Board:          game.Board_T(*dto.Board),
-			StartingTime:   *dto.StartingTime,
-			TimeIncrement:  *dto.TimeIncrement,
+			StartingTime:   *dto.StartingTime * 1000,
+			TimeIncrement:  *dto.TimeIncrement * 1000,
 			Log:            "",
 			IsNewMatch:     true,
 			MatchID:        0,
