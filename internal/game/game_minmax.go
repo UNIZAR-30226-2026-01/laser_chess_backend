@@ -517,7 +517,14 @@ func GetBestMove(b Board_T, b_log string, lvl int) string {
 	if err != nil {
 		fmt.Println("error al inicializar el tablero para minmax", err)
 	}
+
 	team := MinMaxApplyLogToBoard(b_log, board)
+	fmt.Println("===IA RECIBE TABLERO===")
+	fmt.Println("SOY EL EQUIPO:", team)
+	board.print()
+	fmt.Println("=======================")
+
+
 	score, move := minmax(board, lvl, MIN_SCORE, MAX_SCORE, team)
 	fmt.Printf("El score es %d\n", score)
 	fmt.Print(move.fromX, move.fromY, move.toX, move.toY)

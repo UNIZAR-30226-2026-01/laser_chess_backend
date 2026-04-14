@@ -230,13 +230,12 @@ func TestApplyLogToBoard(t *testing.T) {
 
 func TestAImove(t *testing.T) {
 	var engine GameEngine
-	engine.InitEngine(CURIOSITY)
+	engine.InitEngine(ACE)
 
 	for i := 0; i < 40; i++ {
-		for i := 0; i < 100; i++ {
 			switch i % 2 {
 			case 0: //ROJO
-				move := GetBestMove(CURIOSITY, engine.gameLog, 3)
+				move := GetBestMove(ACE, engine.gameLog, 3)
 				logPiece, laserPath, _, err := engine.ProcessTurn(move, RED_TEAM, 100*time.Second)
 				if err != nil {
 					t.Error("la IA ha hecho un movimiento malo en RED_TEAM", err)
@@ -244,10 +243,11 @@ func TestAImove(t *testing.T) {
 				}
 
 				fmt.Println(logPiece)
+				fmt.Println(engine.gameLog)
 				engine.gameBoard.printlaser(laserPath)
 
 			case 1: //AZUL
-				move := GetBestMove(CURIOSITY, engine.gameLog, 3)
+				move := GetBestMove(ACE, engine.gameLog, 3)
 				logPiece, laserPath, _, err := engine.ProcessTurn(move, BLUE_TEAM, 100*time.Second)
 				if err != nil {
 					t.Error("la IA ha hecho un movimiento malo en BLUE_TEAM", err)
@@ -255,8 +255,8 @@ func TestAImove(t *testing.T) {
 				}
 
 				fmt.Println(logPiece)
+				fmt.Println(engine.gameLog)
 				engine.gameBoard.printlaser(laserPath)
-			}
 		}
 	}
 }
