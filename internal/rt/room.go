@@ -290,46 +290,59 @@ func (r *Room) managePause(player *Client) {
 	}
 }
 
-func (r *Room) ReconnectPlayer(player *Client) {
+func (r *Room) NotifyReconnection(reconected *Client, opponent *Client) {
 
-	if player.AccountID == r.Player1.AccountID {
-		r.Player1.Reconnect <- true
+	// Mensajes al jugador no reconectado
+	opponent.Send <- game.ResponseToRoom{Type: game.Reconnection}
 
-		// Cerrar el cliente si esta online
-		r.Player1.mu.RLock()
-		if r.Player1.Online {
-			r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
-		}
-		r.Player1.mu.RUnlock()
-
-		// Sustituirlo
-		aux := r.Player1
-		r.Player1 = player
-		r.RefreshChan <- true
-		close(aux.Send)
-
-		r.Player2.Send <- game.ResponseToRoom{Type: game.Reconnection}
-	} else if player.AccountID == r.Player2.AccountID {
-		r.Player2.Reconnect <- true
-
-		// Cerrar el cliente si esta online
-		r.Player2.mu.RLock()
-		if r.Player2.Online {
-			r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
-		}
-		r.Player2.mu.RUnlock()
-
-		// Sustituirlo
-		aux := r.Player2
-		r.Player2 = player
-		r.RefreshChan <- true
-		close(aux.Send)
-
-		r.Player1.Send <- game.ResponseToRoom{Type: game.Reconnection}
+	// Mensajes al jugador reconectado
+	reconected.Send <- game.ResponseToRoom{
+		Type:    game.Reconnection,
+		Content: strconv.FormatInt(opponent.AccountID, 10),
 	}
 
 	r.Game.FromRoom <- game.RoomMsg{
-		PlayerUid: player.AccountID,
+		PlayerUid: reconected.AccountID,
+		MsgType:   game.GetInitialState,
+	}
+
+	r.Game.FromRoom <- game.RoomMsg{
+		PlayerUid: reconected.AccountID,
 		MsgType:   game.GetState,
 	}
+}
+
+func (r *Room) ReconnectProcedure(reconected *Client, opponent *Client,
+	substituted **Client) {
+	oldClient := *substituted
+	oldClient.Reconnect <- true
+
+	// Cerrar el cliente si esta online
+	oldClient.mu.RLock()
+	if oldClient.Online {
+		oldClient.Send <- game.ResponseToRoom{Type: game.EOC}
+	}
+	oldClient.mu.RUnlock()
+
+	// Sustituirlo
+	*substituted = reconected
+	r.RefreshChan <- true
+	close(oldClient.Send)
+
+	reconected.Send <- game.ResponseToRoom{
+		Type:    game.Reconnection,
+		Content: strconv.FormatInt(opponent.AccountID, 10),
+	}
+
+	r.NotifyReconnection(reconected, opponent)
+}
+
+func (r *Room) ReconnectPlayer(player *Client) {
+
+	if player.AccountID == r.Player1.AccountID {
+		r.ReconnectProcedure(player, r.Player2, &r.Player1)
+	} else if player.AccountID == r.Player2.AccountID {
+		r.ReconnectProcedure(player, r.Player1, &r.Player2)
+	}
+
 }

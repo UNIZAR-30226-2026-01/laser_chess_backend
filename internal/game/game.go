@@ -15,7 +15,7 @@ type RoomMsg struct {
 type ResponseToRoom struct {
 	Type    GameMessageType `json:"Type"`
 	Content string          `json:"Content,omitempty"` // a veces tampoco se usa
-	Extra   string          `json:"Extra,omitempty"`   //campo extra, contiene o el laser, o que jugador eres
+	Extra   string          `json:"Extra,omitempty"`   //campo extra, contiene el laser, que jugador eres o contra que jugador estas
 }
 
 type GameInfo struct {

@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 )
 
 // Variable del fichero
@@ -29,6 +31,7 @@ type MatchRequest struct {
 	GameMode     int
 	Ranked       int
 	ResponseChan chan *Client
+	ErrorChan    chan error
 	FoundChan    chan bool // Creado aqui
 	CancelChan   chan bool
 	ListElement  *list.Element // Asignado aqui
@@ -51,6 +54,9 @@ type PublicHub struct {
 	// Dos mapas para los modos de juego
 	rankingOrCasualQueues [2]map[int]*GameModeQueue
 
+	// Players in queue
+	playersInQueue map[int64]bool
+
 	// Mutex para la creacion de mapas
 	mu sync.RWMutex
 }
@@ -60,11 +66,19 @@ func NewPublicHub() *PublicHub {
 	ph := &PublicHub{}
 	ph.rankingOrCasualQueues[0] = make(map[int]*GameModeQueue)
 	ph.rankingOrCasualQueues[1] = make(map[int]*GameModeQueue)
+	ph.playersInQueue = make(map[int64]bool)
 	return ph
 }
 
 // Inicia el matchmaking para una partida de tipo Rapid
 func (ph *PublicHub) AddPlayerToMatchmaking(request *MatchRequest) {
+
+	// Comprobar que el jugador no está en matchmaking
+	if !ph.EnterPlayersInQueue(request.PlayerClient.AccountID) {
+		fmt.Println("ERROR: El jugador esta ya dentro de la cola")
+		request.ErrorChan <- apierror.ErrAlreadyInQueue
+		return
+	}
 
 	// Buscar en el rango de ELO efectivo del jugador
 	k := int32(2)
@@ -86,6 +100,8 @@ func (ph *PublicHub) AddPlayerToMatchmaking(request *MatchRequest) {
 
 	// Y buscamos
 	go ph.Search(request)
+
+	return
 }
 
 // Busqueda de oponente por ELO
@@ -142,6 +158,9 @@ func (ph *PublicHub) CheckBracket(request *MatchRequest, bracket int64) bool {
 		opponent :=
 			queue.matchmakingQueues[bracket].players.Front().Value.(*MatchRequest)
 		if opponent.PlayerClient.AccountID != request.PlayerClient.AccountID {
+			// Sacar a los jugadores de la cola
+			ph.ExitPlayersInQueue(request.PlayerClient.AccountID)
+			ph.ExitPlayersInQueue(opponent.PlayerClient.AccountID)
 			ph.NotifyMatch(request, opponent)
 			return true
 		}
@@ -215,4 +234,20 @@ func (ph *PublicHub) RemoveFromQueue(request *MatchRequest) {
 	defer queue.mu.Unlock()
 
 	queue.matchmakingQueues[request.ELOBracket].players.Remove(request.ListElement)
+}
+
+func (ph *PublicHub) EnterPlayersInQueue(id int64) bool {
+	ph.mu.Lock()
+	defer ph.mu.Unlock()
+	if ph.playersInQueue[id] {
+		return false
+	}
+	ph.playersInQueue[id] = true
+	return true
+}
+
+func (ph *PublicHub) ExitPlayersInQueue(id int64) {
+	ph.mu.Lock()
+	defer ph.mu.Unlock()
+	ph.playersInQueue[id] = false
 }
