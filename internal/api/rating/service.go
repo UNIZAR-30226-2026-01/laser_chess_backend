@@ -232,9 +232,9 @@ func (s *RatingService) GetTopRankUsers(ctx context.Context,
 }
 
 func (s *RatingService) GetRankById(ctx context.Context,
-	body *GetRankByIdDTO, userID int64) (int64, error) {
+	eloType string, userID int64) (int64, error) {
 	res, err := s.store.GetRankById(ctx, db.GetRankByIdParams{
-		EloType: body.EloType,
+		EloType: db.EloType(eloType),
 		UserID:  userID,
 	})
 	if err != nil {
