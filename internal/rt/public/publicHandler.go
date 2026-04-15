@@ -15,7 +15,6 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/boards"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 
@@ -166,7 +165,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 
 	// Iniciar el matchmaking
 
-	ResponseChan := make(chan *rt.Client, 1)
+	ResponseChan := make(chan *rt.MatchmakingFound, 1)
 	ErrorChan := make(chan error, 1)
 
 	go h.hub.AddPlayerToMatchmaking(&rt.MatchRequest{ // TODO: anadir canal de cancel
@@ -177,12 +176,15 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		ResponseChan: ResponseChan,
 		ErrorChan:    ErrorChan,
 		Ranked:       dto.Ranked,
+		Board: 		  dto.Board,
 	})
 
+	var opponentMatchmakingInfo *rt.MatchmakingFound
 	var opponentClient *rt.Client
 
 	select {
-	case opponentClient = <-ResponseChan:
+	case opponentMatchmakingInfo = <-ResponseChan:
+		opponentClient = opponentMatchmakingInfo.Client
 	case err := <-ErrorChan:
 		apierror.DetectAndSendError(c, err)
 		conn.Close()
@@ -198,12 +200,15 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		RedPlayer := rand.Intn(2)
 		var P1Client *rt.Client
 		var P2Client *rt.Client
+		var matchBoard int
 		if RedPlayer == 0 {
 			P1Client = client
 			P2Client = opponentClient
+			matchBoard = opponentMatchmakingInfo.Board
 		} else {
 			P1Client = opponentClient
 			P2Client = client
+			matchBoard = dto.Board
 		}
 
 		var matchType string = "RANKED"
@@ -216,7 +221,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 
 		room.InitRoom(P1Client, P2Client, h.matchService, true,
 			&game.GameInfo{
-				BoardType:     game.Board_T(rand.Intn(boards.BOARD_NUM)),
+				BoardType:     game.Board_T(matchBoard),
 				Log:           "",
 				TimeBase:      dto.StartingTime * 1000,
 				TimeIncrement: dto.TimeIncrement * 1000,

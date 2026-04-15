@@ -30,11 +30,17 @@ type MatchRequest struct {
 	ELOBracket   int64 // Asigando aqui
 	GameMode     int
 	Ranked       int
-	ResponseChan chan *Client
+	ResponseChan chan *MatchmakingFound
 	ErrorChan    chan error
 	FoundChan    chan bool // Creado aqui
 	CancelChan   chan bool
 	ListElement  *list.Element // Asignado aqui
+	Board		 int
+}
+
+type MatchmakingFound struct {
+	Client *Client
+	Board  int
 }
 
 type MatchmakingQueue struct {
@@ -208,8 +214,14 @@ func (ph *PublicHub) CheckCreatedQueue(request *MatchRequest, eloDiff_optional .
 }
 
 func (ph *PublicHub) NotifyMatch(request *MatchRequest, opponent *MatchRequest) {
-	request.ResponseChan <- opponent.PlayerClient
-	opponent.ResponseChan <- request.PlayerClient
+	request.ResponseChan <- &MatchmakingFound{
+		Client: opponent.PlayerClient,
+		Board:  opponent.Board,
+	}
+	opponent.ResponseChan <- &MatchmakingFound{
+		Client: request.PlayerClient,
+		Board:  request.Board,
+	}
 	request.FoundChan <- true
 	opponent.FoundChan <- true
 
