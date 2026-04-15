@@ -9,6 +9,7 @@ const (
 	Pause           GameMessageType = "Pause"
 
 	State        GameMessageType = "State"
+	MatchStart	 GameMessageType = "MatchStart"
 	InitialState GameMessageType = "InitialState"
 	PauseRequest GameMessageType = "PauseRequest"
 	Paused       GameMessageType = "Paused"

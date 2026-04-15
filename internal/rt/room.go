@@ -127,9 +127,24 @@ EmptyBroadcast:
 
 }
 
+func (r *Room) sendOpponentIds() {
+	r.Player1.Send <- game.ResponseToRoom{
+		Type: game.MatchStart, 
+		Content: strconv.FormatInt(r.Player2.AccountID, 10),
+	}
+
+	r.Player2.Send <- game.ResponseToRoom{
+		Type: game.MatchStart, 
+		Content: strconv.FormatInt(r.Player1.AccountID, 10),
+	}
+}
+
 func (r *Room) run() {
 
 	fmt.Println("La partida ha iniciado :)")
+
+	// Enviar id del oponente a cada jugador
+	r.sendOpponentIds()
 
 	// Pedir estado inicial
 	r.Game.FromRoom <- game.RoomMsg{MsgType: game.GetInitialState}
