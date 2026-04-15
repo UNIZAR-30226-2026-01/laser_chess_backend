@@ -175,9 +175,13 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 		return
 	}
 
+	challengerUsername, err := h.accountService.GetUsernameByID(c, challengerID)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+	}
 	h.eventSystem.SendEvent(challengedID, &sse.Event{
 		EventType: "Challenge",
-		Data:      challengerID,
+		Data:      challengerUsername,
 	}, true)
 
 	// Esperar a que el WS se cierre.
