@@ -54,7 +54,7 @@ func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *a
 		matchService:   matches,
 		ratingService:  ratings,
 		gameModes: []GameMode{
-			{10, 2},
+			{300, 2},
 			{300, 5},
 			{900, 5},
 			{900, 10},

@@ -20,15 +20,15 @@ func NewService(s *db.Store) *RatingService {
 // Sirve tanto como para ranked, como para saber
 // en una privada cual es el elo más cercano
 func GetEloTypeFromBaseTime(baseTime int32) db.EloType {
-	if baseTime < 600 {
+	if baseTime < 600000 {
 		// Blitz ~ 300 s
 		return db.EloTypeBLITZ
 
-	} else if baseTime < 1350 {
+	} else if baseTime < 1350000 {
 		// Rapid ~ 900 s
 		return db.EloTypeRAPID
 
-	} else if baseTime < 2700 {
+	} else if baseTime < 2700000 {
 		// Classic ~ 1800 s
 		return db.EloTypeCLASSIC
 
