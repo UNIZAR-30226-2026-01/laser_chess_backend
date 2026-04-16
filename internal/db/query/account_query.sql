@@ -94,3 +94,14 @@ DELETE FROM device
 WHERE token = $1
 RETURNING token;
 
+-- name: ChangePassword :one
+UPDATE account
+SET
+    password_hash = $2
+WHERE account_id = $1
+RETURNING username;
+
+-- name: GetPasswordById :one
+SELECT password_hash FROM account
+WHERE account_id = $1;
+

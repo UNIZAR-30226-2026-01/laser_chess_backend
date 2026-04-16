@@ -9,6 +9,26 @@ import (
 	"context"
 )
 
+const changePassword = `-- name: ChangePassword :one
+UPDATE account
+SET
+    password_hash = $2
+WHERE account_id = $1
+RETURNING username
+`
+
+type ChangePasswordParams struct {
+	AccountID    int64  `json:"account_id"`
+	PasswordHash string `json:"password_hash"`
+}
+
+func (q *Queries) ChangePassword(ctx context.Context, arg ChangePasswordParams) (string, error) {
+	row := q.db.QueryRow(ctx, changePassword, arg.AccountID, arg.PasswordHash)
+	var username string
+	err := row.Scan(&username)
+	return username, err
+}
+
 const createAccount = `-- name: CreateAccount :one
 
 INSERT INTO account (
@@ -168,6 +188,18 @@ func (q *Queries) GetDevicesById(ctx context.Context, userID int64) ([]string, e
 		return nil, err
 	}
 	return items, nil
+}
+
+const getPasswordById = `-- name: GetPasswordById :one
+SELECT password_hash FROM account
+WHERE account_id = $1
+`
+
+func (q *Queries) GetPasswordById(ctx context.Context, accountID int64) (string, error) {
+	row := q.db.QueryRow(ctx, getPasswordById, accountID)
+	var password_hash string
+	err := row.Scan(&password_hash)
+	return password_hash, err
 }
 
 const getStats = `-- name: GetStats :one

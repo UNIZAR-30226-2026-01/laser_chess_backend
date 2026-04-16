@@ -117,3 +117,23 @@ func (h *AccountHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, gin.H{})
 }
+
+// Cambia la contrasenha de la cuenta del user que manda la peticion
+func (h *AccountHandler) ChangePassword(c *gin.Context) {
+
+	id, err := middleware.ExtractAccountID(c)
+
+	var body ChangePasswordDTO
+	if err := c.ShouldBindJSON(&body); err != nil {
+		apierror.SendError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.accountService.ChangePassword(c.Request.Context(), body, int64(id))
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusNoContent, gin.H{})
+}

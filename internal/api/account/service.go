@@ -193,6 +193,37 @@ func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
 	return s.store.DeleteAccount(ctx, accountID)
 }
 
+// Cambia la contrasenha del usuario con id == accountID
+func (s *AccountService) ChangePassword(ctx context.Context, 
+	dto ChangePasswordDTO, accountID int64) error {
+
+	oldPasswordHash, err := s.store.GetPasswordById(ctx, accountID)
+	if err != nil {
+		return err
+	}
+	
+	err = auth.VerifyPassword(oldPasswordHash, dto.OldPassword)
+	if err != nil {
+		return apierror.ErrUnauthorized
+	}
+
+	newPasswordHash, err := auth.HashPassword(dto.NewPassword)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.store.ChangePassword(ctx, db.ChangePasswordParams{
+		AccountID: 	  accountID,
+		PasswordHash: newPasswordHash,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Comprueba si un string es una direccion de email o no
 func IsMail(credential string) bool {
 	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
