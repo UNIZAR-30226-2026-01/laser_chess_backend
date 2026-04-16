@@ -183,7 +183,7 @@ func (ph *PrivateHub) RemoveChallenge(challenger, challenged int64) {
 
 // Acepta un reto y limpia el estado
 // Devuelve la ChallengeInfo del reto aceptado
-func (ph *PrivateHub) AcceptChallenge(challenger, challenged int64) (*ChallengeInfo, error) {
+func (ph *PrivateHub) TakeChallenge(challenger, challenged int64) (*ChallengeInfo, error) {
 	indexChallenger := shardIndex(challenger)
 	sChallenger := ph.shards[indexChallenger]
 

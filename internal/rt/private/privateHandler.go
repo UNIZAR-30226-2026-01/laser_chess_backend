@@ -205,7 +205,23 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 //	Llama a AcceptChallenge en el hub → recibe ChallengeInfo.
 //	Crea la Room con ambos clientes y arranca la partida.
 func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
+	h.responseToChallenge(c, true)
+}
 
+// RejectChallenge — el challenged upgradea a WS y rechaza el reto.
+//
+// Query params: username  (username del challenger)
+//
+//	Valida params y saca el challengedID del JWT.
+//	Consigue el ID del challenger a partir del username.
+//	Upgradea a WebSocket.
+//	Llama a AcceptChallenge en el hub → recibe ChallengeInfo.
+//	Crea la Room con ambos clientes y arranca la partida.
+func (h *PrivateHandler) RejectChallenge(c *gin.Context) {
+	h.responseToChallenge(c, false)
+}
+
+func (h *PrivateHandler) responseToChallenge(c *gin.Context, accept bool) {
 	// Cojer params y JWT
 	var dto AcceptChallengeDTO
 	if err := c.ShouldBindQuery(&dto); err != nil {
@@ -250,7 +266,7 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 	challengedClient.InitClient(challengedID, conn, false)
 
 	// Aceptar el reto en el hub
-	info, err := h.hub.AcceptChallenge(challengerID, challengedID)
+	info, err := h.hub.TakeChallenge(challengerID, challengedID)
 	if err != nil {
 		challengedClient.Send <- game.ResponseToRoom{
 			Type:    game.Error,
@@ -260,32 +276,36 @@ func (h *PrivateHandler) AcceptChallenge(c *gin.Context) {
 		return
 	}
 
-	// Crear la Room y arrancar la partida
-	room := &rt.Room{}
-	var P1Client *rt.Client
-	var P2Client *rt.Client
-	if info.IsChallengerP1 {
-		P1Client = info.ChallengerClient
-		P2Client = challengedClient
+	if accept {
+		// Crear la Room y arrancar la partida
+		room := &rt.Room{}
+		var P1Client *rt.Client
+		var P2Client *rt.Client
+		if info.IsChallengerP1 {
+			P1Client = info.ChallengerClient
+			P2Client = challengedClient
+		} else {
+			P1Client = challengedClient
+			P2Client = info.ChallengerClient
+		}
+		room.InitRoom(P1Client, P2Client, h.matchService, info.IsNewMatch,
+			&game.GameInfo{
+				BoardType:     info.Board,
+				Log:           info.Log,
+				TimeBase:      info.StartingTime,
+				TimeIncrement: info.TimeIncrement,
+				MatchType:     "PRIVATE",
+				MatchID:       info.MatchID,
+			}, h.registry)
 	} else {
-		P1Client = challengedClient
-		P2Client = info.ChallengerClient
+		challengedClient.Send <- game.ResponseToRoom{Type: game.EOC,
+			Content: "Challenge rejected"}
+		info.ChallengerClient.Send <- game.ResponseToRoom{Type: game.EOC,
+			Content: "Challenge rejected"}
 	}
-	room.InitRoom(P1Client, P2Client, h.matchService, info.IsNewMatch,
-		&game.GameInfo{
-			BoardType:     info.Board,
-			Log:           info.Log,
-			TimeBase:      info.StartingTime,
-			TimeIncrement: info.TimeIncrement,
-			MatchType:     "PRIVATE",
-			MatchID:       info.MatchID,
-		}, h.registry)
-
-	// Registrar ambos jugadores en el registry
 
 	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
-
 }
 
 // GetChallenges — devuelve la lista de retos pendientes recibidos por el usuario.

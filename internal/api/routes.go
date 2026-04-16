@@ -175,6 +175,7 @@ func SetupRouter(store *db.Store,
 		// Partidas privadas
 		rtRoute.GET("/challenge", privateHandler.Challenge)
 		rtRoute.GET("/challenge/accept", privateHandler.AcceptChallenge)
+		rtRoute.GET("/challenge/reject", privateHandler.RejectChallenge)
 		rtRoute.GET("/challenges", privateHandler.GetChallenges)
 
 		// Partidas publicas
