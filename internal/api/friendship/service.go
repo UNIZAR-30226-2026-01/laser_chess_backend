@@ -3,18 +3,22 @@ package friendship
 import (
 	"context"
 
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 )
 
 type FriendshipService struct {
-	store       *db.Store
-	eventSystem *sse.EventSystem
+	store          *db.Store
+	eventSystem    *sse.EventSystem
+	accountService *account.AccountService
 }
 
-func NewService(s *db.Store, events *sse.EventSystem) *FriendshipService {
-	return &FriendshipService{store: s, eventSystem: events}
+func NewService(s *db.Store, events *sse.EventSystem,
+	accounts *account.AccountService) *FriendshipService {
+	return &FriendshipService{store: s, eventSystem: events,
+		accountService: accounts}
 }
 
 /*
@@ -69,9 +73,13 @@ func (s FriendshipService) Create(ctx context.Context, data *FriendshipDTO) erro
 		return err
 	}
 
+	senderUsername, err := s.accountService.GetUsernameByID(ctx, *data.SenderID)
+	if err != nil {
+		return err
+	}
 	s.eventSystem.SendEvent(data.ReceiverID, &sse.Event{
 		EventType: "FriendRequest",
-		Data:      *data.SenderID,
+		Data:      senderUsername,
 	}, true)
 
 	return nil
@@ -270,14 +278,24 @@ func (s FriendshipService) AcceptFriendship(
 		return err
 	}
 
+	senderUsername, err := s.accountService.GetUsernameByID(ctx, *data.SenderID)
+	if err != nil {
+		return err
+	}
+
+	receiverUsername, err := s.accountService.GetUsernameByID(ctx, data.ReceiverID)
+	if err != nil {
+		return err
+	}
+
 	s.eventSystem.SendEvent(data.ReceiverID, &sse.Event{
 		EventType: "NewFriend",
-		Data:      *data.SenderID,
+		Data:      senderUsername,
 	}, true)
 
 	s.eventSystem.SendEvent(*data.SenderID, &sse.Event{
 		EventType: "NewFriend",
-		Data:      data.ReceiverID,
+		Data:      receiverUsername,
 	}, true)
 
 	return nil

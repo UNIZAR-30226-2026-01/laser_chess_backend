@@ -72,7 +72,7 @@ func SetupRouter(store *db.Store,
 	}
 	eventSystem := sse.InitSSE(fcm)
 
-	friendshipService := friendship.NewService(store, eventSystem)
+	friendshipService := friendship.NewService(store, eventSystem, accountService)
 	friendshipHandler := friendship.NewHandler(friendshipService, accountService)
 
 	// Establecer las rutas de las peticiones http por grupos
