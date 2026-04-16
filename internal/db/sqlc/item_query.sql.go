@@ -85,3 +85,34 @@ func (q *Queries) GetUserItems(ctx context.Context, userID int64) ([]GetUserItem
 	}
 	return items, nil
 }
+
+const listShopItems = `-- name: ListShopItems :many
+SELECT item_id, price, level_requisite, item_type, is_default FROM shop_item
+WHERE is_default = false
+`
+
+func (q *Queries) ListShopItems(ctx context.Context) ([]ShopItem, error) {
+	rows, err := q.db.Query(ctx, listShopItems)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ShopItem
+	for rows.Next() {
+		var i ShopItem
+		if err := rows.Scan(
+			&i.ItemID,
+			&i.Price,
+			&i.LevelRequisite,
+			&i.ItemType,
+			&i.IsDefault,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

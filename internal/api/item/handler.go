@@ -112,3 +112,15 @@ func (h *itemHandler) CreateItemOwner(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, nil)
 }
+
+func (h *itemHandler) ListShopItems(c *gin.Context) {
+	_, err := middleware.ExtractAccountID(c)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	res, err := h.service.ListShopItems(c)
+
+	c.JSON(http.StatusOK, res)
+}

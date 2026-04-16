@@ -3,13 +3,13 @@ package item
 import (
 	"context"
 
-	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
-	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
+	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 )
 
 type itemService struct {
-	store *db.Store
+	store          *db.Store
 	accountService *account.AccountService
 }
 
@@ -59,10 +59,10 @@ func (s *itemService) Create(
 		}
 
 		// Actualizamos el dinero del user
-		errTx = s.accountService.UpdateStats(ctx, accountID, 
+		errTx = s.accountService.UpdateStats(ctx, accountID,
 			&account.AccountStatsDTO{
 				Level: *accountInfo.Level,
-				Xp: *accountInfo.Xp,
+				Xp:    *accountInfo.Xp,
 				Money: *accountInfo.Money - itemInfo.Price,
 			})
 
@@ -134,8 +134,31 @@ func (s *itemService) GetUserItems(ctx context.Context, userID int64) ([]ShopIte
 	return parseUserItems(res), nil
 }
 
+func (s *itemService) ListShopItems(ctx context.Context) ([]ShopItemDTO, error) {
+	items, err := s.store.ListShopItems(ctx)
+	return parseShopItemToDTO(items), err
+}
+
 // Funcion auxiliar: pasar de db.GetUserItemsRow a ShopItemDTO
 func parseUserItems(data []db.GetUserItemsRow) []ShopItemDTO {
+	var res []ShopItemDTO
+
+	print(len(data))
+
+	for _, value := range data {
+		res = append(res, ShopItemDTO{
+			ItemID:         value.ItemID,
+			Price:          value.Price,
+			LevelRequisite: value.LevelRequisite,
+			ItemType:       value.ItemType,
+			IsDefault:      value.IsDefault,
+		})
+	}
+
+	return res
+}
+
+func parseShopItemToDTO(data []db.ShopItem) []ShopItemDTO {
 	var res []ShopItemDTO
 
 	print(len(data))

@@ -14,3 +14,7 @@ WHERE user_id = $1;
 -- name: GetShopItem :one
 SELECT * FROM shop_item
 WHERE item_id = $1 LIMIT 1;
+
+-- name: ListShopItems :many
+SELECT * FROM shop_item
+WHERE is_default = false;

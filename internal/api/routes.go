@@ -117,7 +117,7 @@ func SetupRouter(store *db.Store,
 		itemRoute.POST("", itemHandler.CreateItemOwner)
 		itemRoute.GET("/inventory", itemHandler.GetUserItems)
 		itemRoute.GET("/:itemID", itemHandler.GetShopItem)
-		// Probablemente habrá que meter una de GET todos los items
+		itemRoute.GET("/all", itemHandler.ListShopItems)
 	}
 
 	// Rating routes
