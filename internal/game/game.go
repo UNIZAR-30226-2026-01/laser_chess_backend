@@ -74,13 +74,13 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 			g.turn = UidBluePlayer
 		}
 
-		g.timerRed = NewGameTimer(time.Duration(timeLeftRed)*time.Second, time.Duration(timeInc)*time.Second)
-		g.timerBlue = NewGameTimer(time.Duration(timeLeftBlue)*time.Second, time.Duration(timeInc)*time.Second)
+		g.timerRed = NewGameTimer(time.Duration(timeLeftRed)*time.Millisecond, time.Duration(timeInc)*time.Millisecond)
+		g.timerBlue = NewGameTimer(time.Duration(timeLeftBlue)*time.Millisecond, time.Duration(timeInc)*time.Millisecond)
 
 	} else {
 		g.turn = UidRedPlayer
-		g.timerRed = NewGameTimer(time.Duration(timeBase)*time.Millisecond, time.Duration(timeInc)*time.Second)
-		g.timerBlue = NewGameTimer(time.Duration(timeBase)*time.Millisecond, time.Duration(timeInc)*time.Second)
+		g.timerRed = NewGameTimer(time.Duration(timeBase)*time.Millisecond, time.Duration(timeInc)*time.Millisecond)
+		g.timerBlue = NewGameTimer(time.Duration(timeBase)*time.Millisecond, time.Duration(timeInc)*time.Millisecond)
 	}
 
 	//Se crean los canales de comunicacón
