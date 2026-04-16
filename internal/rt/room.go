@@ -129,12 +129,12 @@ EmptyBroadcast:
 
 func (r *Room) sendOpponentIds() {
 	r.Player1.Send <- game.ResponseToRoom{
-		Type: game.MatchStart, 
+		Type:    game.MatchStart,
 		Content: strconv.FormatInt(r.Player2.AccountID, 10),
 	}
 
 	r.Player2.Send <- game.ResponseToRoom{
-		Type: game.MatchStart, 
+		Type:    game.MatchStart,
 		Content: strconv.FormatInt(r.Player1.AccountID, 10),
 	}
 }
@@ -207,6 +207,8 @@ func (r *Room) filterMessage(player *Client, message ClientSocketMessage) {
 		}
 	case game.Pause:
 		r.managePause(player)
+	case game.PauseReject:
+		r.managePauseReject(player)
 	case game.EOC:
 		go r.manageDisconnection(player)
 	}
@@ -295,6 +297,44 @@ func (r *Room) managePause(player *Client) {
 			r.Player1.Send <- game.ResponseToRoom{Type: game.PauseRequest}
 		}
 	}
+
+	if r.P1Pause && r.P2Pause {
+		r.Game.FromRoom <- game.RoomMsg{
+			PlayerUid:  0,
+			MsgType:    game.Pause,
+			MsgContent: "",
+		}
+	}
+}
+
+func (r *Room) managePauseReject(player *Client) {
+	if r.GameInfo.MatchType != "PRIVATE" {
+		player.Send <- game.ResponseToRoom{Type: game.Error,
+			Content: "You can't reject a pause in a public game"}
+		return
+	}
+
+	var sender *Client
+	if player.AccountID == r.Player1.AccountID {
+		if !r.P2Pause {
+			player.Send <- game.ResponseToRoom{Type: game.Error,
+				Content: "No pause request received"}
+			return
+		}
+		r.P2Pause = false
+		sender = r.Player2
+	} else {
+		if !r.P1Pause {
+			player.Send <- game.ResponseToRoom{Type: game.Error,
+				Content: "No pause request received"}
+			return
+		}
+		r.P1Pause = false
+		sender = r.Player1
+	}
+
+	sender.Send <- game.ResponseToRoom{Type: game.PauseReject,
+		Content: "Pause request rejected"}
 
 	if r.P1Pause && r.P2Pause {
 		r.Game.FromRoom <- game.RoomMsg{
