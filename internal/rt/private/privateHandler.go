@@ -276,6 +276,10 @@ func (h *PrivateHandler) responseToChallenge(c *gin.Context, accept bool) {
 		return
 	}
 
+	fmt.Println()
+	fmt.Println(info)
+	fmt.Println()
+
 	if accept {
 		// Crear la Room y arrancar la partida
 		room := &rt.Room{}

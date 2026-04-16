@@ -54,17 +54,20 @@ type LaserChessGame struct {
  */
 func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer int64,
 	BoardType Board_T, Log string, timeBase int32, timeInc int32) {
+
 	//Rellenan los datos relevantes
 	g.redPlayer = UidRedPlayer
 	g.bluePlayer = UidBluePlayer
 
-	g.gameEngine.gameLog = Log
-
 	//Estado inicial de la partida
 	g.gameEngine.InitEngine(BoardType)
 
+	g.gameEngine.gameLog = Log
+	fmt.Println("LOG AL ENTRAR A INITLASERCHESSGAME: ", g.gameEngine.gameLog)
+
 	//si el log no está vacío hay que reconstruir el estado
 	if g.gameEngine.gameLog != "" {
+		fmt.Println("DENTRO DEL IF")
 		team, timeLeftRed, timeLeftBlue := g.gameEngine.EngineApplyLogToBoard(timeBase)
 
 		switch team {
@@ -78,6 +81,7 @@ func (g *LaserChessGame) InitLaserChessGame(UidRedPlayer int64, UidBluePlayer in
 		g.timerBlue = NewGameTimer(time.Duration(timeLeftBlue)*time.Millisecond, time.Duration(timeInc)*time.Millisecond)
 
 	} else {
+		fmt.Println("DENTRO DEL ELSE")
 		g.turn = UidRedPlayer
 		g.timerRed = NewGameTimer(time.Duration(timeBase)*time.Millisecond, time.Duration(timeInc)*time.Millisecond)
 		g.timerBlue = NewGameTimer(time.Duration(timeBase)*time.Millisecond, time.Duration(timeInc)*time.Millisecond)

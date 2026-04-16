@@ -140,6 +140,7 @@ func (g *GameEngine) EngineApplyLogToBoard(timeBase int32) (nextTeam team_T, red
 	//dividimos el log en cachitos
 	redTimeLeft = float64(timeBase)
 	blueTimeLeft = float64(timeBase)
+	fmt.Println("LOG AL ENTRAR A APPLYLOG: ", g.gameLog)
 	if g.gameLog == "" {
 		return nextTeam, redTimeLeft, blueTimeLeft
 	}
@@ -168,6 +169,9 @@ func (g *GameEngine) EngineApplyLogToBoard(timeBase int32) (nextTeam team_T, red
 			nextTeam = BLUE_TEAM
 		}
 	}
+
+	fmt.Println("TABLERO TRAS APLICAR EL LOG")
+	g.gameBoard.print()
 
 	return nextTeam, redTimeLeft, blueTimeLeft
 }

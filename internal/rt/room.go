@@ -48,6 +48,8 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	r.isNewMatch = isNewMatch
 	r.GameInfo = GameInfo
 
+	fmt.Println("LOG AL ENTRAR A ROOM: ", GameInfo.Log)
+
 	fmt.Println(GameInfo.BoardType)
 
 	r.Game = &game.LaserChessGame{}
