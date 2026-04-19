@@ -53,6 +53,24 @@ func (h *LoginHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, LoginResponseDTO{AccessToken: res.AccessToken})
 }
 
+// Endpoint de logout
+func (h *LoginHandler) Logout(c *gin.Context) {
+
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		apierror.SendError(c, http.StatusUnauthorized, err)
+		return
+	}
+
+	err = h.service.Logout(c.Request.Context(), refreshToken)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, "")
+}
+
 // Endpoint para generar un nuevo access token
 // Se presenta el refresh token y si es valido se
 // devuelve un acces token nuevo

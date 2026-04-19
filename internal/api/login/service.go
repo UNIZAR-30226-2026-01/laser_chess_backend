@@ -115,6 +115,18 @@ func (s *LoginService) Login(ctx context.Context, body *LoginDTO) (*LoginResult,
 	}, nil
 }
 
+// Elimina el token de refresh de la sesion en caso de que exista
+func (s *LoginService) Logout(ctx context.Context, refreshToken string) error {
+	tokenHash := auth.HashToken(refreshToken)
+
+	// Eliminar el token en bdd
+	err := s.store.DeleteRefreshSession(ctx, tokenHash)
+	if err != nil {
+		return apierror.ErrUnauthorized
+	}
+	return nil
+}
+
 // Valida el refresh token, y si es correcto,
 // crea una pareja nueva de refresh y access tokens
 func (s *LoginService) Refresh(ctx context.Context, refreshToken string) (*LoginResult, error) {

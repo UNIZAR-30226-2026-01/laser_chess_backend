@@ -82,6 +82,7 @@ func SetupRouter(store *db.Store,
 	router.POST("/login", loginHandler.Login)
 	router.POST("/register", accountHandler.Create)
 	router.POST("/refresh", loginHandler.Refresh)
+	router.POST("/logout", loginHandler.Logout)
 
 	// == RUTAS PRIVADAS ===============================================
 
