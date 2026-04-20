@@ -232,7 +232,7 @@ func TestAImove(t *testing.T) {
 	var engine GameEngine
 	engine.InitEngine(ACE)
 
-	for i := 0; i < 40; i++ {
+	for i := 0; i < 60; i++ {
 			switch i % 2 {
 			case 0: //ROJO
 				move := GetBestMove(ACE, engine.gameLog, 3)

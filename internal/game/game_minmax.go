@@ -28,8 +28,8 @@ type AIMove struct {
 }
 
 const (
-	MAX_SCORE = 9999999
-	MIN_SCORE = -9999999
+	MAX_SCORE = 99999999
+	MIN_SCORE = -99999999
 )
 
 // Iniciar el estado para acelerar cálculos
@@ -426,7 +426,7 @@ func minmax(b *Board, depth int, alpha int, beta int, myTeam team_T) (score int,
 	// 2. Aplicar los movimientos y devolver el mejor
 	switch myTeam {
 	case RED_TEAM: //ROJO MAXIMIZA
-		maximizedScore := MIN_SCORE
+		maximizedScore := -2147483648
 		for _, move := range frontier {
 			nextState := transitionFunc(b, move)
 			// Pasamos alpha y beta a la llamada recursiva
@@ -447,7 +447,7 @@ func minmax(b *Board, depth int, alpha int, beta int, myTeam team_T) (score int,
 		return maximizedScore + depth*5, bestMove
 
 	case BLUE_TEAM: // AZUL MINIMIZA
-		minimizedScore := MAX_SCORE
+		minimizedScore := 2147483648
 		for _, move := range frontier {
 			nextState := transitionFunc(b, move)
 			// Pasamos alpha y beta a la llamada recursiva
