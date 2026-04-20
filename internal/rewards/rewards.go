@@ -17,15 +17,20 @@ const (
 	loseMoney = 10.0
 )
 
+// Devuelve el nivel dado xp global
 func GetLevel(XP int32) int32 {
 	level := math.Sqrt(float64(XP) / scale)
 	return int32(math.Floor(level))
 }
 
+// Devuelve la XP necesaria para alcanzar un nivel especifico
 func GetLevelXP(level int32) int32 {
 	return int32(math.Floor(scale * float64(level) * float64(level)))
 }
 
+// Devuelve la XP de dentro del nivel, y la xp maxima del nivel
+// Es decir si a nivel 10 llegas con xp 100, al 11 con 110, y tienes 105 xp
+// 	devuelve 5, 10
 func GetXPBarInfo(XP int32) (int32, int32) {
 	level := GetLevel(XP)
 

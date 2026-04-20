@@ -30,6 +30,11 @@ type AccountStatsDTO struct {
 	Money int32 `json:"money"`
 }
 
+type XpBarDTO struct {
+	Xp    	   int32 `json:"xp"`
+	RequiredXp int32 `json:"required_xp"`
+}
+
 type ChangePasswordDTO struct {
 	OldPassword string `json:"old_password" binding:"required"`
 	NewPassword string `json:"new_password" binding:"required"`

@@ -6,6 +6,7 @@ import (
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rewards"
 	"github.com/gin-gonic/gin"
 )
 
@@ -108,8 +109,12 @@ func (h *AccountHandler) Update(c *gin.Context) {
 func (h *AccountHandler) Delete(c *gin.Context) {
 
 	id, err := middleware.ExtractAccountID(c)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
 
-	err = h.accountService.Delete(c.Request.Context(), int64(id))
+	err = h.accountService.Delete(c.Request.Context(), id)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
@@ -122,6 +127,10 @@ func (h *AccountHandler) Delete(c *gin.Context) {
 func (h *AccountHandler) ChangePassword(c *gin.Context) {
 
 	id, err := middleware.ExtractAccountID(c)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
 
 	var body ChangePasswordDTO
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -136,4 +145,29 @@ func (h *AccountHandler) ChangePassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, gin.H{})
+}
+
+// Devuelve la info necesaria para la barra de xp
+func (h *AccountHandler) GetXPInfo(c *gin.Context) {
+	id, err := middleware.ExtractAccountID(c)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+
+	data, err := h.accountService.GetByID(c.Request.Context(), id)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+	
+	xp, requiredXp := rewards.GetXPBarInfo(*data.Xp);
+
+	body := XpBarDTO{
+		Xp: xp,
+		RequiredXp: requiredXp,
+	}
+
+	c.JSON(http.StatusOK, body)
 }
