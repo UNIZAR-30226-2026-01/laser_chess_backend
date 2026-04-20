@@ -102,7 +102,7 @@ func SetupRouter(store *db.Store,
 		accountRoute.GET("/:id", accountHandler.GetOtherByID)
 		accountRoute.POST("/update", accountHandler.Update)
 		accountRoute.DELETE("/delete/", accountHandler.Delete)
-		accountRoute.PUT("/changePassword", accountHandler.ChangePassword)
+		accountRoute.PUT("/passwd", accountHandler.ChangePassword)
 	}
 
 	// Match routes
