@@ -83,6 +83,31 @@ func parseMatches(data []db.Match) []MatchDTO {
 	return res
 }
 
+// Funcion auxiliar: pasar de db.Match a PausedMatchDTO
+func parsePausedMatches(data []db.Match) []PausedMatchDTO {
+	var res []PausedMatchDTO
+
+	for _, value := range data {
+		res = append(res, PausedMatchDTO{
+			MatchID:         value.MatchID,
+			P1ID:            value.P1ID,
+			P2ID:            value.P2ID,
+			P1Elo:           value.P1Elo,
+			P2Elo:           value.P2Elo,
+			Date:            value.Date,
+			Winner:          value.Winner,
+			Termination:     value.Termination,
+			MatchType:       value.MatchType,
+			Board:           value.Board,
+			MovementHistory: value.MovementHistory,
+			TimeBase:        value.TimeBase,
+			TimeIncrement:   value.TimeIncrement,
+		})
+	}
+
+	return res
+}
+
 func (s *MatchService) FinalizeMatch(ctx context.Context, summary MatchSummaryDTO) error {
 	isRanked := summary.GameInfo.MatchType == "RANKED"
 
@@ -304,12 +329,12 @@ func (s *MatchService) GetUserHistory(ctx context.Context, userID int64) ([]Matc
 	return parseMatches(res), nil
 }
 
-func (s *MatchService) GetPausedMatches(ctx context.Context, userID int64) ([]MatchDTO, error) {
+func (s *MatchService) GetPausedMatches(ctx context.Context, userID int64) ([]PausedMatchDTO, error) {
 	res, err := s.store.GetPausedMatches(ctx, userID)
 	println(len(res))
 	if err != nil {
 		return nil, err
 	}
 
-	return parseMatches(res), nil
+	return parsePausedMatches(res), nil
 }
