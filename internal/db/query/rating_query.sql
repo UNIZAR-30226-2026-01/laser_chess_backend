@@ -35,7 +35,7 @@ SET value = $3,
 WHERE user_id = $1 AND elo_type = $2;
 
 -- name: GetTopRankUsers :many
-SELECT r.value, a.account_id, a.username, a.level, a.avatar
+SELECT r.value, a.account_id, a.username, a.avatar
 FROM rating r 
 JOIN account a ON a.account_id = r.user_id
 WHERE r.elo_type = $1

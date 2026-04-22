@@ -35,11 +35,10 @@ type AllRatingsDTO struct {
 }
 
 type RankUserDTO struct {
-	UserID 		int64 `json:"user_id" binding:"required"`
-	Username 	string `json:"username" binding:"required"`
-	Level 		int32 `json:"level" binding:"required"`
-	Avatar 		int32 `json:"avatar" binding:"required"`
-	Rating		int32 `json:"rating" binding:"required"`
+	UserID   int64  `json:"user_id" binding:"required"`
+	Username string `json:"username" binding:"required"`
+	Avatar   int32  `json:"avatar" binding:"required"`
+	Rating   int32  `json:"rating" binding:"required"`
 }
 
 type GetRankingDTO struct {
@@ -53,4 +52,3 @@ type GetRankByIdDTO struct {
 type RankingDTO struct {
 	Rank int64 `json:"rank" binding:"required"`
 }
- 

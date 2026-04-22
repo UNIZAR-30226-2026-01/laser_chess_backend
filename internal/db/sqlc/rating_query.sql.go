@@ -155,7 +155,7 @@ func (q *Queries) GetRapidElo(ctx context.Context, userID int64) (Rating, error)
 }
 
 const getTopRankUsers = `-- name: GetTopRankUsers :many
-SELECT r.value, a.account_id, a.username, a.level, a.avatar
+SELECT r.value, a.account_id, a.username, a.avatar
 FROM rating r 
 JOIN account a ON a.account_id = r.user_id
 WHERE r.elo_type = $1
@@ -166,7 +166,6 @@ type GetTopRankUsersRow struct {
 	Value     int32  `json:"value"`
 	AccountID int64  `json:"account_id"`
 	Username  string `json:"username"`
-	Level     int32  `json:"level"`
 	Avatar    int32  `json:"avatar"`
 }
 
@@ -183,7 +182,6 @@ func (q *Queries) GetTopRankUsers(ctx context.Context, eloType EloType) ([]GetTo
 			&i.Value,
 			&i.AccountID,
 			&i.Username,
-			&i.Level,
 			&i.Avatar,
 		); err != nil {
 			return nil, err

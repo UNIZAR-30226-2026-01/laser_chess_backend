@@ -255,7 +255,6 @@ func ParseRankingRow(
 		res = append(res, RankUserDTO{
 			UserID:   value.AccountID,
 			Username: value.Username,
-			Level:    value.Level,
 			Avatar:   value.Avatar,
 			Rating:   value.Value,
 		})
