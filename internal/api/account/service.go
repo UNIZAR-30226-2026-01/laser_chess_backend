@@ -5,8 +5,8 @@ package account
 
 import (
 	"context"
-	"regexp"
 	"fmt"
+	"regexp"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/auth"
@@ -194,14 +194,14 @@ func (s *AccountService) Delete(ctx context.Context, accountID int64) error {
 }
 
 // Cambia la contrasenha del usuario con id == accountID
-func (s *AccountService) ChangePassword(ctx context.Context, 
+func (s *AccountService) ChangePassword(ctx context.Context,
 	dto ChangePasswordDTO, accountID int64) error {
 
 	oldPasswordHash, err := s.store.GetPasswordById(ctx, accountID)
 	if err != nil {
 		return err
 	}
-	
+
 	err = auth.VerifyPassword(oldPasswordHash, dto.OldPassword)
 	if err != nil {
 		return apierror.ErrUnauthorized
@@ -213,7 +213,7 @@ func (s *AccountService) ChangePassword(ctx context.Context,
 	}
 
 	_, err = s.store.ChangePassword(ctx, db.ChangePasswordParams{
-		AccountID: 	  accountID,
+		AccountID:    accountID,
 		PasswordHash: newPasswordHash,
 	})
 

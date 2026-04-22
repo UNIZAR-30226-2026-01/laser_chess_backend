@@ -20,7 +20,6 @@ CREATE TYPE "match_type" AS ENUM (
 
 CREATE TYPE "termination" AS ENUM (
 	'OUT_OF_TIME',
-	'SURRENDER',
 	'LASER',
 	'UNFINISHED',
 	'DISCONNECTION'

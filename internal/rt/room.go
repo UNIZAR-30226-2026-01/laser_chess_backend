@@ -356,6 +356,7 @@ func (r *Room) NotifyReconnection(reconected *Client, opponent *Client) {
 	reconected.Send <- game.ResponseToRoom{
 		Type:    game.Reconnection,
 		Content: strconv.FormatInt(opponent.AccountID, 10),
+		Extra:   strconv.FormatInt(r.Game.GetPlayerTimer(reconected.AccountID), 10),
 	}
 
 	r.Game.FromRoom <- game.RoomMsg{
@@ -385,11 +386,6 @@ func (r *Room) ReconnectProcedure(reconected *Client, opponent *Client,
 	*substituted = reconected
 	r.RefreshChan <- true
 	close(oldClient.Send)
-
-	reconected.Send <- game.ResponseToRoom{
-		Type:    game.Reconnection,
-		Content: strconv.FormatInt(opponent.AccountID, 10),
-	}
 
 	r.NotifyReconnection(reconected, opponent)
 }

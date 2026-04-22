@@ -157,6 +157,17 @@ func (g *LaserChessGame) changeTimers() {
 	fmt.Println("Timer blue:" + g.timerBlue.Remaining.String())
 }
 
+func (g *LaserChessGame) GetPlayerTimer(ID int64) int64 {
+	switch ID {
+	case g.bluePlayer:
+		return g.timerBlue.Remaining.Milliseconds()
+	case g.redPlayer:
+		return g.timerRed.Remaining.Milliseconds()
+	default:
+		return 0
+	}
+}
+
 // Devuelve true si ha acabado la partida
 func (g *LaserChessGame) processMove(message RoomMsg) bool {
 
