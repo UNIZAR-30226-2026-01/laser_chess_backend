@@ -318,6 +318,11 @@ func (r *Room) managePauseReject(player *Client) {
 
 	var sender *Client
 	if player.AccountID == r.Player1.AccountID {
+		if r.P1Pause {
+			r.Player2.Send <- game.ResponseToRoom{Type: game.PauseReject,
+				Content: "Pause request canceled"}
+			return
+		}
 		if !r.P2Pause {
 			player.Send <- game.ResponseToRoom{Type: game.Error,
 				Content: "No pause request received"}
@@ -326,6 +331,11 @@ func (r *Room) managePauseReject(player *Client) {
 		r.P2Pause = false
 		sender = r.Player2
 	} else {
+		if r.P2Pause {
+			r.Player1.Send <- game.ResponseToRoom{Type: game.PauseReject,
+				Content: "Pause request canceled"}
+			return
+		}
 		if !r.P1Pause {
 			player.Send <- game.ResponseToRoom{Type: game.Error,
 				Content: "No pause request received"}
