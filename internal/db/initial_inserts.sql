@@ -38,6 +38,7 @@ VALUES (
 );
 
 INSERT INTO public.account (
+    account_id,
     mail,
     username,
     password_hash,
@@ -51,6 +52,7 @@ INSERT INTO public.account (
     avatar
 )
 VALUES(
+    1,
     'user1@gmail.com',
     'user1', 
     '$2a$12$Q0RsprBAXFgSSttIet3nNe/rwKOFOJychVd9F2BH6q/Q3Pp5lnV3.',
@@ -63,6 +65,7 @@ VALUES(
     3,
     1
 ), (
+    2,
     'user2@gmail.com',
     'user2', 
     '$2a$12$ApqnzgaPJ3LpimwZGjxJk.rBhWQ5EIQ.YNBDxXJZKmDXlxY42cNFK',
@@ -75,6 +78,7 @@ VALUES(
     3,
     1
 ), (
+    3,
     'user3@gmail.com',
     'user3', 
     '$2a$12$HX2kns7L6joaJo07PrGafO8Sjz044snkwRBIh7pjdtHps4u.2kBLa',
@@ -87,6 +91,7 @@ VALUES(
     3,
     1
 ), (
+    4,
     'user4@gmail.com',
     'user4', 
     '$2b$12$y4/FIcy88bFV6JArmNtq6.ovknJ3I7ynqepkQ6s/4usAtcjH3ouwC',
@@ -94,6 +99,84 @@ VALUES(
     4,
     14,
     401,
+    1,
+    2,
+    3,
+    1
+), (
+    5,
+    'user5@gmail.com',
+    'user5', 
+    '$2a$12$ucy8oE/C8vOeuBJP5tjRVOK803mdyPAChh1eRMV0tceWziPxiIewq',
+    false,
+    5,
+    15,
+    501,
+    1,
+    2,
+    3,
+    1
+), (
+    6,
+    'user6@gmail.com',
+    'user6', 
+    '$2a$12$TJTTVIoZw09z9.Rre9ELdemP/a6JfAZ5DC3MvllTMbrMrJwflPKCK',
+    false,
+    6,
+    16,
+    601,
+    1,
+    2,
+    3,
+    1
+), (
+    7,
+    'user7@gmail.com',
+    'user7', 
+    '$2a$12$iiEC/A6ZbKgeh75egfPlKupOQW7JL5VPXz.IAlvJ6lO3oUUAtjFWe',
+    false,
+    7,
+    17,
+    701,
+    1,
+    2,
+    3,
+    1
+), (
+    8,
+    'user8@gmail.com',
+    'user8', 
+    '$2a$12$u548i67ylzsb1vOykpWUouOxH6wdEaO1J.tCXtaFGyNDF4rOIDV7W',
+    false,
+    8,
+    18,
+    801,
+    1,
+    2,
+    3,
+    1
+), (
+    9,
+    'user9@gmail.com',
+    'user9', 
+    '$2a$12$R77H7YqkOPEGQep4n7oHUeFx2sqG0msqYT3uN.2yWPdM8copfY5EK',
+    false,
+    9,
+    19,
+    901,
+    1,
+    2,
+    3,
+    1
+), (
+    10,
+    'user10@gmail.com',
+    'user10', 
+    '$2a$12$dVqxoDl/Aubzgd/uIpQLvuAAqyXg3KvhpFnNj1GHDEV.Whvb/gABW',
+    false,
+    10,
+    20,
+    1001,
     1,
     2,
     3,
@@ -170,31 +253,168 @@ INSERT INTO public."friendship" (
 
 INSERT INTO public."rating" (
     user_id,
-    elo_type
+    elo_type,
+    value
 ) VALUES (
     1,
-    'BLITZ'
+    'BLITZ',
+    1500
 ), (
     1,
-    'RAPID'
+    'RAPID',
+    4500
 ), (
     1,
-    'CLASSIC'
+    'CLASSIC',
+    1500
 ), (
     1,
-    'EXTENDED'
+    'EXTENDED',
+    1500
 ), (
     2,
-    'BLITZ'
+    'BLITZ',
+    1600
 ), (
     2,
-    'RAPID'
+    'RAPID',
+    1600
 ), (
     2,
-    'CLASSIC'
+    'CLASSIC',
+    4600
 ), (
     2,
-    'EXTENDED'
+    'EXTENDED',
+    1600
+), (
+    3,
+    'BLITZ',
+    4700
+), (
+    3,
+    'RAPID',
+    1700
+), (
+    3,
+    'CLASSIC',
+    1700
+), (
+    3,
+    'EXTENDED',
+    1700
+), (
+    4,
+    'BLITZ',
+    1800
+), (
+    4,
+    'RAPID',
+    1800
+), (
+    4,
+    'CLASSIC',
+    1800
+),(
+    4,
+    'EXTENDED',
+    4800
+), (
+    5,
+    'BLITZ',
+    4900
+), (
+    5,
+    'RAPID',
+    1900
+), (
+    5,
+    'CLASSIC',
+    1900
+), (
+    5,
+    'EXTENDED',
+    1900
+), (
+    6,
+    'BLITZ',
+    2000
+), (
+    6,
+    'RAPID',
+    4000
+), (
+    6,
+    'CLASSIC',
+    2000
+), (
+    6,
+    'EXTENDED',
+    2000
+), (
+    7,
+    'BLITZ',
+    2100
+), (
+    7,
+    'RAPID',
+    2100
+), (
+    7,
+    'CLASSIC',
+    4100
+), (
+    7,
+    'EXTENDED',
+    2100
+), (
+    8,
+    'BLITZ',
+    2200
+), (
+    8,
+    'RAPID',
+    2200
+), (
+    8,
+    'CLASSIC',
+    2200
+), (
+    8,
+    'EXTENDED',
+    4200
+),(
+    9,
+    'BLITZ',
+    2300
+), (
+    9,
+    'RAPID',
+    4300
+), (
+    9,
+    'CLASSIC',
+    2300
+), (
+    9,
+    'EXTENDED',
+    2300
+), (
+    10,
+    'BLITZ',
+    2400
+), (
+    10,
+    'RAPID',
+    4400
+), (
+    10,
+    'CLASSIC',
+    2400
+), (
+    10,
+    'EXTENDED',
+    2400
 );
 
 INSERT INTO shop_item (
@@ -205,4 +425,9 @@ INSERT INTO shop_item (
     1000, 0, 'BOARD_SKIN', false
 ), (
     1, 10, 'BOARD_SKIN', false
+);
+
+SELECT setval(
+    pg_get_serial_sequence('public.account', 'account_id'),
+    COALESCE((SELECT MAX(account_id) FROM public.account), 1)
 );
