@@ -198,7 +198,7 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 	user2ID, err := h.accountService.GetIDByUsername(c, user2Username)
 
 	if err != nil {
-		apierror.SendError(c, http.StatusBadRequest, err)
+		apierror.DetectAndSendError(c, err)
 		return
 	}
 

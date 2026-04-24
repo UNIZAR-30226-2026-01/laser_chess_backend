@@ -103,6 +103,9 @@ func DetectAndSendError(c *gin.Context, err error) {
 		case errors.Is(err, ErrAlreadyInQueue):
 			httpCode = http.StatusConflict
 
+		case errors.Is(err, ErrAlreadyFriends):
+			httpCode = http.StatusConflict
+
 		default:
 			httpCode = http.StatusInternalServerError
 		}
