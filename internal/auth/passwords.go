@@ -6,7 +6,7 @@ import "golang.org/x/crypto/bcrypt"
 
 // Crea un hash a partir de una contraseña de texto plano
 func HashPassword(password string) (string, error) {
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
 		return "", err
 	}

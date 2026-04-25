@@ -12,8 +12,11 @@ postgres:
 apply-schema: postgres
 	docker exec -i $(DB_CONTAINER) psql "$(DB_URL)" < $(SCHEMA_FILE)
 
-apply-inserts: postgres
-	docker exec -i $(DB_CONTAINER) psql "$(DB_URL)" < $(INSERTS_FILE)
+seed:
+	go run cmd/seed/main.go
+
+seed-debug:
+	SEED_DEBUG=true go run cmd/seed/main.go
 
 sqlc: 
 	sqlc generate
@@ -30,4 +33,9 @@ clean:
 reset-db: postgres
 	docker exec -i $(DB_CONTAINER) psql "$(DB_URL)" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 	make apply-schema
-	make apply-inserts
+	make seed
+
+reset-db-debug: postgres
+	docker exec -i $(DB_CONTAINER) psql "$(DB_URL)" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+	make apply-schema
+	make seed-debug
