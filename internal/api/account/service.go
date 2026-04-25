@@ -5,7 +5,6 @@ package account
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/apierror"
@@ -43,8 +42,6 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 		return nil, err
 	}
 
-	fmt.Println("First check")
-
 	var res int64
 
 	// Ejecutar en transaccion
@@ -67,14 +64,12 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 		if errTx != nil {
 			return errTx
 		}
-		fmt.Println("Second check")
 
 		// Inicializar ratings
 		errTx = q.CreateRatings(ctx, res)
 		if errTx != nil {
 			return errTx
 		}
-		fmt.Println("Third check")
 
 		//TODO: hacer que ownee los cosmeticos por defecto
 
@@ -84,7 +79,6 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Fourth check")
 
 	// Solo devuelve el AccountID
 	return &AccountDTO{AccountID: &res}, nil
