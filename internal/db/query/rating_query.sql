@@ -39,14 +39,19 @@ SELECT r.value, a.account_id, a.username, a.avatar
 FROM rating r 
 JOIN account a ON a.account_id = r.user_id
 WHERE r.elo_type = $1
-ORDER BY r.value DESC LIMIT 100;
+ORDER BY r.value DESC, r.user_id ASC LIMIT 100;
 
 -- name: GetRankById :one
-SELECT rank 
-FROM (
-    SELECT user_id, 
-    ROW_NUMBER() OVER (ORDER BY value DESC) as rank
-    FROM rating
-    WHERE elo_type = $1 
-) as rankings
-WHERE user_id = $2;
+WITH user_score AS (
+    SELECT value FROM rating WHERE user_id = $2 AND elo_type = $1
+)
+SELECT COUNT(*) + 1 AS rank
+FROM rating
+WHERE elo_type = $1 
+  AND (
+      -- Contamos a los que tienen más puntos
+      value > (SELECT value FROM user_score)
+      OR 
+      -- O a los que tienen los mismos puntos pero menor ID (tu desempate)
+      (value = (SELECT value FROM user_score) AND user_id < $2)
+  );
