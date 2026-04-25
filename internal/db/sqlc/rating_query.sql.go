@@ -113,14 +113,21 @@ func (q *Queries) GetExtendedElo(ctx context.Context, userID int64) (Rating, err
 }
 
 const getRankById = `-- name: GetRankById :one
-SELECT rank 
-FROM (
-    SELECT user_id, 
-    ROW_NUMBER() OVER (ORDER BY value DESC) as rank
-    FROM rating
-    WHERE elo_type = $1 
-) as rankings
-WHERE user_id = $2
+WITH user_score AS (
+    SELECT r1.value 
+    FROM rating r1
+    WHERE r1.user_id = $2 AND r1.elo_type = $1
+)
+SELECT CAST(COUNT(*) + 1 AS BIGINT) AS rank
+FROM rating r2
+WHERE r2.elo_type = $1 
+  AND (
+      -- Contamos a los que tienen más puntos
+      r2.value > (SELECT value FROM user_score)
+      OR 
+      -- O a los que tienen los mismos puntos pero menor ID (tu desempate)
+      (r2.value = (SELECT value FROM user_score) AND r2.user_id < $2)
+  )
 `
 
 type GetRankByIdParams struct {
@@ -159,7 +166,7 @@ SELECT r.value, a.account_id, a.username, a.avatar
 FROM rating r 
 JOIN account a ON a.account_id = r.user_id
 WHERE r.elo_type = $1
-ORDER BY r.value DESC LIMIT 100
+ORDER BY r.value DESC, r.user_id ASC LIMIT 100
 `
 
 type GetTopRankUsersRow struct {

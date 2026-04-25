@@ -43,15 +43,17 @@ ORDER BY r.value DESC, r.user_id ASC LIMIT 100;
 
 -- name: GetRankById :one
 WITH user_score AS (
-    SELECT value FROM rating WHERE user_id = $2 AND elo_type = $1
+    SELECT r1.value 
+    FROM rating r1
+    WHERE r1.user_id = $2 AND r1.elo_type = $1
 )
-SELECT COUNT(*) + 1 AS rank
-FROM rating
-WHERE elo_type = $1 
+SELECT CAST(COUNT(*) + 1 AS BIGINT) AS rank
+FROM rating r2
+WHERE r2.elo_type = $1 
   AND (
       -- Contamos a los que tienen más puntos
-      value > (SELECT value FROM user_score)
+      r2.value > (SELECT value FROM user_score)
       OR 
       -- O a los que tienen los mismos puntos pero menor ID (tu desempate)
-      (value = (SELECT value FROM user_score) AND user_id < $2)
+      (r2.value = (SELECT value FROM user_score) AND r2.user_id < $2)
   );
