@@ -46,13 +46,15 @@ func toCreateMatchParamsFromSaveDTO(data MatchSaveDTO) db.CreateMatchParams {
 func toUpdateMatchParamsFromSaveDTO(data MatchSaveDTO) db.UpdateMatchParams {
 	return db.UpdateMatchParams{
 		MatchID:         data.GameInfo.MatchID,
+		P1ID:            data.P1ID,
+		P2ID:            data.P2ID,
 		P1Elo:           data.P1Elo,
 		P2Elo:           data.P2Elo,
 		Date:            data.Date,
 		Winner:          db.Winner(data.GameInfo.Winner),
 		Termination:     db.Termination(data.GameInfo.Termination),
 		MatchType:       db.MatchType(data.GameInfo.MatchType),
-		Board:           db.BoardType(data.GameInfo.BoardType),
+		Board:           boards.IntToBoard[data.GameInfo.BoardType],
 		MovementHistory: data.GameInfo.Log,
 		TimeBase:        int32(data.GameInfo.TimeBase),
 		TimeIncrement:   int32(data.GameInfo.TimeIncrement),
@@ -212,8 +214,12 @@ func (s *MatchService) SaveMatchResultTx(ctx context.Context,
 			}
 		} else {
 			dbParams := toUpdateMatchParamsFromSaveDTO(match)
+			fmt.Println()
+			fmt.Println("PARAMETROS: ", dbParams)
+			fmt.Println()
 			_, err := q.UpdateMatch(ctx, dbParams)
 			if err != nil {
+				fmt.Println("HA HABIDO UN ERROR AL ACTUALIZAR PARTIDA: ", err.Error())
 				return err
 			}
 		}
