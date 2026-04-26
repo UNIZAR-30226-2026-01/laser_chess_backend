@@ -10,6 +10,7 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/account"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rewards"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -77,17 +78,17 @@ func seedShopItems(ctx context.Context, dbPool *pgxpool.Pool) {
 }
 
 func seedDebugUsers(ctx context.Context, accSvc *account.AccountService, ratingSvc *rating.RatingService) {
-	log.Println("Iniciando la inserción de 150 usuarios...")
+	log.Println("Iniciando la inserción de usuarios con Elo, Nivel y XP random...")
 
-	for i := 1; i <= 150; i++ {
+	for i := 1; i <= 150; i++ { // (Ajusta a 10 o 150 según necesites)
 		username := fmt.Sprintf("user%d", i)
-		password := fmt.Sprintf("%s%s", username, username) // Ej: user1user1
+		password := fmt.Sprintf("%s%s", username, username)
 		mail := fmt.Sprintf("user%d@gmail.com", i)
 
-		// Comprobar si el usuario ya existe usando tu servicio
+		// Comprobar si ya existe
 		_, err := accSvc.GetIDByUsername(ctx, username)
 		if err == nil {
-			continue // Ya existe, lo saltamos silenciosamente para no saturar los logs
+			continue
 		}
 
 		dto := &account.CreateAccountDTO{
@@ -96,9 +97,11 @@ func seedDebugUsers(ctx context.Context, accSvc *account.AccountService, ratingS
 			Password: password,
 		}
 
+		// Crear la cuenta
 		accDTO, err := accSvc.Create(ctx, dto)
 		if err != nil {
 			log.Printf("Error creando a %s: %v", username, err)
+			continue
 		}
 
 		randomBlitz := int32(800 + rand.Intn(1201))
@@ -106,43 +109,32 @@ func seedDebugUsers(ctx context.Context, accSvc *account.AccountService, ratingS
 		randomClassic := int32(800 + rand.Intn(1201))
 		randomExtended := int32(800 + rand.Intn(1201))
 
-		// Actualizamos BLITZ
-		ratingSvc.UpdateEloByID(ctx, &rating.RatingDTO{
-			UserID:     *accDTO.AccountID,
-			EloType:    db.EloTypeBLITZ,
-			Value:      randomBlitz,
-			Deviation:  350,
-			Volatility: 0.06,
+		ratingSvc.UpdateEloByID(ctx, &rating.RatingDTO{UserID: *accDTO.AccountID, EloType: db.EloTypeBLITZ, Value: randomBlitz, Deviation: 350, Volatility: 0.06})
+		ratingSvc.UpdateEloByID(ctx, &rating.RatingDTO{UserID: *accDTO.AccountID, EloType: db.EloTypeRAPID, Value: randomRapid, Deviation: 350, Volatility: 0.06})
+		ratingSvc.UpdateEloByID(ctx, &rating.RatingDTO{UserID: *accDTO.AccountID, EloType: db.EloTypeCLASSIC, Value: randomClassic, Deviation: 350, Volatility: 0.06})
+		ratingSvc.UpdateEloByID(ctx, &rating.RatingDTO{UserID: *accDTO.AccountID, EloType: db.EloTypeEXTENDED, Value: randomExtended, Deviation: 350, Volatility: 0.06})
+
+		// XP aleatoria entre 0 y 99999
+		randomXp := int32(rand.Intn(100000))
+		randomLevel := rewards.GetLevel(randomXp)
+
+		// Dinero aleatorio entre 0 y 5000
+		randomMoney := int32(rand.Intn(5001))
+
+		err = accSvc.UpdateStats(ctx, *accDTO.AccountID, &account.AccountStatsDTO{
+			Level: randomLevel,
+			Xp:    randomXp,
+			Money: randomMoney,
 		})
 
-		// Actualizamos RAPID
-		ratingSvc.UpdateEloByID(ctx, &rating.RatingDTO{
-			UserID:     *accDTO.AccountID,
-			EloType:    db.EloTypeRAPID,
-			Value:      randomRapid,
-			Deviation:  350,
-			Volatility: 0.06,
-		})
+		if err != nil {
+			log.Printf("Error actualizando stats (nivel/xp) para %s: %v", username, err)
+		}
 
-		// Actualizamos CLASSIC
-		ratingSvc.UpdateEloByID(ctx, &rating.RatingDTO{
-			UserID:     *accDTO.AccountID,
-			EloType:    db.EloTypeCLASSIC,
-			Value:      randomClassic,
-			Deviation:  350,
-			Volatility: 0.06,
-		})
-
-		// Actualizamos EXTENDED
-		ratingSvc.UpdateEloByID(ctx, &rating.RatingDTO{
-			UserID:     *accDTO.AccountID,
-			EloType:    db.EloTypeEXTENDED,
-			Value:      randomExtended,
-			Deviation:  350,
-			Volatility: 0.06,
-		})
+		log.Printf("Usuario %s creado | Nivel: %d | XP: %d", username, randomLevel, randomXp)
 	}
-	log.Println("150 usuarios validados/creados correctamente.")
+
+	log.Println("Usuarios validados/creados correctamente.")
 }
 
 func seedDebugMatchesAndFriends(ctx context.Context, dbPool *pgxpool.Pool) {
