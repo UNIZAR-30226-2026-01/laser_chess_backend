@@ -136,27 +136,17 @@ func (c *Client) RunAIClient() error {
 		}
 	}()
 
-	firstMessage := <-c.Send
-	if firstMessage.Extra == "0" {
-		c.ToAI <- ClientSocketMessage{
-			Type:    "Move",
-			Content: "",
-		}
-		response := <-c.FromAI
-		c.ToRoom <- response
-	}
-
 	for {
 		select {
 		case message, ok := <-c.Send:
+			fmt.Println()
+			fmt.Println("IA RECIBE MENSAJE: ")
+			fmt.Println("Tipo: ", message.Type)
+			fmt.Println("Content", message.Content)
+			fmt.Println("Extra: ", message.Extra)
+			fmt.Println()
 			if !ok {
 				return nil
-			}
-			if message.Type == game.EOC {
-				return nil
-			}
-			if message.Type != game.Move {
-				continue
 			}
 
 			switch message.Type {
@@ -205,6 +195,7 @@ func (c *Client) RunAIClient() error {
 			}
 
 		case <-c.Done:
+			fmt.Println("IA TERMINADA")
 			// Si se detecta un error salimos
 			return nil
 		}
