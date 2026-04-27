@@ -332,13 +332,13 @@ func evaluateKingDefense(b *Board, king int, team team_T) int {
 				case *BoardPieceShield:
 					if v.team == team {
 						bonus += 5
-					}else{
+					} else {
 						bonus -= -1
 					}
 				case *BoardPieceDeflector:
 					if v.team == team {
 						bonus += 2
-					}else{
+					} else {
 						bonus -= 2
 					}
 				case *BoardPieceSwitch:
@@ -523,7 +523,6 @@ func GetBestMove(b Board_T, b_log string, lvl int) string {
 	fmt.Println("SOY EL EQUIPO:", team)
 	board.print()
 	fmt.Println("=======================")
-
 
 	score, move := minmax(board, lvl, MIN_SCORE, MAX_SCORE, team)
 	fmt.Printf("El score es %d\n", score)

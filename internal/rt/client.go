@@ -25,9 +25,10 @@ type Client struct {
 	Reconnect chan bool
 	Online    bool
 
-	isAI   bool
-	ToAI   chan ClientSocketMessage
-	FromAI chan ClientSocketMessage
+	isAI              bool
+	initStateReceived bool
+	ToAI              chan ClientSocketMessage
+	FromAI            chan ClientSocketMessage
 
 	mu sync.RWMutex
 
@@ -49,6 +50,7 @@ func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn, isAI bool) {
 	c.mu.Unlock()
 
 	if isAI {
+		c.initStateReceived = false
 		c.ToAI = make(chan ClientSocketMessage)
 		c.FromAI = make(chan ClientSocketMessage)
 		go c.RunAIClient()
@@ -153,7 +155,11 @@ func (c *Client) RunAIClient() error {
 			case game.EOC:
 				return nil
 			case game.InitialState:
-				fmt.Println("Turno recibido")
+				// Filtramos por si es un mensaje causado
+				// por una reconexion
+				if c.initStateReceived {
+					continue
+				}
 				if message.Extra == "0" {
 					c.ToAI <- ClientSocketMessage{
 						Type:    "Move",
@@ -169,7 +175,7 @@ func (c *Client) RunAIClient() error {
 						Type:    "Move",
 						Content: log.Content,
 					}
-					continue
+					c.initStateReceived = true
 				}
 			case game.Move:
 				fmt.Println("Calculando movimiento")

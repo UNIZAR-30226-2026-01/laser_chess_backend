@@ -7,6 +7,9 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 )
 
+// Clase intermediaria para la comunicacion entre el cliente y la IA para las partidas
+// contra bots
+
 type AIClient struct {
 	client *Client
 	board  game.Board_T
@@ -33,7 +36,7 @@ func (ai *AIClient) run() {
 		if message.Type == "EOC" {
 			return
 		}
-		fmt.Println("Llamada a GetBestMove con board: ", ai.board, ", log: ", ai.log, ", y level: ", ai.lvl)
+		fmt.Println("Message Type IA: ", message.Type, " - Llamada a GetBestMove con board: ", ai.board, ", log: ", ai.log, ", y level: ", ai.lvl)
 		move := game.GetBestMove(ai.board, ai.log, ai.lvl)
 
 		// Tiempo para no saturar al usuario
