@@ -36,7 +36,7 @@ func (ai *AIClient) run() {
 		if message.Type == "EOC" {
 			return
 		}
-		fmt.Println("Llamada a GetBestMove con board: ", ai.board, ", log: ", ai.log, ", y level: ", ai.lvl)
+		fmt.Println("Message Type IA: ", message.Type, " - Llamada a GetBestMove con board: ", ai.board, ", log: ", ai.log, ", y level: ", ai.lvl)
 		move := game.GetBestMove(ai.board, ai.log, ai.lvl)
 
 		// Tiempo para no saturar al usuario
