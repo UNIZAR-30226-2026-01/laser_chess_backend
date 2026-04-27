@@ -26,7 +26,7 @@ services:
       # Asegúrate de que el host coincida con el nombre del servicio de la base de datos ("db")
       - DB_URL=postgres://tu_usuario:tu_contraseña@db:5432/tu_base_datos
     depends_on:
-      - db
+      - postgres_db
 
 volumes:
   postgres_data:
