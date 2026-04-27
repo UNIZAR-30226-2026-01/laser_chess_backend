@@ -18,5 +18,15 @@ services:
       retries: 5
       start_period: 5s
 
+  backend:
+    build: .  # <-- Esto le dice a Portainer que use el Dockerfile de la raíz
+    ports:
+      - "8080:8080"
+    environment:
+      # Asegúrate de que el host coincida con el nombre del servicio de la base de datos ("db")
+      - DB_URL=postgres://tu_usuario:tu_contraseña@db:5432/tu_base_datos
+    depends_on:
+      - db
+
 volumes:
   postgres_data:
