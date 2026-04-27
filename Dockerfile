@@ -3,8 +3,10 @@ FROM golang:1.25.7-alpine AS builder
 WORKDIR /app
 
 # Instalamos certificados y SQLC (para replicar tu comando 'make sqlc')
-RUN apk --no-cache add ca-certificates git
-RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+RUN apk --no-cache add ca-certificates wget tar
+RUN wget https://downloads.sqlc.dev/sqlc_1.25.0_linux_amd64.tar.gz && \
+    tar -xvzf sqlc_1.25.0_linux_amd64.tar.gz && \
+    mv sqlc /usr/local/bin/
 
 # Copiamos dependencias primero
 COPY go.mod go.sum ./
