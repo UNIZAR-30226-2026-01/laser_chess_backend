@@ -7,6 +7,9 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 )
 
+// Clase intermediaria para la comunicacion entre el cliente y la IA para las partidas
+// contra bots
+
 type AIClient struct {
 	client *Client
 	board  game.Board_T
