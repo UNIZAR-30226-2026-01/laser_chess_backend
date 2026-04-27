@@ -2,28 +2,27 @@
 FROM golang:1.25.7-alpine AS builder
 WORKDIR /app
 
-# Instalamos los certificados por si tu backend hace peticiones HTTPS hacia afuera
+# Instalamos certificados y SQLC (para replicar tu comando 'make sqlc')
 RUN apk --no-cache add ca-certificates
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 
+# Copiamos dependencias primero
 COPY go.mod go.sum ./
 RUN go mod download
+
+# Copiamos todo el código fuente
 COPY . .
 
-# Compilamos el binario. 
-# CGO_ENABLED=0 es OBLIGATORIO para 'scratch' para que sea un binario 100% estático.
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+# Generamos el código de la BD (equivalente a 'make sqlc')
+RUN sqlc generate
 
-# Etapa 2: El vacío absoluto
+# Compilamos el backend apuntando a la ruta correcta (equivalente a 'make build')
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/main.go
+
+# Etapa 2: Imagen ultra-ligera
 FROM scratch
-
-# Copiamos los certificados SSL de la etapa anterior (vital si llamas a APIs externas)
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
-# Copiamos nuestro binario ya compilado
 COPY --from=builder /app/main /main
 
-# Exponemos el puerto
 EXPOSE 8080
-
-# Ejecutamos el binario directamente
 CMD ["/main"]

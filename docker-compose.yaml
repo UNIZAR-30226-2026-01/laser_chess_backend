@@ -10,6 +10,7 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./internal/db/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql:ro
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -24,7 +25,7 @@ services:
       - "8080:8080"
     environment:
       # Asegúrate de que el host coincida con el nombre del servicio de la base de datos ("db")
-      - DB_URL=postgres://tu_usuario:tu_contraseña@db:5432/tu_base_datos
+      - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres_db:5432/${DB_NAME}?sslmode=disable
     depends_on:
       - postgres_db
 
