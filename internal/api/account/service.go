@@ -139,6 +139,7 @@ func (s *AccountService) Update(
 		PieceSkin:    body.PieceSkin,
 		WinAnimation: body.WinAnimation,
 		Avatar:       body.Avatar,
+		Mail:         body.Mail,
 	})
 	if err != nil {
 		return nil, err
