@@ -242,15 +242,21 @@ func (h *PrivateHandler) responseToChallenge(c *gin.Context, accept bool) {
 		return
 	}
 
+	// Comprobar que no eres el challenger del reto
+	if challengedID == challengerID {
+		apierror.DetectAndSendError(c, apierror.ErrCantAcceptYourChallenge)
+		return
+	}
+
 	// Comprobar que ninguno de los dos ya está en partida
 	if _, ok := h.registry.GetMatch(challengedID); ok {
 		fmt.Println("PROBLEMA CON EL CHALLENGED")
-		apierror.SendError(c, http.StatusConflict, apierror.ErrAlreadyInMatch)
+		apierror.DetectAndSendError(c, apierror.ErrAlreadyInMatch)
 		return
 	}
 	if _, ok := h.registry.GetMatch(challengerID); ok {
 		fmt.Println("PROBLEMA CON EL CHALLENGER")
-		apierror.SendError(c, http.StatusConflict, apierror.ErrAlreadyInMatch)
+		apierror.DetectAndSendError(c, apierror.ErrAlreadyInMatch)
 		return
 	}
 
