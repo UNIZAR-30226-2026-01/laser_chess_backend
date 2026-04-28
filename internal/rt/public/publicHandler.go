@@ -54,12 +54,16 @@ func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *a
 		matchService:   matches,
 		ratingService:  ratings,
 		gameModes: []GameMode{
+			{300, 0},
 			{300, 2},
 			{300, 5},
+			{900, 0},
 			{900, 5},
 			{900, 10},
+			{1800, 0},
 			{1800, 10},
 			{1800, 15},
+			{3600, 0},
 			{3600, 15},
 			{3600, 20},
 		},
@@ -176,7 +180,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		ResponseChan: ResponseChan,
 		ErrorChan:    ErrorChan,
 		Ranked:       dto.Ranked,
-		Board: 		  dto.Board,
+		Board:        dto.Board,
 	})
 
 	var opponentMatchmakingInfo *rt.MatchmakingFound
