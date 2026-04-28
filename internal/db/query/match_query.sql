@@ -18,9 +18,27 @@ WHERE p1_id = $1 OR p2_id = $1
 ORDER BY date DESC;
 
 -- name: GetPausedMatches :many
-SELECT * FROM match
-WHERE (p1_id = $1 OR p2_id = $1) AND termination = 'UNFINISHED'::termination
-ORDER BY date DESC;
+SELECT
+    m.match_id,
+    m.p1_id,
+    m.p2_id,
+    a1.username AS p1_username,
+    a2.username AS p2_username,
+    m.p1_elo,
+    m.p2_elo,
+    m.date,
+    m.winner,
+    m.termination,
+    m.match_type,
+    m.board,
+    m.movement_history,
+    m.time_base,
+    m.time_increment
+FROM match m
+JOIN account a1 ON m.p1_id = a1.account_id
+JOIN account a2 ON m.p2_id = a2.account_id
+WHERE (m.p1_id = $1 OR m.p2_id = $1) AND m.termination = 'UNFINISHED'::termination
+ORDER BY m.date DESC;
 
 -- name: UpdateMatch :one
 UPDATE match

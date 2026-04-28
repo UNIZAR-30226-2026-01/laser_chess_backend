@@ -11,6 +11,8 @@ type PausedMatchDTO struct {
 	MatchID         int64          `json:"match_id" binding:"required"`
 	P1ID            int64          `json:"p1_id" binding:"required"`
 	P2ID            int64          `json:"p2_id" binding:"required"`
+	P1Username      string         `json:"p1_username"`
+	P2Username      string         `json:"p2_username"`
 	P1Elo           int32          `json:"p1_elo"`
 	P2Elo           int32          `json:"p2_elo"`
 	Date            time.Time      `json:"date"`
