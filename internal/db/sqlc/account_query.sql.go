@@ -258,7 +258,8 @@ SET
     board_skin = COALESCE($3, board_skin),
     piece_skin = COALESCE($4, piece_skin),
     win_animation = COALESCE($5, win_animation),
-    avatar = COALESCE($6, avatar)
+    avatar = COALESCE($6, avatar),
+    mail = COALESCE($7, mail)
 WHERE account_id = $1 AND is_deleted = FALSE
 RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar
 `
@@ -270,6 +271,7 @@ type UpdateAccountParams struct {
 	PieceSkin    *int32  `json:"piece_skin"`
 	WinAnimation *int32  `json:"win_animation"`
 	Avatar       *int32  `json:"avatar"`
+	Mail         *string `json:"mail"`
 }
 
 // solo cambia cosas qué se pueden cambiar por el user
@@ -284,40 +286,8 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (A
 		arg.PieceSkin,
 		arg.WinAnimation,
 		arg.Avatar,
+		arg.Mail,
 	)
-	var i Account
-	err := row.Scan(
-		&i.AccountID,
-		&i.Mail,
-		&i.Username,
-		&i.PasswordHash,
-		&i.IsDeleted,
-		&i.Level,
-		&i.Xp,
-		&i.Money,
-		&i.BoardSkin,
-		&i.PieceSkin,
-		&i.WinAnimation,
-		&i.Avatar,
-	)
-	return i, err
-}
-
-const updateMail = `-- name: UpdateMail :one
-UPDATE account
-SET
-    mail = $2
-WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING account_id, mail, username, password_hash, is_deleted, level, xp, money, board_skin, piece_skin, win_animation, avatar
-`
-
-type UpdateMailParams struct {
-	AccountID int64  `json:"account_id"`
-	Mail      string `json:"mail"`
-}
-
-func (q *Queries) UpdateMail(ctx context.Context, arg UpdateMailParams) (Account, error) {
-	row := q.db.QueryRow(ctx, updateMail, arg.AccountID, arg.Mail)
 	var i Account
 	err := row.Scan(
 		&i.AccountID,

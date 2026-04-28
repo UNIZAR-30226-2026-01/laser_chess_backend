@@ -60,8 +60,7 @@ CREATE TABLE IF NOT EXISTS "account" (
 	CHECK (
         "username" <> '' AND 
         "username" NOT LIKE '% %'
-    ),
-	CHECK ("mail" ~ '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$')
+    )
 );
 
 CREATE TABLE IF NOT EXISTS "device" (

@@ -30,7 +30,8 @@ SET
     board_skin = COALESCE(sqlc.narg('board_skin'), board_skin),
     piece_skin = COALESCE(sqlc.narg('piece_skin'), piece_skin),
     win_animation = COALESCE(sqlc.narg('win_animation'), win_animation),
-    avatar = COALESCE(sqlc.narg('avatar'), avatar)
+    avatar = COALESCE(sqlc.narg('avatar'), avatar),
+    mail = COALESCE(sqlc.narg('mail'), mail)
 WHERE account_id = $1 AND is_deleted = FALSE
 RETURNING *;
 
@@ -59,13 +60,6 @@ UPDATE account
 SET
     password_hash = $2
 WHERE account_id = $1 AND is_deleted = FALSE;
-
--- name: UpdateMail :one
-UPDATE account
-SET
-    mail = $2
-WHERE account_id = $1 AND is_deleted = FALSE
-RETURNING *;
 
 -- name: GetStats :one
 SELECT level, xp, money

@@ -31,7 +31,7 @@ type AccountStatsDTO struct {
 }
 
 type XpBarDTO struct {
-	Xp    	   int32 `json:"xp"`
+	Xp         int32 `json:"xp"`
 	RequiredXp int32 `json:"required_xp"`
 }
 
