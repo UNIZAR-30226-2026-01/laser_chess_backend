@@ -25,15 +25,16 @@ var (
 	ErrInvalidPasswordLenght = errors.New("password must be between 6 and 50 characters")
 	ErrInvalidMailFormat     = errors.New("mail format is invalid")
 
-	ErrSelfChallenge        = errors.New("you can't challenge yourself")
-	ErrNotFriends           = errors.New("users are not friends")
-	ErrAlreadyInMatch       = errors.New("user already in match")
-	ErrAlreadyInQueue       = errors.New("user already in queue")
-	ErrMatchAlreadyFinished = errors.New("match is already finished")
-	ErrNotYourMatch         = errors.New("match is not yours")
-	ErrNotAValidGameMode    = errors.New("time base and/or increment invalid")
-	ErrNotAValidRankedType  = errors.New("ranked type invalid")
-	ErrNoMatchInCourse      = errors.New("user doesn't have any running matches")
+	ErrSelfChallenge           = errors.New("you can't challenge yourself")
+	ErrNotFriends              = errors.New("users are not friends")
+	ErrAlreadyInMatch          = errors.New("user already in match")
+	ErrAlreadyInQueue          = errors.New("user already in queue")
+	ErrMatchAlreadyFinished    = errors.New("match is already finished")
+	ErrNotYourMatch            = errors.New("match is not yours")
+	ErrNotAValidGameMode       = errors.New("time base and/or increment invalid")
+	ErrNotAValidRankedType     = errors.New("ranked type invalid")
+	ErrNoMatchInCourse         = errors.New("user doesn't have any running matches")
+	ErrCantAcceptYourChallenge = errors.New("can't accept your own challenge")
 
 	ErrAlreadyFriends = errors.New("users are already friends")
 
@@ -105,6 +106,9 @@ func DetectAndSendError(c *gin.Context, err error) {
 
 		case errors.Is(err, ErrAlreadyFriends):
 			httpCode = http.StatusConflict
+
+		case errors.Is(err, ErrCantAcceptYourChallenge):
+			httpCode = http.StatusBadRequest
 
 		default:
 			httpCode = http.StatusInternalServerError
