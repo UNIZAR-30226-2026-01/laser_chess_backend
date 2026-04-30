@@ -36,6 +36,7 @@ func main() {
 	// INSERCIONES CORE (Siempre)
 	log.Println("--- Insertando datos CORE ---")
 	seedShopItems(ctx, dbPool)
+	seedAIUser(ctx, accountService)
 
 	// INSERCIONES DEBUG (Solo si SEED_DEBUG=true)
 	isDebug := os.Getenv("SEED_DEBUG") == "true"
@@ -48,6 +49,39 @@ func main() {
 	}
 
 	log.Println("Seeding completado con éxito.")
+}
+
+func seedAIUser(ctx context.Context, accSvc *account.AccountService) {
+	log.Println("Iniciando la inserción del usuario IA...")
+
+	username := fmt.Sprintf("AI")
+	password := fmt.Sprintf(os.Getenv("AI_PASSWORD"))
+	mail := fmt.Sprintf("ai@ai.ai")
+
+	// Comprobar si ya existe
+	_, err := accSvc.GetIDByUsername(ctx, username)
+	if err == nil {
+		return
+	}
+
+	dto := &account.CreateAccountDTO{
+		Username: username,
+		Mail:     mail,
+		Password: password,
+	}
+
+	// Crear la cuenta
+	_, err = accSvc.Create(ctx, dto)
+	if err != nil {
+		log.Printf("Error creando a %s: %v", username, err)
+		return
+	}
+
+	if err != nil {
+		log.Printf("Error actualizando stats (nivel/xp) para %s: %v", username, err)
+	}
+
+	log.Println("Usuarios IA validado/creado correctamente.")
 }
 
 func seedShopItems(ctx context.Context, dbPool *pgxpool.Pool) {

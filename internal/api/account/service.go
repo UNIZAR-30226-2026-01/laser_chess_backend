@@ -167,6 +167,9 @@ func (s *AccountService) Update(
 }
 
 func (s *AccountService) GetStats(ctx context.Context, accountID int64) (*AccountStatsDTO, error) {
+	if accountID == 0 {
+		return &AccountStatsDTO{}, nil
+	}
 	stats, err := s.store.GetStats(ctx, accountID)
 
 	return &AccountStatsDTO{

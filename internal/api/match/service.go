@@ -254,24 +254,28 @@ func (s *MatchService) SaveMatchResultTx(ctx context.Context,
 		}
 
 		// Actualizar XP y Dinero
-		err := q.UpdateStats(ctx, db.UpdateStatsParams{
-			AccountID: match.P1ID,
-			Level:     rewards.GetLevel(p1XP),
-			Xp:        p1XP,
-			Money:     p1Money,
-		})
-		if err != nil {
-			return err
+		if match.P1ID != 0 {
+			err := q.UpdateStats(ctx, db.UpdateStatsParams{
+				AccountID: match.P1ID,
+				Level:     rewards.GetLevel(p1XP),
+				Xp:        p1XP,
+				Money:     p1Money,
+			})
+			if err != nil {
+				return err
+			}
 		}
 
-		err = q.UpdateStats(ctx, db.UpdateStatsParams{
-			AccountID: match.P2ID,
-			Level:     rewards.GetLevel(p2XP),
-			Xp:        p2XP,
-			Money:     p2Money,
-		})
-		if err != nil {
-			return err
+		if match.P2ID != 0 {
+			err := q.UpdateStats(ctx, db.UpdateStatsParams{
+				AccountID: match.P2ID,
+				Level:     rewards.GetLevel(p2XP),
+				Xp:        p2XP,
+				Money:     p2Money,
+			})
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
