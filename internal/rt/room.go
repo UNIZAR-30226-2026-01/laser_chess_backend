@@ -151,6 +151,18 @@ func (r *Room) run() {
 	// Pedir estado inicial
 	r.Game.FromRoom <- game.RoomMsg{MsgType: game.GetInitialState}
 
+	// Si es partida pausada, mandar el estado a cada jugador
+	if !r.isNewMatch {
+		r.Game.FromRoom <- game.RoomMsg{
+			PlayerUid: r.Player1.AccountID,
+			MsgType:   game.GetState,
+		}
+		r.Game.FromRoom <- game.RoomMsg{
+			PlayerUid: r.Player2.AccountID,
+			MsgType:   game.GetState,
+		}
+	}
+
 	for {
 		select {
 		case message := <-r.Broadcast:
