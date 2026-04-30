@@ -28,7 +28,8 @@ CREATE TYPE "termination" AS ENUM (
 CREATE TYPE "item_type" AS ENUM (
 	'BOARD_SKIN',
 	'PIECE_SKIN',
-    'WIN_ANIMATION'
+    'WIN_ANIMATION',
+    'AVATAR'
 );
 
 CREATE TYPE "elo_type" AS ENUM (

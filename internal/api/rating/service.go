@@ -135,6 +135,9 @@ func (s *RatingService) GetEloByID(ctx context.Context, userID int64, baseTime i
 *
  */
 func (s *RatingService) GetBlitzEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
+	if userID == 0 {
+		return &RatingDTO{UserID: 0, EloType: db.EloTypeBLITZ, Value: 1500}, nil
+	}
 	res, err := s.store.GetBlitzElo(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -150,6 +153,9 @@ func (s *RatingService) GetBlitzEloByID(ctx context.Context, userID int64) (*Rat
 }
 
 func (s *RatingService) GetExtendedEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
+	if userID == 0 {
+		return &RatingDTO{UserID: 0, EloType: db.EloTypeEXTENDED, Value: 1500}, nil
+	}
 	res, err := s.store.GetExtendedElo(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -165,6 +171,9 @@ func (s *RatingService) GetExtendedEloByID(ctx context.Context, userID int64) (*
 }
 
 func (s *RatingService) GetRapidEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
+	if userID == 0 {
+		return &RatingDTO{UserID: 0, EloType: db.EloTypeRAPID, Value: 1500}, nil
+	}
 	res, err := s.store.GetRapidElo(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -180,6 +189,9 @@ func (s *RatingService) GetRapidEloByID(ctx context.Context, userID int64) (*Rat
 }
 
 func (s *RatingService) GetClassicEloByID(ctx context.Context, userID int64) (*RatingDTO, error) {
+	if userID == 0 {
+		return &RatingDTO{UserID: 0, EloType: db.EloTypeCLASSIC, Value: 1500}, nil
+	}
 	res, err := s.store.GetClassicElo(ctx, userID)
 	if err != nil {
 		return nil, err

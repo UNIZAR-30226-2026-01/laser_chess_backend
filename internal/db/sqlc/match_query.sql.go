@@ -97,24 +97,62 @@ func (q *Queries) GetMatch(ctx context.Context, matchID int64) (Match, error) {
 }
 
 const getPausedMatches = `-- name: GetPausedMatches :many
-SELECT match_id, p1_id, p2_id, p1_elo, p2_elo, date, winner, termination, match_type, board, movement_history, time_base, time_increment FROM match
-WHERE (p1_id = $1 OR p2_id = $1) AND termination = 'UNFINISHED'::termination
-ORDER BY date DESC
+SELECT
+    m.match_id,
+    m.p1_id,
+    m.p2_id,
+    a1.username AS p1_username,
+    a2.username AS p2_username,
+    m.p1_elo,
+    m.p2_elo,
+    m.date,
+    m.winner,
+    m.termination,
+    m.match_type,
+    m.board,
+    m.movement_history,
+    m.time_base,
+    m.time_increment
+FROM match m
+JOIN account a1 ON m.p1_id = a1.account_id
+JOIN account a2 ON m.p2_id = a2.account_id
+WHERE (m.p1_id = $1 OR m.p2_id = $1) AND m.termination = 'UNFINISHED'::termination
+ORDER BY m.date DESC
 `
 
-func (q *Queries) GetPausedMatches(ctx context.Context, p1ID int64) ([]Match, error) {
+type GetPausedMatchesRow struct {
+	MatchID         int64       `json:"match_id"`
+	P1ID            int64       `json:"p1_id"`
+	P2ID            int64       `json:"p2_id"`
+	P1Username      string      `json:"p1_username"`
+	P2Username      string      `json:"p2_username"`
+	P1Elo           int32       `json:"p1_elo"`
+	P2Elo           int32       `json:"p2_elo"`
+	Date            time.Time   `json:"date"`
+	Winner          Winner      `json:"winner"`
+	Termination     Termination `json:"termination"`
+	MatchType       MatchType   `json:"match_type"`
+	Board           BoardType   `json:"board"`
+	MovementHistory string      `json:"movement_history"`
+	TimeBase        int32       `json:"time_base"`
+	TimeIncrement   int32       `json:"time_increment"`
+}
+
+func (q *Queries) GetPausedMatches(ctx context.Context, p1ID int64) ([]GetPausedMatchesRow, error) {
 	rows, err := q.db.Query(ctx, getPausedMatches, p1ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Match
+	var items []GetPausedMatchesRow
 	for rows.Next() {
-		var i Match
+		var i GetPausedMatchesRow
 		if err := rows.Scan(
 			&i.MatchID,
 			&i.P1ID,
 			&i.P2ID,
+			&i.P1Username,
+			&i.P2Username,
 			&i.P1Elo,
 			&i.P2Elo,
 			&i.Date,

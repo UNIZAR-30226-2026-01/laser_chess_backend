@@ -85,8 +85,8 @@ func parseMatches(data []db.Match) []MatchDTO {
 	return res
 }
 
-// Funcion auxiliar: pasar de db.Match a PausedMatchDTO
-func parsePausedMatches(data []db.Match) []PausedMatchDTO {
+// Funcion auxiliar: pasar de db a PausedMatchDTO
+func parsePausedMatches(data []db.GetPausedMatchesRow) []PausedMatchDTO {
 	var res []PausedMatchDTO
 
 	for _, value := range data {
@@ -96,6 +96,8 @@ func parsePausedMatches(data []db.Match) []PausedMatchDTO {
 			P2ID:            value.P2ID,
 			P1Elo:           value.P1Elo,
 			P2Elo:           value.P2Elo,
+			P1Username:      value.P1Username,
+			P2Username:      value.P2Username,
 			Date:            value.Date,
 			Winner:          value.Winner,
 			Termination:     value.Termination,
@@ -252,24 +254,28 @@ func (s *MatchService) SaveMatchResultTx(ctx context.Context,
 		}
 
 		// Actualizar XP y Dinero
-		err := q.UpdateStats(ctx, db.UpdateStatsParams{
-			AccountID: match.P1ID,
-			Level:     rewards.GetLevel(p1XP),
-			Xp:        p1XP,
-			Money:     p1Money,
-		})
-		if err != nil {
-			return err
+		if match.P1ID != 0 {
+			err := q.UpdateStats(ctx, db.UpdateStatsParams{
+				AccountID: match.P1ID,
+				Level:     rewards.GetLevel(p1XP),
+				Xp:        p1XP,
+				Money:     p1Money,
+			})
+			if err != nil {
+				return err
+			}
 		}
 
-		err = q.UpdateStats(ctx, db.UpdateStatsParams{
-			AccountID: match.P2ID,
-			Level:     rewards.GetLevel(p2XP),
-			Xp:        p2XP,
-			Money:     p2Money,
-		})
-		if err != nil {
-			return err
+		if match.P2ID != 0 {
+			err := q.UpdateStats(ctx, db.UpdateStatsParams{
+				AccountID: match.P2ID,
+				Level:     rewards.GetLevel(p2XP),
+				Xp:        p2XP,
+				Money:     p2Money,
+			})
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

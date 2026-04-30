@@ -36,6 +36,7 @@ func main() {
 	// INSERCIONES CORE (Siempre)
 	log.Println("--- Insertando datos CORE ---")
 	seedShopItems(ctx, dbPool)
+	seedAIUser(ctx, accountService)
 
 	// INSERCIONES DEBUG (Solo si SEED_DEBUG=true)
 	isDebug := os.Getenv("SEED_DEBUG") == "true"
@@ -50,6 +51,39 @@ func main() {
 	log.Println("Seeding completado con éxito.")
 }
 
+func seedAIUser(ctx context.Context, accSvc *account.AccountService) {
+	log.Println("Iniciando la inserción del usuario IA...")
+
+	username := fmt.Sprintf("AI")
+	password := fmt.Sprintf(os.Getenv("AI_PASSWORD"))
+	mail := fmt.Sprintf("ai@ai.ai")
+
+	// Comprobar si ya existe
+	_, err := accSvc.GetIDByUsername(ctx, username)
+	if err == nil {
+		return
+	}
+
+	dto := &account.CreateAccountDTO{
+		Username: username,
+		Mail:     mail,
+		Password: password,
+	}
+
+	// Crear la cuenta
+	_, err = accSvc.Create(ctx, dto)
+	if err != nil {
+		log.Printf("Error creando a %s: %v", username, err)
+		return
+	}
+
+	if err != nil {
+		log.Printf("Error actualizando stats (nivel/xp) para %s: %v", username, err)
+	}
+
+	log.Println("Usuarios IA validado/creado correctamente.")
+}
+
 func seedShopItems(ctx context.Context, dbPool *pgxpool.Pool) {
 	// Comprobar si ya hay items para no duplicar
 	var count int
@@ -59,21 +93,42 @@ func seedShopItems(ctx context.Context, dbPool *pgxpool.Pool) {
 		return
 	}
 
-	// Insertamos los items
+	// Insertamos los items explícitamente con su ID para mantener el orden exacto.
 	query := `
-	INSERT INTO shop_item (price, level_requisite, item_type, is_default) VALUES 
-		(0, 0, 'BOARD_SKIN', true),
-		(0, 0, 'PIECE_SKIN', true),
-		(0, 0, 'WIN_ANIMATION', true),
-		(50, 0, 'BOARD_SKIN', false),
-		(1000, 0, 'BOARD_SKIN', false),
-		(1, 10, 'BOARD_SKIN', false);
+	INSERT INTO shop_item (item_id, price, level_requisite, item_type, is_default) VALUES 
+		(1, 0, 0, 'PIECE_SKIN', true),      -- Classic
+		(2, 500, 5, 'PIECE_SKIN', false),   -- Soretro (Nivel 5)
+		(3, 1000, 10, 'PIECE_SKIN', false), -- Cats (Nivel 10)
+		(4, 0, 0, 'BOARD_SKIN', true),      -- Classic
+		(5, 500, 5, 'BOARD_SKIN', false),   -- Soretro (Nivel 5)
+		(6, 1000, 10, 'BOARD_SKIN', false), -- Cats (Nivel 10)
+		(7, 0, 0, 'WIN_ANIMATION', true),   -- Classic
+		(8, 500, 5, 'WIN_ANIMATION', false),-- Soretro (Nivel 5)
+		(9, 1000, 10, 'WIN_ANIMATION', false),-- Cats (Nivel 10)
+		(10, 0, 0, 'AVATAR', true),         -- bot1_lila (Defecto)
+		(11, 100, 2, 'AVATAR', false),      -- bot2_amarillo
+		(12, 150, 3, 'AVATAR', false),      -- bot3_magenta
+		(13, 200, 4, 'AVATAR', false),      -- bot4_naranja
+		(14, 250, 6, 'AVATAR', false),      -- bot5_amarillo
+		(15, 300, 7, 'AVATAR', false),      -- bot6_magenta
+		(16, 400, 8, 'AVATAR', false),      -- bot7_rojo
+		(17, 500, 10, 'AVATAR', false),     -- bot8_rojo
+		(18, 600, 11, 'AVATAR', false),     -- bot9_verde
+		(19, 750, 13, 'AVATAR', false),     -- bot10_lila
+		(20, 900, 14, 'AVATAR', false),     -- bot11_amarillo
+		(21, 1200, 15, 'AVATAR', false)     -- bot12_verde (Nivel Máximo 15)
+	ON CONFLICT (item_id) DO NOTHING;
 	`
 	_, err = dbPool.Exec(ctx, query)
 	if err != nil {
 		log.Printf("Error insertando items: %v", err)
 	} else {
-		log.Println("Items base insertados correctamente.")
+		log.Println("Items base insertados correctamente en orden.")
+
+		_, err = dbPool.Exec(ctx, "SELECT setval('shop_item_item_id_seq', (SELECT MAX(item_id) FROM shop_item));")
+		if err != nil {
+			log.Printf("Error actualizando la secuencia de item_id: %v", err)
+		}
 	}
 }
 

@@ -5,6 +5,7 @@ package rt
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
@@ -160,7 +161,7 @@ func (c *Client) RunAIClient() error {
 				if c.initStateReceived {
 					continue
 				}
-				if message.Extra == "0" {
+				if message.Extra == strconv.FormatInt(c.AccountID, 10) {
 					c.ToAI <- ClientSocketMessage{
 						Type:    "Move",
 						Content: "",
