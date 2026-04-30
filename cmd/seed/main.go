@@ -63,26 +63,26 @@ func seedShopItems(ctx context.Context, dbPool *pgxpool.Pool) {
 	query := `
 	INSERT INTO shop_item (item_id, price, level_requisite, item_type, is_default) VALUES 
 		(1, 0, 0, 'PIECE_SKIN', true),      -- Classic
-		(2, 100, 0, 'PIECE_SKIN', false),   -- Soretro
-		(3, 100, 0, 'PIECE_SKIN', false),   -- Cats
+		(2, 500, 5, 'PIECE_SKIN', false),   -- Soretro (Nivel 5)
+		(3, 1000, 10, 'PIECE_SKIN', false), -- Cats (Nivel 10)
 		(4, 0, 0, 'BOARD_SKIN', true),      -- Classic
-		(5, 100, 0, 'BOARD_SKIN', false),   -- Soretro
-		(6, 100, 0, 'BOARD_SKIN', false),   -- Cats
+		(5, 500, 5, 'BOARD_SKIN', false),   -- Soretro (Nivel 5)
+		(6, 1000, 10, 'BOARD_SKIN', false), -- Cats (Nivel 10)
 		(7, 0, 0, 'WIN_ANIMATION', true),   -- Classic
-		(8, 100, 0, 'WIN_ANIMATION', false),-- Soretro
-		(9, 100, 0, 'WIN_ANIMATION', false),-- Cats
-		(10, 0, 0, 'AVATAR', true),         -- bot1_lila
-		(11, 100, 0, 'AVATAR', false),      -- bot2_amarillo
-		(12, 100, 0, 'AVATAR', false),      -- bot3_magenta
-		(13, 100, 0, 'AVATAR', false),      -- bot4_naranja
-		(14, 100, 0, 'AVATAR', false),      -- bot5_amarillo
-		(15, 100, 0, 'AVATAR', false),      -- bot6_magenta
-		(16, 100, 0, 'AVATAR', false),      -- bot7_rojo
-		(17, 100, 0, 'AVATAR', false),      -- bot8_rojo
-		(18, 100, 0, 'AVATAR', false),      -- bot9_verde
-		(19, 100, 0, 'AVATAR', false),      -- bot10_lila
-		(20, 100, 0, 'AVATAR', false),      -- bot11_amarillo
-		(21, 100, 0, 'AVATAR', false)       -- bot12_verde
+		(8, 500, 5, 'WIN_ANIMATION', false),-- Soretro (Nivel 5)
+		(9, 1000, 10, 'WIN_ANIMATION', false),-- Cats (Nivel 10)
+		(10, 0, 0, 'AVATAR', true),         -- bot1_lila (Defecto)
+		(11, 100, 2, 'AVATAR', false),      -- bot2_amarillo
+		(12, 150, 3, 'AVATAR', false),      -- bot3_magenta
+		(13, 200, 4, 'AVATAR', false),      -- bot4_naranja
+		(14, 250, 6, 'AVATAR', false),      -- bot5_amarillo
+		(15, 300, 7, 'AVATAR', false),      -- bot6_magenta
+		(16, 400, 8, 'AVATAR', false),      -- bot7_rojo
+		(17, 500, 10, 'AVATAR', false),     -- bot8_rojo
+		(18, 600, 11, 'AVATAR', false),     -- bot9_verde
+		(19, 750, 13, 'AVATAR', false),     -- bot10_lila
+		(20, 900, 14, 'AVATAR', false),     -- bot11_amarillo
+		(21, 1200, 15, 'AVATAR', false)     -- bot12_verde (Nivel Máximo 15)
 	ON CONFLICT (item_id) DO NOTHING;
 	`
 	_, err = dbPool.Exec(ctx, query)
