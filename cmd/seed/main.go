@@ -59,21 +59,42 @@ func seedShopItems(ctx context.Context, dbPool *pgxpool.Pool) {
 		return
 	}
 
-	// Insertamos los items
+	// Insertamos los items explícitamente con su ID para mantener el orden exacto.
 	query := `
-	INSERT INTO shop_item (price, level_requisite, item_type, is_default) VALUES 
-		(0, 0, 'BOARD_SKIN', true),
-		(0, 0, 'PIECE_SKIN', true),
-		(0, 0, 'WIN_ANIMATION', true),
-		(50, 0, 'BOARD_SKIN', false),
-		(1000, 0, 'BOARD_SKIN', false),
-		(1, 10, 'BOARD_SKIN', false);
+	INSERT INTO shop_item (item_id, price, level_requisite, item_type, is_default) VALUES 
+		(1, 0, 0, 'PIECE_SKIN', true),      -- Classic
+		(2, 100, 0, 'PIECE_SKIN', false),   -- Soretro
+		(3, 100, 0, 'PIECE_SKIN', false),   -- Cats
+		(4, 0, 0, 'BOARD_SKIN', true),      -- Classic
+		(5, 100, 0, 'BOARD_SKIN', false),   -- Soretro
+		(6, 100, 0, 'BOARD_SKIN', false),   -- Cats
+		(7, 0, 0, 'WIN_ANIMATION', true),   -- Classic
+		(8, 100, 0, 'WIN_ANIMATION', false),-- Soretro
+		(9, 100, 0, 'WIN_ANIMATION', false),-- Cats
+		(10, 0, 0, 'AVATAR', true),         -- bot1_lila
+		(11, 100, 0, 'AVATAR', false),      -- bot2_amarillo
+		(12, 100, 0, 'AVATAR', false),      -- bot3_magenta
+		(13, 100, 0, 'AVATAR', false),      -- bot4_naranja
+		(14, 100, 0, 'AVATAR', false),      -- bot5_amarillo
+		(15, 100, 0, 'AVATAR', false),      -- bot6_magenta
+		(16, 100, 0, 'AVATAR', false),      -- bot7_rojo
+		(17, 100, 0, 'AVATAR', false),      -- bot8_rojo
+		(18, 100, 0, 'AVATAR', false),      -- bot9_verde
+		(19, 100, 0, 'AVATAR', false),      -- bot10_lila
+		(20, 100, 0, 'AVATAR', false),      -- bot11_amarillo
+		(21, 100, 0, 'AVATAR', false)       -- bot12_verde
+	ON CONFLICT (item_id) DO NOTHING;
 	`
 	_, err = dbPool.Exec(ctx, query)
 	if err != nil {
 		log.Printf("Error insertando items: %v", err)
 	} else {
-		log.Println("Items base insertados correctamente.")
+		log.Println("Items base insertados correctamente en orden.")
+
+		_, err = dbPool.Exec(ctx, "SELECT setval('shop_item_item_id_seq', (SELECT MAX(item_id) FROM shop_item));")
+		if err != nil {
+			log.Printf("Error actualizando la secuencia de item_id: %v", err)
+		}
 	}
 }
 

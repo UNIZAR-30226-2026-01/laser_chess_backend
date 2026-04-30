@@ -105,6 +105,7 @@ const (
 	ItemTypeBOARDSKIN    ItemType = "BOARD_SKIN"
 	ItemTypePIECESKIN    ItemType = "PIECE_SKIN"
 	ItemTypeWINANIMATION ItemType = "WIN_ANIMATION"
+	ItemTypeAVATAR       ItemType = "AVATAR"
 )
 
 func (e *ItemType) Scan(src interface{}) error {

@@ -53,13 +53,10 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 			Username:     body.Username,
 			Mail:         body.Mail,
 
-			// Por ahora forzamos que sean 1 y 2,
-			// pero habrá que hacer algún tipo de consulta
-			// o algo
-			BoardSkin:    1,
-			PieceSkin:    2,
-			WinAnimation: 3,
-			Avatar:       1,
+			BoardSkin:    4,  // ID 4: BOARD_SKIN (Classic)
+			PieceSkin:    1,  // ID 1: PIECE_SKIN (Classic)
+			WinAnimation: 7,  // ID 7: WIN_ANIMATION (Classic)
+			Avatar:       10, // ID 10: AVATAR (bot1_lila)
 		})
 		if errTx != nil {
 			return errTx
@@ -71,7 +68,18 @@ func (s *AccountService) Create(ctx context.Context, body *CreateAccountDTO) (*A
 			return errTx
 		}
 
-		//TODO: hacer que ownee los cosmeticos por defecto
+		// Hacer que el usuario ownee los cosméticos por defecto
+		defaultItemIDs := []int32{1, 4, 7, 10} // Los mismos IDs de arriba
+
+		for _, itemID := range defaultItemIDs {
+			errTx = q.CreateItemOwner(ctx, db.CreateItemOwnerParams{
+				UserID: res,
+				ItemID: itemID,
+			})
+			if errTx != nil {
+				return errTx
+			}
+		}
 
 		return nil
 	})
