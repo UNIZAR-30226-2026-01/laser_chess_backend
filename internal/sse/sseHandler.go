@@ -10,16 +10,16 @@ import (
 )
 
 func (es *EventSystem) EventHandler(ctx *gin.Context) {
-	// Cabeceras obligatorias para el SSE
+	// Cabeceras SSE
 	ctx.Writer.Header().Set("Content-Type", "text/event-stream")
 	ctx.Writer.Header().Set("Cache-Control", "no-cache")
 	ctx.Writer.Header().Set("Connection", "keep-alive")
 	ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 
-	// Canal para desconexion del cliente
 	clientGone := ctx.Request.Context().Done()
 
-	eventChan := make(chan Event)
+	eventChan := make(chan Event, 10)
+
 	userID, err := md.ExtractAccountID(ctx)
 	if err != nil {
 		apierror.DetectAndSendError(ctx, err)
@@ -27,6 +27,7 @@ func (es *EventSystem) EventHandler(ctx *gin.Context) {
 	}
 
 	es.SaveChan(userID, eventChan)
+	defer es.removeChan(userID, eventChan)
 
 	flusher, ok := ctx.Writer.(http.Flusher)
 	if !ok {
@@ -34,13 +35,18 @@ func (es *EventSystem) EventHandler(ctx *gin.Context) {
 		return
 	}
 
-	ctx.SSEvent("Init", "conected")
+	// Evento inicial
+	ctx.SSEvent("Init", "connected")
 	flusher.Flush()
+
+	fmt.Println("Cliente conectado:", userID)
+
 	for {
 		select {
 		case <-clientGone:
-			fmt.Println("Client disconnected")
+			fmt.Println("Cliente desconectado:", userID)
 			return
+
 		case event := <-eventChan:
 			ctx.SSEvent(event.EventType, event.Data)
 			flusher.Flush()
