@@ -1,0 +1,8 @@
+#Cosas de la bdd
+DB_USER=root
+DB_PASSWORD=1234
+DB_NAME=laser_chess_db
+DB_HOST=localhost
+DB_PORT=5432
+
+DB_URL=postgresql://root:1234@localhost:5432/laser_chess_db?sslmode=disable

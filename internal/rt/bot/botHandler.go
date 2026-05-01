@@ -58,7 +58,7 @@ func (h *BotHandler) BotMatch(c *gin.Context) {
 
 	// Construir bot
 	botClient := &rt.Client{}
-	botClient.InitClient(1, nil, true)
+	botClient.InitClient(0, nil, true)
 
 	ai := &rt.AIClient{}
 	ai.InitAIClient(botClient, game.Board_T(*dto.Board), *dto.Level)
