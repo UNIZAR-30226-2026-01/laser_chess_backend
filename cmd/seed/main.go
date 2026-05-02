@@ -196,16 +196,16 @@ func seedDebugMatchesAndFriends(ctx context.Context, dbPool *pgxpool.Pool) {
 	// Amistades
 	friendshipQuery := `
 	INSERT INTO public."friendship" (user1_id, user2_id, accepted_1, accepted_2) VALUES 
-		(1, 2, true, true),
-		(1, 3, false, true),
-		(1, 4, true, false)
+		(2, 3, true, true),
+		(2, 4, false, true),
+		(2, 5, true, false)
 	ON CONFLICT (user1_id, user2_id) DO NOTHING;
 	`
 	dbPool.Exec(ctx, friendshipQuery)
 
 	// Partidas
 	var matchCount int
-	dbPool.QueryRow(ctx, `SELECT COUNT(*) FROM public."match" WHERE p1_id = 1`).Scan(&matchCount)
+	dbPool.QueryRow(ctx, `SELECT COUNT(*) FROM public."match" WHERE p1_id = 2`).Scan(&matchCount)
 
 	if matchCount == 0 {
 		matchQuery := `
@@ -213,8 +213,8 @@ func seedDebugMatchesAndFriends(ctx context.Context, dbPool *pgxpool.Pool) {
 			p1_id, p2_id, p1_elo, p2_elo, "date", "winner", "termination", 
 			"match_type", board, movement_history, time_base, time_increment
 		) VALUES 
-		(1, 2, 1500, 1600, '2026-02-22T15:04:05Z', 'P1_WINS', 'LASER', 'RANKED', 'ACE', '', 300, 5),
-		(1, 2, 1500, 1600, '2026-02-22T15:04:05Z', 'NONE', 'UNFINISHED', 'RANKED', 'CURIOSITY', 'Rf1%j1,j4,i4,i5,j5,j9%{300};Tg6:f6%a8,a5,b5,b4,a4,a0%{300};Rb4%j1,j4,i4,i5,j5,j9%{295};Ri5xf6%a8,a5,b5,b4,e4,e5,f5,f6%{290};', 300, 0);
+		(2, 3, 1500, 1600, '2026-02-22T15:04:05Z', 'P1_WINS', 'LASER', 'RANKED', 'ACE', '', 300, 5),
+		(2, 3, 1500, 1600, '2026-02-22T15:04:05Z', 'NONE', 'UNFINISHED', 'RANKED', 'CURIOSITY', 'Rf1%j1,j4,i4,i5,j5,j9%{300};Tg6:f6%a8,a5,b5,b4,a4,a0%{300};Rb4%j1,j4,i4,i5,j5,j9%{295};Ri5xf6%a8,a5,b5,b4,e4,e5,f5,f6%{290};', 300, 0);
 		`
 		_, err := dbPool.Exec(ctx, matchQuery)
 		if err != nil {
