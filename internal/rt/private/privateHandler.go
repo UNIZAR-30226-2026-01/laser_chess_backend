@@ -93,6 +93,7 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	})
 	if err != nil {
 		apierror.DetectAndSendError(c, apierror.ErrNotFriends)
+		return
 	}
 
 	// Comprobar que el challenger no tiene ya una partida activa
