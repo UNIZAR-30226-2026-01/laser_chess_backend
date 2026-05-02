@@ -112,29 +112,29 @@ func parsePausedMatches(data []db.GetPausedMatchesRow) []PausedMatchDTO {
 	return res
 }
 
-func (s *MatchService) FinalizeMatch(ctx context.Context, summary MatchSummaryDTO) error {
+func (s *MatchService) FinalizeMatch(ctx context.Context, summary MatchSummaryDTO) (*MatchRewardsDTO, error) {
 	isRanked := summary.GameInfo.MatchType == "RANKED"
 
 	// Obtener elos actuales de los players
 	p1RatingData, err := s.ratingService.GetEloByID(ctx, summary.P1ID, summary.GameInfo.TimeBase)
 	if err != nil {
-		return fmt.Errorf("error obteniendo elo p1: %w", err)
+		return nil, fmt.Errorf("error obteniendo elo p1: %w", err)
 	}
 
 	p2RatingData, err := s.ratingService.GetEloByID(ctx, summary.P2ID, summary.GameInfo.TimeBase)
 	if err != nil {
-		return fmt.Errorf("error obteniendo elo p2: %w", err)
+		return nil, fmt.Errorf("error obteniendo elo p2: %w", err)
 	}
 
 	// Obtener xp, level y money actuales de los players
 	p1StatsData, err := s.accountService.GetStats(ctx, summary.P1ID)
 	if err != nil {
-		return fmt.Errorf("error obteniendo stats p1: %w", err)
+		return nil, fmt.Errorf("error obteniendo stats p1: %w", err)
 	}
 
 	p2StatsData, err := s.accountService.GetStats(ctx, summary.P2ID)
 	if err != nil {
-		return fmt.Errorf("error obteniendo stats p2: %w", err)
+		return nil, fmt.Errorf("error obteniendo stats p2: %w", err)
 	}
 
 	p1Elo := elo.Rating{
@@ -174,6 +174,19 @@ func (s *MatchService) FinalizeMatch(ctx context.Context, summary MatchSummaryDT
 		p1GainedMoney, p2GainedMoney = rewards.GetMatchMoney(p1RatingData.Value, p2RatingData.Value, scoreP1, isRanked)
 	}
 
+	// Calcular diferencia de elo
+	p1EloDiff := int32(newP1Rating.Value) - int32(p1Elo.Value)
+	p2EloDiff := int32(newP2Rating.Value) - int32(p2Elo.Value)
+
+	rewardsInfo := &MatchRewardsDTO{
+		P1XPDiff:    p1GainedXP,
+		P2XPDiff:    p2GainedXP,
+		P1MoneyDiff: p1GainedMoney,
+		P2MoneyDiff: p2GainedMoney,
+		P1EloDiff:   p1EloDiff,
+		P2EloDiff:   p2EloDiff,
+	}
+
 	// Preparar datos para query
 	matchData := MatchSaveDTO{
 		IsNewMatch: summary.IsNewMatch,
@@ -192,9 +205,12 @@ func (s *MatchService) FinalizeMatch(ctx context.Context, summary MatchSummaryDT
 	newP2Money := p2StatsData.Money + p2GainedMoney
 
 	// Guardar y actualizar elos y recompensas
-	return s.SaveMatchResultTx(ctx, matchData, newP1Rating, newP2Rating,
-		newP1XP, newP2XP, newP1Money, newP2Money)
+	err = s.SaveMatchResultTx(ctx, matchData, newP1Rating, newP2Rating, newP1XP, newP2XP, newP1Money, newP2Money)
+	if err != nil {
+		return nil, err
+	}
 
+	return rewardsInfo, nil
 }
 
 /*

@@ -58,3 +58,13 @@ type MatchSummaryDTO struct {
 	P2ID       int64
 	Date       time.Time
 }
+
+// Para pasarle a la room las rewards y el elo
+type MatchRewardsDTO struct {
+	P1XPDiff    int32
+	P2XPDiff    int32
+	P1MoneyDiff int32
+	P2MoneyDiff int32
+	P1EloDiff   int32
+	P2EloDiff   int32
+}

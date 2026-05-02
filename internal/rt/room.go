@@ -101,13 +101,54 @@ EmptyBroadcast:
 		Date:       time.Now(),
 	}
 
-	err := r.matchService.FinalizeMatch(context.Background(), summary)
+	// Recibimos los rewards y guardamos la partida
+	rewards, err := r.matchService.FinalizeMatch(context.Background(), summary)
 	if err != nil {
 		fmt.Println("ERROR finalizando la partida: ", err.Error())
 		// TODO: gestionar error
 	}
 
-	// TODO: mandar al cliente la info de elo y exp
+	// Enviar rewards y elo a los clientes
+	// SOLO si la partida ha acabado y no ha sido pausada
+	if rewards != nil && r.GameInfo.Termination != "UNFINISHED" {
+		// Mensajes P1
+		r.Player1.mu.RLock()
+		if r.Player1.Online {
+			// Mandar Rewards (XP y dinero)
+			r.Player1.Send <- game.ResponseToRoom{
+				Type:    game.Rewards,
+				Content: strconv.Itoa(int(rewards.P1XPDiff)),
+				Extra:   strconv.Itoa(int(rewards.P1MoneyDiff)),
+			}
+			// Mandar Elo solo si es Ranked
+			if r.GameInfo.MatchType == "RANKED" {
+				r.Player1.Send <- game.ResponseToRoom{
+					Type:    game.EloUpdate,
+					Content: strconv.Itoa(int(rewards.P1EloDiff)),
+				}
+			}
+		}
+		r.Player1.mu.RUnlock()
+
+		// Mensajes P2
+		r.Player2.mu.RLock()
+		if r.Player2.Online {
+			// Mandar Rewards (XP y dinero)
+			r.Player2.Send <- game.ResponseToRoom{
+				Type:    game.Rewards,
+				Content: strconv.Itoa(int(rewards.P2XPDiff)),
+				Extra:   strconv.Itoa(int(rewards.P2MoneyDiff)),
+			}
+			// Mandar Elo solo si es Ranked
+			if r.GameInfo.MatchType == "RANKED" {
+				r.Player2.Send <- game.ResponseToRoom{
+					Type:    game.EloUpdate,
+					Content: strconv.Itoa(int(rewards.P2EloDiff)),
+				}
+			}
+		}
+		r.Player2.mu.RUnlock()
+	}
 
 	fmt.Println("Antes de enviar el EOC a los clientes")
 	// Avisar y cerrar los clientes
