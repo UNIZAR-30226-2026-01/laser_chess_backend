@@ -26,10 +26,15 @@ type Room struct {
 	P1Pause bool
 	P2Pause bool
 
-	Broadcast   chan game.ResponseToRoom
-	RefreshChan chan bool
+	Broadcast     chan game.ResponseToRoom
+	RefreshChan   chan bool
+	ReconnectChan chan ReconnectionInfo
 
 	matchService *match.MatchService
+}
+
+type ReconnectionInfo struct {
+	NewClient *Client
 }
 
 func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
@@ -42,6 +47,7 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	r.P2Pause = false
 	r.Broadcast = make(chan game.ResponseToRoom, 2)
 	r.RefreshChan = make(chan bool)
+	r.ReconnectChan = make(chan ReconnectionInfo)
 
 	r.matchService = matchService
 
@@ -101,13 +107,54 @@ EmptyBroadcast:
 		Date:       time.Now(),
 	}
 
-	err := r.matchService.FinalizeMatch(context.Background(), summary)
+	// Recibimos los rewards y guardamos la partida
+	rewards, err := r.matchService.FinalizeMatch(context.Background(), summary)
 	if err != nil {
 		fmt.Println("ERROR finalizando la partida: ", err.Error())
 		// TODO: gestionar error
 	}
 
-	// TODO: mandar al cliente la info de elo y exp
+	// Enviar rewards y elo a los clientes
+	// SOLO si la partida ha acabado y no ha sido pausada
+	if rewards != nil && r.GameInfo.Termination != "UNFINISHED" {
+		// Mensajes P1
+		r.Player1.mu.RLock()
+		if r.Player1.Online {
+			// Mandar Rewards (XP y dinero)
+			r.Player1.Send <- game.ResponseToRoom{
+				Type:    game.Rewards,
+				Content: strconv.Itoa(int(rewards.P1XPDiff)),
+				Extra:   strconv.Itoa(int(rewards.P1MoneyDiff)),
+			}
+			// Mandar Elo solo si es Ranked
+			if r.GameInfo.MatchType == "RANKED" {
+				r.Player1.Send <- game.ResponseToRoom{
+					Type:    game.EloUpdate,
+					Content: strconv.Itoa(int(rewards.P1EloDiff)),
+				}
+			}
+		}
+		r.Player1.mu.RUnlock()
+
+		// Mensajes P2
+		r.Player2.mu.RLock()
+		if r.Player2.Online {
+			// Mandar Rewards (XP y dinero)
+			r.Player2.Send <- game.ResponseToRoom{
+				Type:    game.Rewards,
+				Content: strconv.Itoa(int(rewards.P2XPDiff)),
+				Extra:   strconv.Itoa(int(rewards.P2MoneyDiff)),
+			}
+			// Mandar Elo solo si es Ranked
+			if r.GameInfo.MatchType == "RANKED" {
+				r.Player2.Send <- game.ResponseToRoom{
+					Type:    game.EloUpdate,
+					Content: strconv.Itoa(int(rewards.P2EloDiff)),
+				}
+			}
+		}
+		r.Player2.mu.RUnlock()
+	}
 
 	fmt.Println("Antes de enviar el EOC a los clientes")
 	// Avisar y cerrar los clientes
@@ -189,6 +236,9 @@ func (r *Room) run() {
 				// Cerrar la room si acaba la partida
 				return
 			}
+		case message := <-r.ReconnectChan:
+			r.ReconnectProcedure(message)
+
 		case <-r.RefreshChan:
 			// No hace nada, es para refrescar las referencias
 		}
@@ -394,32 +444,41 @@ func (r *Room) NotifyReconnection(reconected *Client, opponent *Client) {
 	}
 }
 
-func (r *Room) ReconnectProcedure(reconected *Client, opponent *Client,
-	substituted **Client) {
-	oldClient := *substituted
-	oldClient.Reconnect <- true
+func (r *Room) ReconnectProcedure(info ReconnectionInfo) {
+	var substituted **Client
+	var opponent *Client
 
-	// Cerrar el cliente si esta online
-	oldClient.mu.RLock()
-	if oldClient.Online {
-		oldClient.Send <- game.ResponseToRoom{Type: game.EOC}
+	if info.NewClient.AccountID == r.Player1.AccountID {
+		substituted = &r.Player1
+		opponent = r.Player2
+	} else {
+		substituted = &r.Player2
+		opponent = r.Player1
 	}
-	oldClient.mu.RUnlock()
 
-	// Sustituirlo
-	*substituted = reconected
-	r.RefreshChan <- true
-	close(oldClient.Send)
+	// Guardamos referencia al viejo para avisarle que ya puede morir
+	oldClient := *substituted
 
-	r.NotifyReconnection(reconected, opponent)
+	select {
+	case oldClient.Send <- game.ResponseToRoom{Type: game.EOC}:
+		fmt.Println("Señal de cierre enviada al cliente antiguo")
+	default:
+	}
+
+	select {
+	case oldClient.Reconnect <- true:
+	default:
+	}
+
+	// 2. Hacemos el cambio físico de puntero
+	*substituted = info.NewClient
+
+	// 3. Notificamos (usando ya los punteros actualizados)
+	r.NotifyReconnection(info.NewClient, opponent)
+
+	fmt.Println("Sustitución completada en el hilo principal")
 }
 
 func (r *Room) ReconnectPlayer(player *Client) {
-
-	if player.AccountID == r.Player1.AccountID {
-		r.ReconnectProcedure(player, r.Player2, &r.Player1)
-	} else if player.AccountID == r.Player2.AccountID {
-		r.ReconnectProcedure(player, r.Player1, &r.Player2)
-	}
-
+	r.ReconnectChan <- ReconnectionInfo{NewClient: player}
 }

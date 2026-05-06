@@ -20,4 +20,7 @@ const (
 
 	Disconnection GameMessageType = "Disconnection"
 	Reconnection  GameMessageType = "Reconnection"
+
+	Rewards   GameMessageType = "Rewards"
+	EloUpdate GameMessageType = "EloUpdate"
 )
