@@ -35,7 +35,7 @@ type MatchRequest struct {
 	FoundChan    chan bool // Creado aqui
 	CancelChan   chan bool
 	ListElement  *list.Element // Asignado aqui
-	Board		 int
+	Board        int
 }
 
 type MatchmakingFound struct {
@@ -107,7 +107,6 @@ func (ph *PublicHub) AddPlayerToMatchmaking(request *MatchRequest) {
 	// Y buscamos
 	go ph.Search(request)
 
-	return
 }
 
 // Busqueda de oponente por ELO
