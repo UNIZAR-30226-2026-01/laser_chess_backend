@@ -64,6 +64,7 @@ func SetupRouter(store *db.Store,
 	itemHandler := item.NewHandler(itemService)
 
 	deviceService := device.NewService(store)
+	deviceHandler := device.NewHandler(deviceService)
 
 	// Creacion del SSE para eventos y notificaciones
 	fcm, err := sse.InitFirebase(deviceService)
@@ -159,6 +160,12 @@ func SetupRouter(store *db.Store,
 	{
 		eventRoute := protected.Group("/events")
 		eventRoute.GET("", eventSystem.EventHandler)
+	}
+
+	//  Device routes
+	{
+		deviceRoute := protected.Group("/device")
+		deviceRoute.POST("/register", deviceHandler.RegisterDevice)
 	}
 
 	// Endpoints de websockets
