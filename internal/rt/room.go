@@ -427,10 +427,13 @@ func (r *Room) NotifyReconnection(reconected *Client, opponent *Client) {
 	opponent.Send <- game.ResponseToRoom{Type: game.Reconnection}
 
 	// Mensajes al jugador reconectado
+	mensajeTimers := strconv.FormatInt(r.Game.GetPlayerTimer(reconected.AccountID), 10)
+	mensajeTimers += "%"
+	mensajeTimers += strconv.FormatInt(r.Game.GetPlayerTimer(opponent.AccountID), 10)
 	reconected.Send <- game.ResponseToRoom{
 		Type:    game.Reconnection,
 		Content: strconv.FormatInt(opponent.AccountID, 10),
-		Extra:   strconv.FormatInt(r.Game.GetPlayerTimer(reconected.AccountID), 10),
+		Extra:   mensajeTimers,
 	}
 
 	r.Game.FromRoom <- game.RoomMsg{
