@@ -26,10 +26,15 @@ type Room struct {
 	P1Pause bool
 	P2Pause bool
 
-	Broadcast   chan game.ResponseToRoom
-	RefreshChan chan bool
+	Broadcast     chan game.ResponseToRoom
+	RefreshChan   chan bool
+	ReconnectChan chan ReconnectionInfo
 
 	matchService *match.MatchService
+}
+
+type ReconnectionInfo struct {
+	NewClient *Client
 }
 
 func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
@@ -42,6 +47,7 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	r.P2Pause = false
 	r.Broadcast = make(chan game.ResponseToRoom, 2)
 	r.RefreshChan = make(chan bool)
+	r.ReconnectChan = make(chan ReconnectionInfo)
 
 	r.matchService = matchService
 
@@ -230,6 +236,9 @@ func (r *Room) run() {
 				// Cerrar la room si acaba la partida
 				return
 			}
+		case message := <-r.ReconnectChan:
+			r.ReconnectProcedure(message)
+
 		case <-r.RefreshChan:
 			// No hace nada, es para refrescar las referencias
 		}
@@ -438,32 +447,41 @@ func (r *Room) NotifyReconnection(reconected *Client, opponent *Client) {
 	}
 }
 
-func (r *Room) ReconnectProcedure(reconected *Client, opponent *Client,
-	substituted **Client) {
-	oldClient := *substituted
-	oldClient.Reconnect <- true
+func (r *Room) ReconnectProcedure(info ReconnectionInfo) {
+	var substituted **Client
+	var opponent *Client
 
-	// Cerrar el cliente si esta online
-	oldClient.mu.RLock()
-	if oldClient.Online {
-		oldClient.Send <- game.ResponseToRoom{Type: game.EOC}
+	if info.NewClient.AccountID == r.Player1.AccountID {
+		substituted = &r.Player1
+		opponent = r.Player2
+	} else {
+		substituted = &r.Player2
+		opponent = r.Player1
 	}
-	oldClient.mu.RUnlock()
 
-	// Sustituirlo
-	*substituted = reconected
-	r.RefreshChan <- true
-	close(oldClient.Send)
+	// Guardamos referencia al viejo para avisarle que ya puede morir
+	oldClient := *substituted
 
-	r.NotifyReconnection(reconected, opponent)
+	select {
+	case oldClient.Send <- game.ResponseToRoom{Type: game.EOC}:
+		fmt.Println("Señal de cierre enviada al cliente antiguo")
+	default:
+	}
+
+	select {
+	case oldClient.Reconnect <- true:
+	default:
+	}
+
+	// 2. Hacemos el cambio físico de puntero
+	*substituted = info.NewClient
+
+	// 3. Notificamos (usando ya los punteros actualizados)
+	r.NotifyReconnection(info.NewClient, opponent)
+
+	fmt.Println("Sustitución completada en el hilo principal")
 }
 
 func (r *Room) ReconnectPlayer(player *Client) {
-
-	if player.AccountID == r.Player1.AccountID {
-		r.ReconnectProcedure(player, r.Player2, &r.Player1)
-	} else if player.AccountID == r.Player2.AccountID {
-		r.ReconnectProcedure(player, r.Player1, &r.Player2)
-	}
-
+	r.ReconnectChan <- ReconnectionInfo{NewClient: player}
 }
