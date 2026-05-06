@@ -423,6 +423,8 @@ func (r *Room) managePauseReject(player *Client) {
 
 func (r *Room) NotifyReconnection(reconected *Client, opponent *Client) {
 
+	time.Sleep(250 * time.Millisecond)
+
 	// Mensajes al jugador no reconectado
 	opponent.Send <- game.ResponseToRoom{Type: game.Reconnection}
 
