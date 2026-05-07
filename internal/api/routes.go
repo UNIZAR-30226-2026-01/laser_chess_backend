@@ -39,8 +39,7 @@ func SetupRouter(store *db.Store,
 	// Cross-Origin Resource Sharing para conexion con Angular
 	router.Use(cors.New(cors.Config{
 		// Habrá que cambiar esto por la url real en produccion
-		AllowOrigins:     []string{"http://localhost:4200"},
-		AllowOrigins:     []string{"https://laserchess.elcangrejo.es"},
+		AllowOrigins:     []string{"http://localhost:4200", "https://laserchess.elcangrejo.es"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
