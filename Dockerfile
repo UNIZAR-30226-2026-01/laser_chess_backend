@@ -21,7 +21,7 @@ COPY . .
 RUN sqlc generate
 
 # Compilamos el backend apuntando a la ruta correcta (equivalente a 'make build')
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/main.go
+RUN GOOS=linux go build -a -installsuffix cgo -o main ./cmd/main.go
 
 # Etapa 2: Imagen ultra-ligera
 FROM scratch
