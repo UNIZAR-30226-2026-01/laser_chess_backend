@@ -41,7 +41,7 @@ func (ai *AIClient) run() {
 		move := game.GetBestMove(ai.board, ai.log, ai.lvl)
 
 		// Tiempo para no saturar al usuario
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 
 		ai.client.FromAI <- ClientSocketMessage{
 			Type:    "Move",

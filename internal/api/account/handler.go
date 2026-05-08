@@ -155,17 +155,40 @@ func (h *AccountHandler) GetXPInfo(c *gin.Context) {
 		return
 	}
 
+	data, err := h.accountService.GetByID(c.Request.Context(), id)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	xp, requiredXp := rewards.GetXPBarInfo(*data.Xp)
+
+	body := XpBarDTO{
+		Xp:         xp,
+		RequiredXp: requiredXp,
+	}
+
+	c.JSON(http.StatusOK, body)
+}
+
+// Devuelve la info necesaria para la barra de xp de un user especifico
+func (h *AccountHandler) GetXPInfoByID(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		apierror.SendError(c, http.StatusBadRequest, err)
+		return
+	}
 
 	data, err := h.accountService.GetByID(c.Request.Context(), id)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return
 	}
-	
-	xp, requiredXp := rewards.GetXPBarInfo(*data.Xp);
+
+	xp, requiredXp := rewards.GetXPBarInfo(*data.Xp)
 
 	body := XpBarDTO{
-		Xp: xp,
+		Xp:         xp,
 		RequiredXp: requiredXp,
 	}
 

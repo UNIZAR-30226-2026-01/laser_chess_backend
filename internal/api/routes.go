@@ -14,12 +14,14 @@ import (
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/match"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/middleware"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/api/rating"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/auth"
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/bot"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/private"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/public"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/reconnection"
+	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/rt/ticket"
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/sse"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -64,6 +66,11 @@ func SetupRouter(store *db.Store,
 	itemHandler := item.NewHandler(itemService)
 
 	deviceService := device.NewService(store)
+	deviceHandler := device.NewHandler(deviceService)
+
+	// Store de tickets para autenticacion de ws
+	wsTicketStore := auth.NewWsTicketStore()
+	ticketHandler := ticket.NewHandler(wsTicketStore)
 
 	// Creacion del SSE para eventos y notificaciones
 	fcm, err := sse.InitFirebase(deviceService)
@@ -92,7 +99,7 @@ func SetupRouter(store *db.Store,
 	// de seguridad y se pueden hacer pruebas sin preocuparse por JWTs
 
 	if os.Getenv("PROTECTED") != "FALSE" {
-		protected.Use(middleware.AuthMiddleware())
+		protected.Use(middleware.AuthMiddleware(wsTicketStore))
 	}
 
 	// Account routes
@@ -101,6 +108,7 @@ func SetupRouter(store *db.Store,
 		accountRoute.GET("/", accountHandler.GetOwnAccount)
 		accountRoute.GET("/:id", accountHandler.GetOtherByID)
 		accountRoute.GET("/xp", accountHandler.GetXPInfo)
+		accountRoute.GET("/xp/:id", accountHandler.GetXPInfoByID)
 		accountRoute.POST("/update", accountHandler.Update)
 		accountRoute.DELETE("/delete", accountHandler.Delete)
 		accountRoute.PUT("/passwd", accountHandler.ChangePassword)
@@ -161,6 +169,12 @@ func SetupRouter(store *db.Store,
 		eventRoute.GET("", eventSystem.EventHandler)
 	}
 
+	//  Device routes
+	{
+		deviceRoute := protected.Group("/device")
+		deviceRoute.POST("/register", deviceHandler.RegisterDevice)
+	}
+
 	// Endpoints de websockets
 	privateHandler := private.NewPrivateHandler(privateHub, registry, accountService,
 		matchService, ratingService, eventSystem, friendshipService)
@@ -175,11 +189,15 @@ func SetupRouter(store *db.Store,
 	{
 		rtRoute := protected.Group("/rt/")
 
+		// Ticket de autentificacion
+		rtRoute.GET("/ticket", ticketHandler.GetWSTicket)
+
 		// Partidas privadas
 		rtRoute.GET("/challenge", privateHandler.Challenge)
 		rtRoute.GET("/challenge/accept", privateHandler.AcceptChallenge)
 		rtRoute.GET("/challenge/reject", privateHandler.RejectChallenge)
 		rtRoute.GET("/challenges", privateHandler.GetChallenges)
+		rtRoute.GET("/challenges/count", privateHandler.GetChallengesCount)
 
 		// Partidas publicas
 		rtRoute.GET("matchmaking", publicHandler.GoIntoMatchmaking)
