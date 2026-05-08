@@ -49,6 +49,7 @@ func main() {
 	}
 
 	log.Println("Seeding completado con éxito.")
+	return 0
 }
 
 func seedAIUser(ctx context.Context, accSvc *account.AccountService) {
