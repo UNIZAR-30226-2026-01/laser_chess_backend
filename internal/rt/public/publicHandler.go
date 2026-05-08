@@ -171,14 +171,16 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 
 	ResponseChan := make(chan *rt.MatchmakingFound, 1)
 	ErrorChan := make(chan error, 1)
+	CancelChan := make(chan bool, 1)
 
-	go h.hub.AddPlayerToMatchmaking(&rt.MatchRequest{ // TODO: anadir canal de cancel
+	go h.hub.AddPlayerToMatchmaking(&rt.MatchRequest{
 		PlayerClient: client,
 		PlayerELO:    playerELO,
 		PlayerRD:     playerRD,
 		GameMode:     i,
 		ResponseChan: ResponseChan,
 		ErrorChan:    ErrorChan,
+		CancelChan:   CancelChan,
 		Ranked:       dto.Ranked,
 		Board:        dto.Board,
 	})
@@ -194,7 +196,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		conn.Close()
 		return
 	case <-client.Done:
-		// TODO: sacar de la cola
+		CancelChan <- true
 		return
 	}
 
