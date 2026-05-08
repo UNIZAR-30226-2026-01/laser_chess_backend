@@ -107,7 +107,6 @@ func (ph *PublicHub) AddPlayerToMatchmaking(request *MatchRequest) {
 	// Y buscamos
 	go ph.Search(request)
 
-	return
 }
 
 // Busqueda de oponente por ELO

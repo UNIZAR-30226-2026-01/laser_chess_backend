@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/game"
 	"github.com/gorilla/websocket"
@@ -109,6 +110,7 @@ func (c *Client) WritePump() error {
 				return err
 			}
 			if message.Type == game.EOC {
+				time.Sleep(500 * time.Millisecond)
 				return nil
 			}
 		case <-c.Done:

@@ -39,7 +39,7 @@ func SetupRouter(store *db.Store,
 	// Cross-Origin Resource Sharing para conexion con Angular
 	router.Use(cors.New(cors.Config{
 		// Habrá que cambiar esto por la url real en produccion
-		AllowOrigins:     []string{"http://localhost:4200"},
+		AllowOrigins:     []string{"http://localhost:4200", "https://laserchess.elcangrejo.es"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -64,6 +64,7 @@ func SetupRouter(store *db.Store,
 	itemHandler := item.NewHandler(itemService)
 
 	deviceService := device.NewService(store)
+	deviceHandler := device.NewHandler(deviceService)
 
 	// Creacion del SSE para eventos y notificaciones
 	fcm, err := sse.InitFirebase(deviceService)
@@ -159,6 +160,12 @@ func SetupRouter(store *db.Store,
 	{
 		eventRoute := protected.Group("/events")
 		eventRoute.GET("", eventSystem.EventHandler)
+	}
+
+	//  Device routes
+	{
+		deviceRoute := protected.Group("/device")
+		deviceRoute.POST("/register", deviceHandler.RegisterDevice)
 	}
 
 	// Endpoints de websockets
