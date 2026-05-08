@@ -173,7 +173,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 	ErrorChan := make(chan error, 1)
 	CancelChan := make(chan bool)
 
-	go h.hub.AddPlayerToMatchmaking(&rt.MatchRequest{ // TODO: anadir canal de cancel
+	go h.hub.AddPlayerToMatchmaking(&rt.MatchRequest{
 		PlayerClient: client,
 		PlayerELO:    playerELO,
 		PlayerRD:     playerRD,
