@@ -35,7 +35,7 @@ type MatchRequest struct {
 	FoundChan    chan bool // Creado aqui
 	CancelChan   chan bool
 	ListElement  *list.Element // Asignado aqui
-	Board		 int
+	Board        int
 }
 
 type MatchmakingFound struct {

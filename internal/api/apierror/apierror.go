@@ -29,6 +29,7 @@ var (
 	ErrNotFriends              = errors.New("users are not friends")
 	ErrAlreadyInMatch          = errors.New("user already in match")
 	ErrAlreadyInQueue          = errors.New("user already in queue")
+	ErrNotInQueue              = errors.New("user not found in queue")
 	ErrMatchAlreadyFinished    = errors.New("match is already finished")
 	ErrNotYourMatch            = errors.New("match is not yours")
 	ErrNotAValidGameMode       = errors.New("time base and/or increment invalid")

@@ -16,7 +16,7 @@ seed:
 	go run cmd/seed/main.go
 
 seed-debug:
-	SEED_DEBUG=true go run cmd/seed/main.go
+	go run cmd/seed/main.go
 
 sqlc: 
 	sqlc generate
