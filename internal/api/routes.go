@@ -188,6 +188,7 @@ func SetupRouter(store *db.Store,
 		rtRoute.GET("/challenge/accept", privateHandler.AcceptChallenge)
 		rtRoute.GET("/challenge/reject", privateHandler.RejectChallenge)
 		rtRoute.GET("/challenges", privateHandler.GetChallenges)
+		rtRoute.GET("/challenges/count", privateHandler.GetChallengesCount)
 
 		// Partidas publicas
 		rtRoute.GET("matchmaking", publicHandler.GoIntoMatchmaking)

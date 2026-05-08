@@ -26,3 +26,7 @@ type PendingChallengeDTO struct {
 type AcceptChallengeDTO struct {
 	ChallengerUsername string `form:"username" binding:"required"`
 }
+
+type RequestCount struct {
+	Count int32 `json:"count" binding:"required"`
+}

@@ -358,3 +358,25 @@ func (h *PrivateHandler) GetChallenges(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// GetChallengesCount — devuelve el numero de retos pendientes recibidos por el usuario.
+//
+// Response: int
+func (h *PrivateHandler) GetChallengesCount(c *gin.Context) {
+	accountID, err := middleware.ExtractAccountID(c)
+	if err != nil {
+		apierror.DetectAndSendError(c, err)
+		return
+	}
+
+	challengerIDs := h.hub.GetChallenges(accountID)
+
+	count := 0
+	for _, cID := range challengerIDs {
+		if info := h.hub.GetChallengeInfo(cID); info != nil {
+			count++
+		}
+	}
+
+	c.JSON(http.StatusOK, RequestCount{Count: int32(count)})
+}
