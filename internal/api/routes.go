@@ -102,6 +102,7 @@ func SetupRouter(store *db.Store,
 		accountRoute.GET("/", accountHandler.GetOwnAccount)
 		accountRoute.GET("/:id", accountHandler.GetOtherByID)
 		accountRoute.GET("/xp", accountHandler.GetXPInfo)
+		accountRoute.GET("/xp/:id", accountHandler.GetXPInfoByID)
 		accountRoute.POST("/update", accountHandler.Update)
 		accountRoute.DELETE("/delete", accountHandler.Delete)
 		accountRoute.PUT("/passwd", accountHandler.ChangePassword)
