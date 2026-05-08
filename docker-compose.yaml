@@ -12,6 +12,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./internal/db/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql:ro
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   backend:
     build: .  # Portainer que usa el Dockerfile de la raíz
@@ -19,6 +25,9 @@ services:
       - "8081:8080"
     environment:
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres_db:5432/${DB_NAME}?sslmode=disable
+    depends_on:
+      postgres_db:
+        condition: service_healthy
     restart: always
 
   backend-init:
@@ -28,7 +37,9 @@ services:
     command: make seed-debug
     environment:
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres_db:5432/${DB_NAME}?sslmode=disable
-    restart: always
+    depends_on:
+      postgres_db:
+        condition: service_healthy
 
 volumes:
   postgres_data:
