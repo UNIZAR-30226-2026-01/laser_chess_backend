@@ -21,6 +21,11 @@ func AuthMiddleware(wsStore *auth.WsTicketStore) gin.HandlerFunc {
 
 		header := c.GetHeader("Authorization")
 
+		if header == "" {
+			header = c.Query("token")
+			header = "Bearer " + header
+		}
+
 		if header != "" && strings.HasPrefix(header, "Bearer ") && header != "Bearer " {
 			tokenString := strings.TrimPrefix(header, "Bearer ")
 			accountID, err = auth.ValidateAccessToken(tokenString)
