@@ -148,6 +148,7 @@ type MatchType string
 const (
 	MatchTypePRIVATE MatchType = "PRIVATE"
 	MatchTypeRANKED  MatchType = "RANKED"
+	MatchTypeCASUAL  MatchType = "CASUAL"
 	MatchTypeBOTS    MatchType = "BOTS"
 )
 

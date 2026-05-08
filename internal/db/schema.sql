@@ -15,6 +15,7 @@ CREATE TYPE "board_type" AS ENUM (
 CREATE TYPE "match_type" AS ENUM (
 	'PRIVATE',
 	'RANKED',
+    'CASUAL',
 	'BOTS'
 );
 
