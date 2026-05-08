@@ -33,7 +33,7 @@ services:
     build: 
       context: .
       target: builder 
-    command: make seed-debug
+    command: make reset-db-debug
     environment:
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres_db:5432/${DB_NAME}?sslmode=disable
     depends_on:
