@@ -14,26 +14,37 @@ import (
 // Middleware que intercepta peticiones http a endpoints protegidos
 // y solo deja pasar si hay un token valido
 // Setea el userID en el context para que lo puedan usar los handlers
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(wsStore *auth.WsTicketStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var accountID int64
+		var err error
+
 		header := c.GetHeader("Authorization")
-		if header == "" {
-			header = c.Query("token")
-			header = "Bearer " + header
-		}
 
-		if header == "Bearer " || !strings.HasPrefix(header, "Bearer ") {
-			error := apierror.ErrInvalidToken
-			apierror.DetectAndSendError(c, error)
-			return
-		}
-
-		tokenString := strings.TrimPrefix(header, "Bearer ")
-		accountID, err := auth.ValidateAccessToken(tokenString)
-		if err != nil {
-			error := apierror.ErrInvalidToken
-			apierror.DetectAndSendError(c, error)
-			return
+		if header != "" && strings.HasPrefix(header, "Bearer ") && header != "Bearer " {
+			tokenString := strings.TrimPrefix(header, "Bearer ")
+			accountID, err = auth.ValidateAccessToken(tokenString)
+			if err != nil {
+				apierror.DetectAndSendError(c, apierror.ErrInvalidToken)
+				c.Abort()
+				return
+			}
+		} else {
+			ticket := c.Query("ticket")
+			if ticket != "" {
+				var isValid bool
+				accountID, isValid = wsStore.GetAndDelete(ticket)
+				if !isValid {
+					apierror.DetectAndSendError(c, apierror.ErrInvalidToken)
+					c.Abort()
+					return
+				}
+			} else {
+				// No hay ni JWT válido ni Ticket
+				apierror.DetectAndSendError(c, apierror.ErrInvalidToken)
+				c.Abort()
+				return
+			}
 		}
 
 		// Guardamos el ID para que los handlers sepan quién es el usuario
