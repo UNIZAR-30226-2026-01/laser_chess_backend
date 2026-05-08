@@ -192,8 +192,9 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 	select {
 	case opponentMatchmakingInfo = <-ResponseChan:
 		opponentClient = opponentMatchmakingInfo.Client
-	case err := <-ErrorChan:
-		apierror.DetectAndSendError(c, err)
+	case <-ErrorChan:
+		//apierror.DetectAndSendError(c, err)
+		// No se si hay que poner algo aqui
 		conn.Close()
 		return
 	case <-client.Done:
