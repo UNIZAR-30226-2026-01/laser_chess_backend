@@ -8,13 +8,13 @@ import (
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 )
 
-type itemService struct {
+type ItemService struct {
 	store          *db.Store
 	accountService *account.AccountService
 }
 
-func NewService(s *db.Store, accounts *account.AccountService) *itemService {
-	return &itemService{store: s, accountService: accounts}
+func NewService(s *db.Store, accounts *account.AccountService) *ItemService {
+	return &ItemService{store: s, accountService: accounts}
 }
 
 /*
@@ -29,7 +29,7 @@ una cuenta de usuario dado un JSON.
 contrario.
 *
 */
-func (s *itemService) Create(
+func (s *ItemService) Create(
 	ctx context.Context,
 	accountID int64,
 	itemID int32,
@@ -95,7 +95,7 @@ su id.
 contrario.
 *
 */
-func (s *itemService) GetByID(ctx context.Context, itemID int32) (*ShopItemDTO, error) {
+func (s *ItemService) GetByID(ctx context.Context, itemID int32) (*ShopItemDTO, error) {
 
 	res, err := s.store.GetShopItem(ctx, itemID)
 	if err != nil {
@@ -124,7 +124,7 @@ una cuenta dado su id.
 contrario.
 *
 */
-func (s *itemService) GetUserItems(ctx context.Context, userID int64) ([]ShopItemDTO, error) {
+func (s *ItemService) GetUserItems(ctx context.Context, userID int64) ([]ShopItemDTO, error) {
 
 	res, err := s.store.GetUserItems(ctx, userID)
 	if err != nil {
@@ -134,7 +134,7 @@ func (s *itemService) GetUserItems(ctx context.Context, userID int64) ([]ShopIte
 	return parseUserItems(res), nil
 }
 
-func (s *itemService) ListShopItems(ctx context.Context) ([]ShopItemDTO, error) {
+func (s *ItemService) ListShopItems(ctx context.Context) ([]ShopItemDTO, error) {
 	items, err := s.store.ListShopItems(ctx)
 	return parseShopItemToDTO(items), err
 }
