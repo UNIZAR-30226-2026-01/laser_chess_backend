@@ -5,6 +5,7 @@ package device
 
 import (
 	"context"
+	"fmt"
 
 	db "github.com/UNIZAR-30226-2026-01/laser_chess_backend/internal/db/sqlc"
 )
@@ -19,8 +20,9 @@ func NewService(s *db.Store) *DeviceService {
 
 // Registra un nuevo dispositivo al usuario con id == DeviceID
 func (s *DeviceService) RegisterDevice(ctx context.Context,
-	token RegisterDeviceDTO, userID int64) (int64, error) {
+	token DeviceDTO, userID int64) (int64, error) {
 
+	fmt.Println(token)
 	return s.store.RegisterDevice(ctx, db.RegisterDeviceParams{
 		UserID: userID,
 		Token:  token.Token,
