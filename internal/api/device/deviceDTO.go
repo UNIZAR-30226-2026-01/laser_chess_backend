@@ -1,5 +1,5 @@
 package device
 
-type RegisterDeviceDTO struct {
+type DeviceDTO struct {
 	Token string `json:"token" binding:"required"`
 }

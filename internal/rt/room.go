@@ -15,6 +15,11 @@ import (
 // jugadores de una partida :)
 // es el intermediario entre el front y el juego
 
+// Interfaz para abstraer el match service en tests
+type MatchFinalizer interface {
+	FinalizeMatch(ctx context.Context, summary match.MatchSummaryDTO) (*match.MatchRewardsDTO, error)
+}
+
 type Room struct {
 	Player1    *Client
 	Player2    *Client
@@ -30,7 +35,7 @@ type Room struct {
 	RefreshChan   chan bool
 	ReconnectChan chan ReconnectionInfo
 
-	matchService *match.MatchService
+	matchService MatchFinalizer
 }
 
 type ReconnectionInfo struct {
@@ -38,7 +43,7 @@ type ReconnectionInfo struct {
 }
 
 func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
-	matchService *match.MatchService, isNewMatch bool,
+	matchService MatchFinalizer, isNewMatch bool,
 	GameInfo *game.GameInfo, registry *MatchRegistry) {
 
 	r.Player1 = Player1

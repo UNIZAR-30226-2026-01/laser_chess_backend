@@ -6,6 +6,9 @@ DB_CONTAINER=postgres_db
 SCHEMA_FILE=internal/db/schema.sql
 INSERTS_FILE=internal/db/initial_inserts.sql
 
+test:
+	go test -v -cover -race ./...
+
 postgres:
 	docker compose up -d
 

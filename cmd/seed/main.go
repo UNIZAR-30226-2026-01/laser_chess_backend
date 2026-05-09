@@ -54,9 +54,9 @@ func main() {
 func seedAIUser(ctx context.Context, accSvc *account.AccountService) {
 	log.Println("Iniciando la inserción del usuario IA...")
 
-	username := fmt.Sprintf("AI")
-	password := fmt.Sprintf(os.Getenv("AI_PASSWORD"))
-	mail := fmt.Sprintf("ai@ai.ai")
+	username := "AI"
+	password := os.Getenv("AI_PASSWORD")
+	mail := "ai@ai.ai"
 
 	// Comprobar si ya existe
 	_, err := accSvc.GetIDByUsername(ctx, username)

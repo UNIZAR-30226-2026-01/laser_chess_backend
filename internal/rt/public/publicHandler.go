@@ -46,7 +46,8 @@ type PublicHandler struct {
 }
 
 func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *account.AccountService,
-	matches *match.MatchService, ratings *rating.RatingService, events *sse.EventSystem) *PublicHandler {
+	matches *match.MatchService, ratings *rating.RatingService, events *sse.EventSystem,
+) *PublicHandler {
 	return &PublicHandler{
 		hub:            hub,
 		registry:       registry,
@@ -72,7 +73,8 @@ func NewPublicHandler(hub *rt.PublicHub, registry *rt.MatchRegistry, accounts *a
 }
 
 func (h *PublicHandler) GetELOByGameMode(c *gin.Context, gameMode int,
-	id int64) (*rating.RatingDTO, error) {
+	id int64,
+) (*rating.RatingDTO, error) {
 	var err error = nil
 	var playerELO *rating.RatingDTO = nil
 	switch gameMode {
@@ -119,7 +121,6 @@ func (h *PublicHandler) GetIDAndELOStats(c *gin.Context, gameMode int) (int64, i
 //	Bloquea leyendo del canal Send del cliente (mensajes de la Room
 //	   cuando la partida arranque) o hasta que el WS se cierre.
 func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
-
 	var dto MatchmakingRequestDTO
 	if err := c.ShouldBindQuery(&dto); err != nil {
 		apierror.SendError(c, http.StatusBadRequest, err)
@@ -171,7 +172,11 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 
 	ResponseChan := make(chan *rt.MatchmakingFound, 1)
 	ErrorChan := make(chan error, 1)
+<<<<<<< HEAD
 	CancelChan := make(chan bool)
+=======
+	CancelChan := make(chan bool, 1)
+>>>>>>> main
 
 	go h.hub.AddPlayerToMatchmaking(&rt.MatchRequest{
 		PlayerClient: client,
@@ -181,6 +186,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		ResponseChan: ResponseChan,
 		CancelChan:   CancelChan,
 		ErrorChan:    ErrorChan,
+		CancelChan:   CancelChan,
 		Ranked:       dto.Ranked,
 		Board:        dto.Board,
 	})
@@ -191,8 +197,9 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 	select {
 	case opponentMatchmakingInfo = <-ResponseChan:
 		opponentClient = opponentMatchmakingInfo.Client
-	case err := <-ErrorChan:
-		apierror.DetectAndSendError(c, err)
+	case <-ErrorChan:
+		//apierror.DetectAndSendError(c, err)
+		// No se si hay que poner algo aqui
 		conn.Close()
 		return
 	case <-client.Done:
@@ -222,7 +229,7 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		case 0:
 			matchType = "RANKED"
 		case 1:
-			matchType = "FRIENDLY"
+			matchType = "CASUAL"
 		}
 
 		room.InitRoom(P1Client, P2Client, h.matchService, true,
@@ -235,5 +242,4 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 			}, h.registry)
 
 	}
-
 }
