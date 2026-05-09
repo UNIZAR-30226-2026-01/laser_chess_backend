@@ -1,6 +1,6 @@
 on:
   push:
-    branches: [ main, despliegue ]
+    branches: [ main ]
 
 jobs:
   build:
