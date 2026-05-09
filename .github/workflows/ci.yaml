@@ -52,7 +52,7 @@ jobs:
           GIN_MODE: release
 
       - name: Ejecutar tests
-        run: make test
+        run: go test -v -cover -race ./...
         env:
           DB_USER: user
           DB_PASSWORD: password

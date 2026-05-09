@@ -40,7 +40,6 @@ func (h *DeviceHandler) RegisterDevice(c *gin.Context) {
 	res, err := h.deviceService.RegisterDevice(c.Request.Context(),
 		body, accountID)
 
-	fmt.Println(err.Error())
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
 		return

@@ -12,10 +12,10 @@ import (
 // Handler http con endpoints para tratar con items de la tienda y de usuarios
 
 type itemHandler struct {
-	service *itemService
+	service *ItemService
 }
 
-func NewHandler(s *itemService) *itemHandler {
+func NewHandler(s *ItemService) *itemHandler {
 	return &itemHandler{service: s}
 }
 
