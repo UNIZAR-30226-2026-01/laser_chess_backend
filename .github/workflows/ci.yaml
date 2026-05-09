@@ -93,5 +93,13 @@ jobs:
           target: seeder   # Apunta a la etapa 'seeder' del dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.REPO_NAME }}-seeder:latest
+      
+      - name: Construir y subir imagen de la Base de Datos
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: database  # Apunta a la etapa 'database' del dockerfile
+          push: true
+          tags: ghcr.io/${{ env.REPO_NAME }}-db:latest
           
       

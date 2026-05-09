@@ -38,3 +38,7 @@ COPY --from=backend /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=backend /app/seeder-bin /seeder
 # El seeder no suele necesitar EXPOSE porque solo escribe en la BD y termina
 CMD ["/seeder"]
+
+FROM postgres:16-alpine AS database
+# Copiamos el esquema a la base de datos y hacemos una imagen con el esquema aplicado ya
+COPY internal/db/schema.sql /docker-entrypoint-initdb.d/1-schema.sql
