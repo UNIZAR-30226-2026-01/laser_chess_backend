@@ -1,10 +1,14 @@
+name: CI/CD Pipeline
 on:
   push:
-    branches: [ main ]
+    branches: [ main, despliegue ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v6
 
@@ -59,5 +63,32 @@ jobs:
           DB_NAME: laser_chess_db
           DB_PORT: 5432
           DB_URL: "postgresql://user:password@localhost:5432/laser_chess_db?sslmode=disable"
+
+      - name: Iniciar sesión en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Convertir nombre del repo a minúsculas
+        # Docker odia las mayúsculas en los nombres de las imágenes. Esto lo previene.
+        run: echo "REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Construir y subir imagen del Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: backend  # Apunta a la etapa 'backend' del dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.REPO_NAME }}-backend:latest
+
+      - name: Construir y subir imagen del Seeder
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: seeder   # Apunta a la etapa 'seeder' del dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.REPO_NAME }}-seeder:latest
           
       
