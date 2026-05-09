@@ -182,7 +182,6 @@ func (h *PublicHandler) GoIntoMatchmaking(c *gin.Context) {
 		ResponseChan: ResponseChan,
 		CancelChan:   CancelChan,
 		ErrorChan:    ErrorChan,
-		CancelChan:   CancelChan,
 		Ranked:       dto.Ranked,
 		Board:        dto.Board,
 	})
