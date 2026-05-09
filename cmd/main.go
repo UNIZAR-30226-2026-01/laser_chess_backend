@@ -55,10 +55,14 @@ func main() {
 	// Inicializar router de gin
 	router := api.SetupRouter(store, matchRegistry, privateHub, publicHub)
 
+
 	// Ejecutar el router en el puerto que se le diga (8080 por defecto)
 	port := os.Getenv("PORT")
+	log.Println("Arrancando servidor Gin en el puerto:8080")
 	if port == "" {
 		port = "8080"
 	}
-	router.Run(":" + port)
+	if err := router.Run(":" + port); err != nil {
+        log.Fatalln("Fallo crítico al intentar arrancar el router:", err)
+    }
 }
