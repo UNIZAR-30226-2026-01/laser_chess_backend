@@ -74,6 +74,10 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	}
 
 	// Conseguir id del challenged
+	if dto.ChallengedUsername == nil {
+		apierror.DetectAndSendError(c, apierror.ErrBadRequest)
+		return
+	}
 	challengedID, err := h.accountService.GetIDByUsername(c.Request.Context(), *dto.ChallengedUsername)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
