@@ -173,6 +173,7 @@ func SetupRouter(store *db.Store,
 	{
 		deviceRoute := protected.Group("/device")
 		deviceRoute.POST("/register", deviceHandler.RegisterDevice)
+		deviceRoute.DELETE("/delete", deviceHandler.DeleteDevice)
 	}
 
 	// Endpoints de websockets
