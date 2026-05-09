@@ -10,15 +10,15 @@ const BOARD_NUM = 5
 var IntToBoard = map[game.Board_T]db.BoardType{
 	0: "ACE",
 	1: "CURIOSITY",
-	2: "SOPHIE",
-	3: "GRAIL",
-	4: "MERCURY",
+	2: "GRAIL",
+	3: "MERCURY",
+	4: "SOPHIE",
 }
 
 var BoardToInt = map[db.BoardType]game.Board_T{
 	"ACE":       0,
 	"CURIOSITY": 1,
-	"SOPHIE":    2,
-	"GRAIL":     3,
-	"MERCURY":   4,
+	"GRAIL":     2,
+	"MERCURY":   3,
+	"SOPHIE":    4,
 }
