@@ -25,7 +25,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/main.g
 RUN CGO_ENABLED=0 GOOS=linux go build -o seeder-bin ./cmd/seed/main.go
 
 # Etapa 2: Imagen ultra-ligera
-FROM backend
+FROM scratch AS backend
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/main /main
 
