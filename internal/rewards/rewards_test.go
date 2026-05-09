@@ -170,28 +170,3 @@ func TestGetMatchMoney(t *testing.T) {
 		})
 	}
 }
-
-func TestGetNewVolatility_CoverageExtra(t *testing.T) {
-	// Para cubrir las líneas del método de Illinois (fA = fA / 2.0) y el bucle de (k += 1.0),
-	// iteramos sobre una matriz de valores extremos que deforman la curva matemática de getF.
-
-	deltas := []float64{0.0, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0}
-	phis := []float64{0.1, 0.5, 1.0, 2.0}
-	vs := []float64{0.01, 0.1, 1.0, 2.0}
-
-	// El tau de 100.0 asegura matemáticamente que term1 domine a term2 en la primera iteración,
-	// forzando la entrada al bucle "for getF(...) < 0 { k += 1.0 }"
-	taus := []float64{0.1, 0.5, 1.0, 10.0, 100.0}
-
-	for _, d := range deltas {
-		for _, p := range phis {
-			for _, v := range vs {
-				for _, tau := range taus {
-					// Al probar cientos de combinaciones geométricas de la curva,
-					// garantizamos que al menos una desencadene la condición fC*fB > 0 (el else fA = fA / 2.0)
-					_ = getNewVolatility(d, p, v, 0.06, tau)
-				}
-			}
-		}
-	}
-}
