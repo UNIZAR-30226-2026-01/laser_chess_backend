@@ -26,15 +26,15 @@ RUN GOOS=linux go build -o seeder-bin ./cmd/seed/main.go
 
 # Etapa 2: Imagen ultra-ligera
 FROM scratch
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /app/main /main
+COPY --from=backend /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=backend /app/main /main
 
 EXPOSE 8080
 CMD ["/main"]
 
 FROM alpine:latest AS seeder
 WORKDIR /
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /app/seeder-bin /seeder
+COPY --from=backend /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=backend /app/seeder-bin /seeder
 # El seeder no suele necesitar EXPOSE porque solo escribe en la BD y termina
 CMD ["/seeder"]
