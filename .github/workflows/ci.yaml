@@ -37,9 +37,9 @@ jobs:
         env:
           DB_USER: user
          
-      - name: Aplicar esquema y hacer la build
+      - name: Aplicar esquema, inserciones debug y hacer la build
         run: |
-          make apply-schema
+          make reset-db-debug
           make build
         env:
           DB_USER: user
@@ -47,11 +47,12 @@ jobs:
           DB_NAME: laser_chess_db
           DB_PORT: 5432
           DB_URL: "postgresql://user:password@localhost:5432/laser_chess_db?sslmode=disable"
+          AI_PASSWORD: '1234567890'
           # Hacer que se ejecute en modo release
           GIN_MODE: release
 
       - name: Ejecutar tests
-        run: go test -v -cover ./...
+        run: make test
         env:
           DB_USER: user
           DB_PASSWORD: password

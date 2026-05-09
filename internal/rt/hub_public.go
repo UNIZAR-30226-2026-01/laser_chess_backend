@@ -155,21 +155,32 @@ func (ph *PublicHub) FindOpponentInRange(request *MatchRequest, radius int) {
 }
 
 func (ph *PublicHub) CheckBracket(request *MatchRequest, bracket int64) bool {
+	ph.mu.RLock()
 	queue := ph.rankingOrCasualQueues[request.Ranked][request.GameMode]
+	ph.mu.RUnlock()
+
+	if queue == nil {
+		return false
+	}
 
 	queue.mu.Lock()
 	defer queue.mu.Unlock()
+	mmQueue := queue.matchmakingQueues[bracket]
+	if mmQueue == nil || mmQueue.players.Len() == 0 {
+		return false
+	}
 
-	if queue.matchmakingQueues[bracket].players.Len() != 0 {
-		opponent :=
-			queue.matchmakingQueues[bracket].players.Front().Value.(*MatchRequest)
-		if opponent.PlayerClient.AccountID != request.PlayerClient.AccountID {
-			// Sacar a los jugadores de la cola
-			ph.ExitPlayersInQueue(request.PlayerClient.AccountID)
-			ph.ExitPlayersInQueue(opponent.PlayerClient.AccountID)
-			ph.NotifyMatch(request, opponent)
-			return true
-		}
+	element := mmQueue.players.Front()
+	opponent := element.Value.(*MatchRequest)
+
+	if opponent.PlayerClient.AccountID != request.PlayerClient.AccountID {
+		mmQueue.players.Remove(element)
+
+		ph.ExitPlayersInQueue(request.PlayerClient.AccountID)
+		ph.ExitPlayersInQueue(opponent.PlayerClient.AccountID)
+
+		ph.NotifyMatch(request, opponent)
+		return true
 	}
 
 	return false
@@ -230,7 +241,9 @@ func (ph *PublicHub) NotifyMatch(request *MatchRequest, opponent *MatchRequest) 
 }
 
 func (ph *PublicHub) AddToQueue(request *MatchRequest) {
+	ph.mu.RLock()
 	queue := ph.rankingOrCasualQueues[request.Ranked][request.GameMode]
+	ph.mu.RUnlock()
 
 	queue.mu.Lock()
 	defer queue.mu.Unlock()
