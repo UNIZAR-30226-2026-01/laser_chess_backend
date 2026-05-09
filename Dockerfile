@@ -1,5 +1,5 @@
 # Etapa 1: Compilación (usamos alpine solo para tener las herramientas de Go)
-FROM golang:1.25.7-alpine AS builder
+FROM golang:1.25.7-alpine AS backend
 WORKDIR /app
 
 ENV CGO_ENABLED=0
