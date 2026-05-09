@@ -124,6 +124,7 @@ func (ph *PublicHub) Search(request *MatchRequest) {
 			return
 		case <-request.CancelChan:
 			ph.RemoveFromQueue(request)
+			ph.ExitPlayersInQueue(request.PlayerClient.AccountID)
 			return
 		case <-ticker.C:
 			if radius <= 6 {
