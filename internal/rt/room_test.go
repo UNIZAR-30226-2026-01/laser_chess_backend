@@ -122,3 +122,52 @@ func TestRoom_CompleteFlow(t *testing.T) {
 	assert.Equal(t, "100", msgRewards.Content)
 	assert.Equal(t, "10", msgRewards.Extra)
 }
+
+func TestRoom_FullPauseFlow(t *testing.T) {
+	p1 := createTestClient(10)
+	p2 := createTestClient(20)
+
+	registry := NewMatchRegistry()
+	mockDB := &MockMatchService{}
+
+	gameInfo := &game.GameInfo{
+		BoardType:     game.ACE,
+		TimeBase:      30000,
+		TimeIncrement: 1000,
+		MatchType:     "PRIVATE",
+	}
+
+	room := &Room{}
+	// InitRoom ya lanza la gorutina internamente, no necesitamos hacer "go room.run()"
+	room.InitRoom(p1, p2, mockDB, true, gameInfo, registry)
+
+	// 1. INICIO DE PARTIDA
+	waitMsg(t, p1.Send, game.MatchStart)
+	waitMsg(t, p2.Send, game.MatchStart)
+
+	// 2. P1 PIDE PAUSA, P2 RECIBE PETICIÓN Y RECHAZA
+	p1.ToRoom <- ClientSocketMessage{Type: string(game.Pause)}
+	waitMsg(t, p2.Send, game.PauseRequest)
+
+	p2.ToRoom <- ClientSocketMessage{Type: string(game.PauseReject)}
+	waitMsg(t, p1.Send, game.PauseReject)
+
+	// 3. P2 PIDE PAUSA (Comprobamos que el rechazo anterior limpió el estado)
+	p2.ToRoom <- ClientSocketMessage{Type: string(game.Pause)}
+	waitMsg(t, p1.Send, game.PauseRequest) // P1 debe recibir la petición de P2
+
+	// 4. P1 ACEPTA LA PAUSA (Pidiendo pausa él también)
+	p1.ToRoom <- ClientSocketMessage{Type: string(game.Pause)}
+
+	// 5. EL MOTOR DEL JUEGO RECIBE EL DOBLE PAUSE Y DEVUELVE "PAUSED"
+	// Esto provoca que la room ejecute r.end()
+	msgPausedP1 := waitMsg(t, p1.Send, game.Paused)
+	msgPausedP2 := waitMsg(t, p2.Send, game.Paused)
+
+	assert.Equal(t, game.Paused, msgPausedP1.Type)
+	assert.Equal(t, game.Paused, msgPausedP2.Type)
+
+	// 6. LA ROOM SE CIERRA Y CORTA LA CONEXIÓN (EOC)
+	waitMsg(t, p1.Send, game.EOC)
+	waitMsg(t, p2.Send, game.EOC)
+}
