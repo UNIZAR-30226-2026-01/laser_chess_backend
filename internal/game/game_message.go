@@ -10,7 +10,7 @@ const (
 
 	State        GameMessageType = "State"
 	MatchStart   GameMessageType = "MatchStart"
-	MatchType    GameMessageType = "MatchStart"
+	MatchType    GameMessageType = "MatchType"
 	InitialState GameMessageType = "InitialState"
 	PauseRequest GameMessageType = "PauseRequest"
 	PauseReject  GameMessageType = "PauseReject"
