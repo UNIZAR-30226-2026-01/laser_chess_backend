@@ -1,7 +1,7 @@
 name: CI/CD Pipeline
 on:
   push:
-    branches: [ main, despliegue ]
+    branches: [ main, despliegue, ainhoa-pruebas ]
 
 env:
   REGISTRY: ghcr.io
