@@ -37,7 +37,7 @@ func (h *DeviceHandler) RegisterDevice(c *gin.Context) {
 
 	fmt.Println(body)
 
-	res, err := h.deviceService.RegisterDevice(c.Request.Context(),
+	_, err = h.deviceService.RegisterDevice(c.Request.Context(),
 		body, accountID)
 
 	if err != nil {
@@ -45,7 +45,7 @@ func (h *DeviceHandler) RegisterDevice(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, res)
+	c.Status(http.StatusCreated)
 }
 
 func (h *DeviceHandler) DeleteDevice(c *gin.Context) {
@@ -64,7 +64,7 @@ func (h *DeviceHandler) DeleteDevice(c *gin.Context) {
 	}
 
 	fmt.Println(body.Token)
-	res, err := h.deviceService.DeleteDevice(c.Request.Context(),
+	_, err = h.deviceService.DeleteDevice(c.Request.Context(),
 		body.Token)
 
 	if err != nil {
@@ -72,5 +72,5 @@ func (h *DeviceHandler) DeleteDevice(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, res)
+	c.Status(http.StatusCreated)
 }

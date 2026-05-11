@@ -27,6 +27,8 @@ func (es *EventSystem) EventHandler(ctx *gin.Context) {
 	}
 
 	es.SaveChan(userID, eventChan)
+	es.MarkOnline(userID)
+
 	defer es.removeChan(userID, eventChan)
 
 	flusher, ok := ctx.Writer.(http.Flusher)
@@ -52,4 +54,26 @@ func (es *EventSystem) EventHandler(ctx *gin.Context) {
 			flusher.Flush()
 		}
 	}
+}
+
+func (es *EventSystem) OnlineHandler(ctx *gin.Context) {
+	userID, err := md.ExtractAccountID(ctx)
+	if err != nil {
+		apierror.DetectAndSendError(ctx, err)
+		return
+	}
+
+	es.MarkOnline(userID)
+	ctx.Status(http.StatusNoContent)
+}
+
+func (es *EventSystem) OfflineHandler(ctx *gin.Context) {
+	userID, err := md.ExtractAccountID(ctx)
+	if err != nil {
+		apierror.DetectAndSendError(ctx, err)
+		return
+	}
+
+	es.MarkOffline(userID)
+	ctx.Status(http.StatusNoContent)
 }
