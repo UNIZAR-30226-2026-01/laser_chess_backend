@@ -36,8 +36,8 @@ type PrivateHandler struct {
 func NewPrivateHandler(hub *rt.PrivateHub, registry *rt.MatchRegistry,
 	accounts *account.AccountService, matches *match.MatchService,
 	ratings *rating.RatingService, events *sse.EventSystem,
-	friendships *friendship.FriendshipService) *PrivateHandler {
-
+	friendships *friendship.FriendshipService,
+) *PrivateHandler {
 	return &PrivateHandler{
 		hub:               hub,
 		registry:          registry,
@@ -167,7 +167,7 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	client.InitClient(challengerID, conn, false)
 
 	info.ChallengerClient = client
-	
+
 	// Registrar reto en el hub privado
 	err = h.hub.CreateChallenge(challengerID, challengedID, info)
 	if err != nil {
@@ -188,7 +188,6 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 			EventType: "Challenge",
 			Data:      challengerUsername,
 		}, true)
-
 	}
 
 	// Esperar a que el WS se cierre.
@@ -199,7 +198,6 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	fmt.Println("CLIENTE CERRADO")
 	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
-
 }
 
 // AcceptChallenge — el challenged upgradea a WS y acepta el reto.
@@ -315,10 +313,12 @@ func (h *PrivateHandler) responseToChallenge(c *gin.Context, accept bool) {
 				MatchID:       info.MatchID,
 			}, h.registry)
 	} else {
-		challengedClient.Send <- game.ResponseToRoom{Type: game.EOC,
-			Content: "Challenge rejected"}
-		info.ChallengerClient.Send <- game.ResponseToRoom{Type: game.EOC,
-			Content: "Challenge rejected"}
+		challengedClient.Send <- game.ResponseToRoom{Type: game.EOC}
+
+		info.ChallengerClient.Send <- game.ResponseToRoom{
+			Type:    game.EOC,
+			Content: "Challenge rejected",
+		}
 	}
 
 	fmt.Println("Borrando reto")
