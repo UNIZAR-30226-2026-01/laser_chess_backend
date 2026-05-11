@@ -2,5 +2,5 @@ bin/
 
 .env
 
-laser-chess-grace-hopper-firebase-adminsdk-fbsvc-df9693614b.json
+config/gracehopper-laserchess-firebase-service-account.json
 *:Zone.Identifier

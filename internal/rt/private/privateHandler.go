@@ -168,6 +168,8 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 
 	info.ChallengerClient = client
 
+	fmt.Println("ANTES de CreateChallenge")
+	
 	// Registrar reto en el hub privado
 	err = h.hub.CreateChallenge(challengerID, challengedID, info)
 	if err != nil {
@@ -180,14 +182,20 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("DESPUÉS de CreateChallenge")
+
 	challengerUsername, err := h.accountService.GetUsernameByID(c, challengerID)
 	if err != nil {
 		apierror.DetectAndSendError(c, err)
+	} else {
+		fmt.Println("ANTES de SendEvent Challenge:", challengedID, challengerUsername)
+		go h.eventSystem.SendEvent(challengedID, &sse.Event{
+			EventType: "Challenge",
+			Data:      challengerUsername,
+		}, true)
+
+		fmt.Println("DESPUÉS de lanzar SendEvent Challenge")
 	}
-	h.eventSystem.SendEvent(challengedID, &sse.Event{
-		EventType: "Challenge",
-		Data:      challengerUsername,
-	}, true)
 
 	// Esperar a que el WS se cierre.
 	// Si el challenger cancela antes de que lo acepten, limpiamos el reto.

@@ -167,6 +167,8 @@ func SetupRouter(store *db.Store,
 	{
 		eventRoute := protected.Group("/events")
 		eventRoute.GET("", eventSystem.EventHandler)
+		eventRoute.POST("/online", eventSystem.OnlineHandler)
+		eventRoute.POST("/offline", eventSystem.OfflineHandler)
 	}
 
 	//  Device routes
