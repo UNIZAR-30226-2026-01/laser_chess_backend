@@ -452,6 +452,11 @@ func (r *Room) NotifyReconnection(reconected *Client, opponent *Client) {
 		PlayerUid: reconected.AccountID,
 		MsgType:   game.GetState,
 	}
+
+	reconected.Send <- game.ResponseToRoom{
+		Type: game.MatchType,
+		Content: r.GameInfo.MatchType,
+	}
 }
 
 func (r *Room) ReconnectProcedure(info ReconnectionInfo) {
