@@ -42,3 +42,7 @@ reset-db-debug: postgres
 	docker exec -i $(DB_CONTAINER) psql "$(DB_URL)" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 	make apply-schema
 	make seed-debug
+
+.PHONY: test
+
+
