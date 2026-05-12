@@ -11,7 +11,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-// Definicion del servicio
+// Definición del servicio
 
 type FirebaseManager struct {
 	App           *firebase.App
