@@ -290,6 +290,19 @@ func TestRTChallenge(t *testing.T) {
 	LoginUser(t, "user2")
 	token2 := access_token
 
+	// Hacer friend request de user1 a user2
+	body := []byte(`{"receiver_username": "user2"}`)
+	w := performRequest("POST", "/api/friendship", body, token1, nil)
+	if w.Code != 201 {
+		t.Fatalf("Error creando friendship: %d", w.Code)
+	}
+
+	// Aceptar con user2
+	w = performRequest("PUT", "/api/friendship/user1", nil, token2, nil)
+	if w.Code != 200 {
+		t.Fatalf("Error aceptando friendship: %d", w.Code)
+	}
+
 	headers1 := http.Header{}
 	headers1.Add("Authorization", "Bearer "+token1)
 

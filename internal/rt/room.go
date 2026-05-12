@@ -74,6 +74,25 @@ func (r *Room) InitRoom(Player1 *Client, Player2 *Client,
 	go r.run()
 }
 
+// Función auxiliar para enviar mensajes de forma segura sin bloquear la Room
+func (r *Room) sendMessage(player *Client, message game.ResponseToRoom) {
+	player.mu.RLock()
+	defer player.mu.RUnlock()
+
+	if !player.Online {
+		return // Si no está online, no intentamos enviar
+	}
+
+	select {
+	case player.Send <- message:
+		// Mensaje enviado correctamente
+	default:
+		// El canal está lleno (el cliente no está leyendo).
+		// Lo ignoramos para evitar el deadlock.
+		fmt.Printf("Aviso: No se pudo enviar el mensaje (tipo %v) al jugador %d (buffer lleno)\n", message.Type, player.AccountID)
+	}
+}
+
 func (r *Room) end() {
 	fmt.Println("Cierre de la room")
 
@@ -84,17 +103,8 @@ EmptyBroadcast:
 		case message := <-r.Broadcast:
 			fmt.Println("Broadcast: ", message)
 
-			r.Player1.mu.RLock()
-			if r.Player1.Online {
-				r.Player1.Send <- message
-			}
-			r.Player1.mu.RUnlock()
-
-			r.Player2.mu.RLock()
-			if r.Player2.Online {
-				r.Player2.Send <- message
-			}
-			r.Player2.mu.RUnlock()
+			r.sendMessage(r.Player1, message)
+			r.sendMessage(r.Player2, message)
 		default:
 			break EmptyBroadcast
 		}
@@ -123,57 +133,40 @@ EmptyBroadcast:
 	// SOLO si la partida ha acabado y no ha sido pausada
 	if rewards != nil && r.GameInfo.Termination != "UNFINISHED" {
 		// Mensajes P1
-		r.Player1.mu.RLock()
-		if r.Player1.Online {
-			// Mandar Rewards (XP y dinero)
-			r.Player1.Send <- game.ResponseToRoom{
-				Type:    game.Rewards,
-				Content: strconv.Itoa(int(rewards.P1XPDiff)),
-				Extra:   strconv.Itoa(int(rewards.P1MoneyDiff)),
-			}
-			// Mandar Elo solo si es Ranked
-			if r.GameInfo.MatchType == "RANKED" {
-				r.Player1.Send <- game.ResponseToRoom{
-					Type:    game.EloUpdate,
-					Content: strconv.Itoa(int(rewards.P1EloDiff)),
-				}
-			}
+		// Mandar Rewards (XP y dinero)
+		r.sendMessage(r.Player1, game.ResponseToRoom{
+			Type:    game.Rewards,
+			Content: strconv.Itoa(int(rewards.P1XPDiff)),
+			Extra:   strconv.Itoa(int(rewards.P1MoneyDiff)),
+		})
+		// Mandar Elo solo si es Ranked
+		if r.GameInfo.MatchType == "RANKED" {
+			r.sendMessage(r.Player1, game.ResponseToRoom{
+				Type:    game.EloUpdate,
+				Content: strconv.Itoa(int(rewards.P1EloDiff)),
+			})
 		}
-		r.Player1.mu.RUnlock()
 
 		// Mensajes P2
-		r.Player2.mu.RLock()
-		if r.Player2.Online {
-			// Mandar Rewards (XP y dinero)
-			r.Player2.Send <- game.ResponseToRoom{
-				Type:    game.Rewards,
-				Content: strconv.Itoa(int(rewards.P2XPDiff)),
-				Extra:   strconv.Itoa(int(rewards.P2MoneyDiff)),
-			}
-			// Mandar Elo solo si es Ranked
-			if r.GameInfo.MatchType == "RANKED" {
-				r.Player2.Send <- game.ResponseToRoom{
-					Type:    game.EloUpdate,
-					Content: strconv.Itoa(int(rewards.P2EloDiff)),
-				}
-			}
+		// Mandar Rewards (XP y dinero)
+		r.sendMessage(r.Player2, game.ResponseToRoom{
+			Type:    game.Rewards,
+			Content: strconv.Itoa(int(rewards.P2XPDiff)),
+			Extra:   strconv.Itoa(int(rewards.P2MoneyDiff)),
+		})
+		// Mandar Elo solo si es Ranked
+		if r.GameInfo.MatchType == "RANKED" {
+			r.sendMessage(r.Player2, game.ResponseToRoom{
+				Type:    game.EloUpdate,
+				Content: strconv.Itoa(int(rewards.P2EloDiff)),
+			})
 		}
-		r.Player2.mu.RUnlock()
 	}
 
 	fmt.Println("Antes de enviar el EOC a los clientes")
 	// Avisar y cerrar los clientes
-	r.Player1.mu.RLock()
-	if r.Player1.Online {
-		r.Player1.Send <- game.ResponseToRoom{Type: game.EOC}
-	}
-	r.Player1.mu.RUnlock()
-
-	r.Player2.mu.RLock()
-	if r.Player2.Online {
-		r.Player2.Send <- game.ResponseToRoom{Type: game.EOC}
-	}
-	r.Player2.mu.RUnlock()
+	r.sendMessage(r.Player1, game.ResponseToRoom{Type: game.EOC})
+	r.sendMessage(r.Player2, game.ResponseToRoom{Type: game.EOC})
 
 	fmt.Println("Despues de enviar el EOC a los clientes")
 
@@ -182,15 +175,15 @@ EmptyBroadcast:
 }
 
 func (r *Room) sendOpponentIds() {
-	r.Player1.Send <- game.ResponseToRoom{
+	r.sendMessage(r.Player1, game.ResponseToRoom{
 		Type:    game.MatchStart,
 		Content: strconv.FormatInt(r.Player2.AccountID, 10),
-	}
+	})
 
-	r.Player2.Send <- game.ResponseToRoom{
+	r.sendMessage(r.Player2, game.ResponseToRoom{
 		Type:    game.MatchStart,
 		Content: strconv.FormatInt(r.Player1.AccountID, 10),
-	}
+	})
 }
 
 func (r *Room) run() {
@@ -220,8 +213,10 @@ func (r *Room) run() {
 		case message := <-r.Broadcast:
 			fmt.Println("Broadcast: ", message)
 			fmt.Println("ROOM: Enviando mensaje de broadcast a jugadores")
-			r.Player1.Send <- message
-			r.Player2.Send <- message
+
+			r.sendMessage(r.Player1, message)
+			r.sendMessage(r.Player2, message)
+
 			fmt.Println("ROOM: Enviado mensaje de broadcast a jugadores")
 
 		case message, ok := <-r.Player1.ToRoom:
@@ -288,10 +283,27 @@ func (r *Room) manageDisconnection(player *Client) {
 	defer timeout.Stop()
 
 	fmt.Println("Desconexion detectada")
-	if player.AccountID == r.Player1.AccountID {
-		r.Player2.Send <- game.ResponseToRoom{Type: game.Disconnection}
+	opponent := r.Player2
+	if player.AccountID == r.Player2.AccountID {
+		opponent = r.Player1
+	}
+
+	// Verificar si el oponente también está desconectado
+	opponent.mu.RLock()
+	opponentOnline := opponent.Online
+	opponent.mu.RUnlock()
+
+	if opponentOnline {
+		// Solo enviar mensaje si el oponente está online
+		r.sendMessage(opponent, game.ResponseToRoom{Type: game.Disconnection})
 	} else {
-		r.Player1.Send <- game.ResponseToRoom{Type: game.Disconnection}
+		// Ambos desconectados: pausar inmediatamente la partida
+		fmt.Println("Ambos jugadores desconectados: pausando partida inmediatamente")
+		r.Game.FromRoom <- game.RoomMsg{
+			PlayerUid: 0, // 0 para indicar pausa por desconexión mutua
+			MsgType:   game.Disconnection,
+		}
+		return // No esperar timer
 	}
 
 	select {
@@ -318,10 +330,10 @@ func (r *Room) handleGameMessage(response game.ResponseToRoom) bool {
 		// Mandar exclusivamente al jugador correspondiente usando el Extra
 		if strconv.FormatInt(r.Player1.AccountID, 10) == response.Extra {
 			response.Extra = ""
-			r.Player1.Send <- response
+			r.sendMessage(r.Player1, response)
 		} else if strconv.FormatInt(r.Player2.AccountID, 10) == response.Extra {
 			response.Extra = ""
-			r.Player2.Send <- response
+			r.sendMessage(r.Player2, response)
 		}
 
 	case game.End:
@@ -349,8 +361,10 @@ func (r *Room) handleGameMessage(response game.ResponseToRoom) bool {
 
 func (r *Room) managePause(player *Client) {
 	if r.GameInfo.MatchType != "PRIVATE" {
-		player.Send <- game.ResponseToRoom{Type: game.Error,
-			Content: "You can't pause a public game"}
+		r.sendMessage(player, game.ResponseToRoom{
+			Type:    game.Error,
+			Content: "You can't pause a public game",
+		})
 		return
 	}
 
@@ -358,12 +372,12 @@ func (r *Room) managePause(player *Client) {
 	case r.Player1.AccountID:
 		r.P1Pause = true
 		if !r.P2Pause {
-			r.Player2.Send <- game.ResponseToRoom{Type: game.PauseRequest}
+			r.sendMessage(r.Player2, game.ResponseToRoom{Type: game.PauseRequest})
 		}
 	case r.Player2.AccountID:
 		r.P2Pause = true
 		if !r.P1Pause {
-			r.Player1.Send <- game.ResponseToRoom{Type: game.PauseRequest}
+			r.sendMessage(r.Player1, game.ResponseToRoom{Type: game.PauseRequest})
 		}
 	}
 
@@ -378,8 +392,9 @@ func (r *Room) managePause(player *Client) {
 
 func (r *Room) managePauseReject(player *Client) {
 	if r.GameInfo.MatchType != "PRIVATE" {
-		player.Send <- game.ResponseToRoom{Type: game.Error,
-			Content: "You can't reject a pause in a public game"}
+		r.sendMessage(player, game.ResponseToRoom{Type: game.Error,
+			Content: "You can't reject a pause in a public game",
+		})
 		return
 	}
 
@@ -387,13 +402,15 @@ func (r *Room) managePauseReject(player *Client) {
 	if player.AccountID == r.Player1.AccountID {
 		if r.P1Pause {
 			r.P1Pause = false
-			r.Player2.Send <- game.ResponseToRoom{Type: game.PauseReject,
-				Content: "Pause request canceled"}
+			r.sendMessage(r.Player2, game.ResponseToRoom{Type: game.PauseReject,
+				Content: "Pause request canceled",
+			})
 			return
 		}
 		if !r.P2Pause {
-			player.Send <- game.ResponseToRoom{Type: game.Error,
-				Content: "No pause request received"}
+			r.sendMessage(player, game.ResponseToRoom{Type: game.Error,
+				Content: "No pause request received",
+			})
 			return
 		}
 		r.P2Pause = false
@@ -401,21 +418,24 @@ func (r *Room) managePauseReject(player *Client) {
 	} else {
 		if r.P2Pause {
 			r.P2Pause = false
-			r.Player1.Send <- game.ResponseToRoom{Type: game.PauseReject,
-				Content: "Pause request canceled"}
+			r.sendMessage(r.Player1, game.ResponseToRoom{Type: game.PauseReject,
+				Content: "Pause request canceled",
+			})
 			return
 		}
 		if !r.P1Pause {
-			player.Send <- game.ResponseToRoom{Type: game.Error,
-				Content: "No pause request received"}
+			r.sendMessage(player, game.ResponseToRoom{Type: game.Error,
+				Content: "No pause request received",
+			})
 			return
 		}
 		r.P1Pause = false
 		sender = r.Player1
 	}
 
-	sender.Send <- game.ResponseToRoom{Type: game.PauseReject,
-		Content: "Pause request rejected"}
+	r.sendMessage(sender, game.ResponseToRoom{Type: game.PauseReject,
+		Content: "Pause request rejected",
+	})
 
 	if r.P1Pause && r.P2Pause {
 		r.Game.FromRoom <- game.RoomMsg{
@@ -431,17 +451,17 @@ func (r *Room) NotifyReconnection(reconected *Client, opponent *Client) {
 	time.Sleep(250 * time.Millisecond)
 
 	// Mensajes al jugador no reconectado
-	opponent.Send <- game.ResponseToRoom{Type: game.Reconnection}
+	r.sendMessage(opponent, game.ResponseToRoom{Type: game.Reconnection})
 
 	// Mensajes al jugador reconectado
 	mensajeTimers := strconv.FormatInt(r.Game.GetPlayerTimer(reconected.AccountID), 10)
 	mensajeTimers += "%"
 	mensajeTimers += strconv.FormatInt(r.Game.GetPlayerTimer(opponent.AccountID), 10)
-	reconected.Send <- game.ResponseToRoom{
+	r.sendMessage(reconected, game.ResponseToRoom{
 		Type:    game.Reconnection,
 		Content: strconv.FormatInt(opponent.AccountID, 10),
 		Extra:   mensajeTimers,
-	}
+	})
 
 	r.Game.FromRoom <- game.RoomMsg{
 		PlayerUid: reconected.AccountID,
@@ -453,10 +473,10 @@ func (r *Room) NotifyReconnection(reconected *Client, opponent *Client) {
 		MsgType:   game.GetState,
 	}
 
-	reconected.Send <- game.ResponseToRoom{
-		Type: game.MatchType,
+	r.sendMessage(reconected, game.ResponseToRoom{
+		Type:    game.MatchType,
 		Content: r.GameInfo.MatchType,
-	}
+	})
 }
 
 func (r *Room) ReconnectProcedure(info ReconnectionInfo) {
