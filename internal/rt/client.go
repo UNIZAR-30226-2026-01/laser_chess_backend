@@ -41,8 +41,8 @@ type Client struct {
 func (c *Client) InitClient(AccountID int64, Conn *websocket.Conn, isAI bool) {
 	c.AccountID = AccountID
 	c.Conn = Conn
-	c.Send = make(chan game.ResponseToRoom, 1)
-	c.ToRoom = make(chan ClientSocketMessage, 1)
+	c.Send = make(chan game.ResponseToRoom, 5)
+	c.ToRoom = make(chan ClientSocketMessage, 5)
 
 	c.Done = make(chan struct{})
 	c.Reconnect = make(chan bool, 1)
