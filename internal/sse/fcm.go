@@ -11,7 +11,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-// Definicion del servicio
+// Definición del servicio
 
 type FirebaseManager struct {
 	App           *firebase.App
@@ -74,31 +74,12 @@ func (f *FirebaseManager) SendNotification(userID int64,
 		return nil
 	}
 
-	title := ""
-	body := ""
-	switch event.EventType {
-	case "FriendRequest":
-		title = "Nueva solicitud de amistad"
-		body = fmt.Sprintf("Has recibido una solicitud de amistad de %v", event.Data)
-	case "NewFriend":
-		title = "Nueva amistad"
-		body = fmt.Sprintf("Tu amistad con %v ha comenzado", event.Data)
-	case "Challenge":
-		title = "Nueva invitación de partida"
-		body = fmt.Sprintf("Has recibido una invitación de %v", event.Data)
-	default:
-		title = "Nueva notificación"
-		body = fmt.Sprintf("%v", event.Data)
-	}
-
 	// Enviamos a todos los dispositivos la notificacion
 	message := &messaging.MulticastMessage{
 		Tokens: tokens,
 		Data: map[string]string{
 			"event_type": event.EventType,
 			"data":       fmt.Sprintf("%v", event.Data),
-			"title":      title,
-			"body":       body,
 		},
 		Android: &messaging.AndroidConfig{
 			Priority: "high",

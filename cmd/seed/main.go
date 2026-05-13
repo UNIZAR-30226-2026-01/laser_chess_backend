@@ -54,7 +54,7 @@ func main() {
 func seedAIUser(ctx context.Context, accSvc *account.AccountService) {
 	log.Println("Iniciando la inserción del usuario IA...")
 
-	username := "AI"
+	username := "Hopper"
 	password := os.Getenv("AI_PASSWORD")
 	mail := "ai@ai.ai"
 
@@ -74,11 +74,8 @@ func seedAIUser(ctx context.Context, accSvc *account.AccountService) {
 	_, err = accSvc.Create(ctx, dto)
 	if err != nil {
 		log.Printf("Error creando a %s: %v", username, err)
-		return
-	}
-
-	if err != nil {
 		log.Printf("Error actualizando stats (nivel/xp) para %s: %v", username, err)
+		return
 	}
 
 	log.Println("Usuarios IA validado/creado correctamente.")

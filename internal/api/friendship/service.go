@@ -41,6 +41,10 @@ func (s FriendshipService) Create(ctx context.Context, data *FriendshipDTO) erro
 	var AuxAccepted1 bool
 	var AuxAccepted2 bool
 
+	if data.ReceiverID == 1 {
+		return apierror.ErrBadRequest
+	}
+
 	// Ordenamos para la inserción en BDD
 	if *data.SenderID < data.ReceiverID {
 		AuxUser1ID = *data.SenderID

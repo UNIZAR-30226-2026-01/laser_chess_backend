@@ -191,13 +191,18 @@ func (h *PrivateHandler) Challenge(c *gin.Context) {
 	}
 
 	// Esperar a que el WS se cierre.
-	// Si el challenger cancela antes de que lo acepten, limpiamos el reto.
+	// Si el challenger cancela antes de que lo acepten, limpiamos el reto y notificamos al challenged con un evento SSE
 	// Si la partida arranca, la Room cerrará la conn al terminar.
 	<-client.Done
 
 	fmt.Println("CLIENTE CERRADO")
 	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
+
+	go h.eventSystem.SendEvent(challengedID, &sse.Event{
+		EventType: "ChallengesUpdated",
+		Data:      "",
+	}, false)
 }
 
 // AcceptChallenge — el challenged upgradea a WS y acepta el reto.
@@ -323,6 +328,10 @@ func (h *PrivateHandler) responseToChallenge(c *gin.Context, accept bool) {
 
 	fmt.Println("Borrando reto")
 	h.hub.RemoveChallenge(challengerID, challengedID)
+	go h.eventSystem.SendEvent(challengedID, &sse.Event{
+		EventType: "ChallengesUpdated",
+		Data:      "",
+	}, false)
 }
 
 // GetChallenges — devuelve la lista de retos pendientes recibidos por el usuario.
