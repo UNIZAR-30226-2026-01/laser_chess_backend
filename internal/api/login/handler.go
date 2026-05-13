@@ -55,20 +55,28 @@ func (h *LoginHandler) Login(c *gin.Context) {
 
 // Endpoint de logout
 func (h *LoginHandler) Logout(c *gin.Context) {
+	// Intentamos obtener el valor de la cookie
+	refreshToken, _ := c.Cookie("refresh_token")
 
-	refreshToken, err := c.Cookie("refresh_token")
-	if err != nil {
-		apierror.SendError(c, http.StatusUnauthorized, err)
-		return
+	if refreshToken != "" {
+		_ = h.service.Logout(c.Request.Context(), refreshToken)
 	}
 
-	err = h.service.Logout(c.Request.Context(), refreshToken)
-	if err != nil {
-		apierror.DetectAndSendError(c, err)
-		return
-	}
+	clearRefreshTokenCookie(c)
 
-	c.JSON(http.StatusOK, "")
+	c.JSON(http.StatusOK, gin.H{""})
+}
+
+func clearRefreshTokenCookie(c *gin.Context) {
+	c.SetCookie(
+		"refresh_token",
+		"", // valor vacío
+		-1, // MaxAge -1 indica al navegador que la borre inmediatamente
+		"/",
+		"",
+		false,
+		true, // HttpOnly
+	)
 }
 
 // Endpoint para generar un nuevo access token
