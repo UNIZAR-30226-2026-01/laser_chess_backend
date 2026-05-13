@@ -64,7 +64,7 @@ func (h *LoginHandler) Logout(c *gin.Context) {
 
 	clearRefreshTokenCookie(c)
 
-	c.JSON(http.StatusOK, gin.H{""})
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 }
 
 func clearRefreshTokenCookie(c *gin.Context) {
