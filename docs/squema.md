@@ -1,4 +1,3 @@
-```mermaid
 erDiagram
     account ||--o{ item_owner : owns
     account ||--o{ match : plays_as_p1
@@ -7,6 +6,7 @@ erDiagram
     account ||--o{ friendship : friend_2
     account ||--o{ rating : has_rating
     account ||--o{ refresh_session : has_session
+    account ||--o{ device : registers
     account }o--|| shop_item : equips_board
     account }o--|| shop_item : equips_piece
     shop_item ||--o{ item_owner : is_owned
@@ -22,6 +22,13 @@ erDiagram
         INTEGER money
         INTEGER board_skin FK
         INTEGER piece_skin FK
+        INTEGER win_animation
+        INTEGER avatar
+    }
+
+    device {
+        BIGSERIAL user_id PK, FK
+        VARCHAR token PK, UK
     }
 
     shop_item {
@@ -64,6 +71,9 @@ erDiagram
         BIGINT user_id PK, FK
         ELO_TYPE elo_type PK
         INTEGER value
+        INTEGER deviation
+        FLOAT volatility
+        TIMESTAMPTZ last_updated_at
     }
 
     refresh_session {
@@ -73,4 +83,3 @@ erDiagram
         TIMESTAMPTZ expires_at
         TIMESTAMPTZ created_at
     }
-
