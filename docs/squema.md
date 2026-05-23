@@ -1,3 +1,4 @@
+```mermaid
 erDiagram
     account ||--o{ item_owner : owns
     account ||--o{ match : plays_as_p1
