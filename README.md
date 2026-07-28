@@ -1,34 +1,45 @@
-# Laser Chess - Backend [![CI](https://github.com/UNIZAR-30226-2026-01/laser_chess_backend/actions/workflows/ci.yaml/badge.svg)](https://github.com/UNIZAR-30226-2026-01/laser_chess_backend/actions/workflows/ci.yaml)
+# Laser Chess - Backend
 
-Backend del juego de mesa online Laser Chess.
+Backend REST y en tiempo real para el juego de mesa online **Laser Chess**, desarrollado en Go. 
 
-## Estructura del proyecto
-```text
+El sistema gestiona la autenticación de usuarios, la persistencia de datos con PostgreSQL, la lógica del juego y las partidas multijugador en tiempo real.
+
+---
+
+## 🛠️ Tecnologías y Arquitectura
+
+* **Lenguaje:** Go (Golang)
+* **API REST:** Rutas y middlewares personalizados para autenticación (JWT) y gestión de cuentas.
+* **Base de Datos:** PostgreSQL con **sqlc** para la generación de código Go a partir de consultas SQL de tipo seguro (*type-safe*).
+* **Tiempo Real:** Sistema de comunicación bidireccional (`internal/rt`) para el estado de las partidas y movimientos.
+* **Seguridad:** Hashing seguro de contraseñas y validación de tokens JWT.
+
+---
+
+## Estructura del Proyecto
+
 .
-├── cmd
-│   └── main.go                     # Inicializacion del sistema
-├── docs
-├── internal
-│   ├── api                         # Endpoints de la api REST
-│   │   ├── account
-│   │   ├── apierror                # Gestion de errores
-│   │   ├── ...
-│   │   ├── middleware              # Middleware de auth
-│   │   └── routes.go               # Inicializacion de la api REST
-│   ├── auth                    
-│   │   ├── passwords.go            # Gestion de contraseñas seguras
-│   │   └── token.go                # Utilidades para JWTs
-│   ├── db              
-│   │   ├── initial_inserts.sql     # Datos iniciales bdd
-│   │   ├── query                   # Directorio de queries sql
-│   │   ├── schema.sql              # Creacion de tablas 
-│   │   └── sqlc                    # Codigo generado por sqlc
-│   │       ├── ...
-│   │       └── store.go            # Objeto tipo repositorio
-│   ├── game                        # Gestion de partidas laser chess
-│   │   └── ...
-│   └── rt                          # Gestion de comunicacion a tiempo real
-│       └── ...
-├── Makefile                        # Makefile para puesta en marcha
-└── ...
+├── cmd/
+│   └── main.go                  # Punto de entrada e inicialización del servidor
+├── internal/
+│   ├── api/                     # Endpoints REST, middlewares de Auth y rutas
+│   ├── auth/                    # Lógica de JWT y hashing de contraseñas
+│   ├── db/                      # Esquema SQL, queries, datos iniciales y código generado por sqlc
+│   ├── game/                    # Lógica de juego de Laser Chess (reglas, tablero, turnos)
+│   └── rt/                      # Gestión de comunicación en tiempo real (WebSockets)
+└── Makefile                     # Automatización de tareas (compilación, migración, ejecución)
 
+---
+
+## Puesta en Marcha
+
+### Requisitos previos
+* Go 1.20+ (o versión correspondiente)
+* PostgreSQL
+
+### Ejecución
+Puedes desplegar la base de datos y lanzar el servidor usando el `Makefile`:
+
+```bash
+# Iniciar el servidor
+make run
