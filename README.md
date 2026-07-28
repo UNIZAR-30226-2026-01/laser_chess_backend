@@ -6,7 +6,7 @@ El sistema gestiona la autenticación de usuarios, la persistencia de datos con 
 
 ---
 
-## 🛠️ Tecnologías y Arquitectura
+## Tecnologías y Arquitectura
 
 * **Lenguaje:** Go (Golang)
 * **API REST:** Rutas y middlewares personalizados para autenticación (JWT) y gestión de cuentas.
