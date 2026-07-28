@@ -18,6 +18,7 @@ El sistema gestiona la autenticación de usuarios, la persistencia de datos con 
 
 ## Estructura del Proyecto
 
+```
 .
 ├── cmd/
 │   └── main.go                  # Punto de entrada e inicialización del servidor
@@ -28,7 +29,7 @@ El sistema gestiona la autenticación de usuarios, la persistencia de datos con 
 │   ├── game/                    # Lógica de juego de Laser Chess (reglas, tablero, turnos)
 │   └── rt/                      # Gestión de comunicación en tiempo real (WebSockets)
 └── Makefile                     # Automatización de tareas (compilación, migración, ejecución)
-
+```
 ---
 
 ## Puesta en Marcha
